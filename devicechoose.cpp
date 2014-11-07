@@ -9,27 +9,25 @@
 #include <dirent.h>
 #include <cstdio>
 
+#include <QDir>
+
 DeviceChoose::DeviceChoose(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DeviceChoose)
 {
     ui->setupUi(this);
 
-    ui->buttonBox->addButton(new QPushButton(tr("&Refresh")), QDialogButtonBox::AcceptRole);
+    QPushButton* btRefresh = new QPushButton(tr("&Refresh"), ui->buttonBox);
+    connect(btRefresh, SIGNAL(clicked()), this, SLOT(refreshDevices()));
+    ui->buttonBox->addButton(btRefresh, QDialogButtonBox::ActionRole);
 
     this->refreshDevices();
-    this->resize(0, 0);
+
+    this->setFixedSize(0, 0);
 }
 
 void DeviceChoose::refreshDevices()
 {
-    DIR* dir = opendir("/sys/class/net/");
-    if(!dir)
-    {
-        QMessageBox::warning(this, "Error", "Error getting the interfaces\n""Are you root?");
-        return;
-        this->close();
-    }
 
     // clear the table
     while(ui->gridLayout->count() > 0)
@@ -39,25 +37,25 @@ void DeviceChoose::refreshDevices()
         delete widget;
     }
 
-    struct dirent *ent;
-    char MAC[32];
-    char path[64];
-    FILE* file;
-    int row = 0;
-    while ((ent = readdir (dir)))
+    QDir dir("/sys/class/net/");
+    QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
+    QListIterator<QString> iter(allFiles);
+    for(int row = 0; iter.hasNext(); ++row)
     {
-        std::sprintf(path, "/sys/class/net/%s/address", ent->d_name);
-        if((file = std::fopen(path, "r")))
+        QString name = iter.next();
+        QFile file(QString("/sys/class/net/%1/address").arg(name));
+        if(!file.open(QIODevice::ReadOnly))
         {
-            MAC[std::fread(MAC, 1, 32, file)] = '\0';
-            ui->gridLayout->addWidget(new QCheckBox(this), row, 0);
-            ui->gridLayout->addWidget(new QLabel(QString(ent->d_name), this), row, 1);
-            ui->gridLayout->addWidget(new QLabel(QString(MAC), this), row, 2);
-            std::fclose(file);
-            ++row;
+            QMessageBox::warning(this, "Error", "Error getting the interfaces\n""Are you root?");
+            this->close();
+            return;
         }
+
+        ui->gridLayout->addWidget(new QCheckBox(this), row, 0);
+        ui->gridLayout->addWidget(new QLabel(name, this), row, 1);
+        ui->gridLayout->addWidget(new QLabel(QString(file.readAll()), this), row, 2);
+        file.close();
     }
-    closedir(dir);
 }
 
 DeviceChoose::~DeviceChoose()
@@ -65,31 +63,23 @@ DeviceChoose::~DeviceChoose()
     delete ui;
 }
 
-void DeviceChoose::on_buttonBox_clicked(QAbstractButton *button)
+void DeviceChoose::on_buttonBox_accepted()
 {
-    QPushButton& bt = *((QPushButton*)button);
-    QString st = bt.text();
-    if(st == "&Refresh")
+    this->results.clear();
+    for(int row = 0; row < ui->gridLayout->rowCount(); ++row)
     {
-        this->refreshDevices();
-    }
-    else if(st == "&OK")
-    {
-        this->results.clear();
-        for(int row = 0; row < ui->gridLayout->rowCount(); ++row)
+        QCheckBox* cb = (QCheckBox*)ui->gridLayout->itemAtPosition(row, 0)->widget();
+        if(cb->isChecked())
         {
-            QCheckBox* cb = (QCheckBox*)ui->gridLayout->itemAtPosition(row, 0)->widget();
-            if(cb->isChecked())
-            {
-                QLabel* lb = (QLabel*)ui->gridLayout->itemAtPosition(row, 1)->widget();
-                this->results.push_back(lb->text().toStdString());
-                cb->setChecked(false);
-            }
+            QLabel* lb = (QLabel*)ui->gridLayout->itemAtPosition(row, 1)->widget();
+            this->results.append(lb->text());
+            cb->setChecked(false);
         }
-        this->close();
     }
-    else if(st == "&Cancel")
-    {
-        this->close();
-    }
+    this->close();
+}
+
+void DeviceChoose::on_buttonBox_rejected()
+{
+    this->close();
 }
