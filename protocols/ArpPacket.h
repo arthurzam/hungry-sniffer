@@ -9,7 +9,7 @@ using namespace hungry_sniffer;
 
 class ArpPacket : public PacketStructed<struct arphdr> {
     public:
-        ArpPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev = nullptr)
+        ArpPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
             : PacketStructed(data, len, protocol, prev) {}
 
         virtual ~ArpPacket() {}

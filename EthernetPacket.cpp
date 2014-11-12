@@ -9,7 +9,7 @@ EthernetPacket::EthernetPacket(const void* data, size_t len,
         PacketStructed(data, len, protocol, prev)
 {
     this->setNext(ntohs(this->value.ether_type),
-            (const char*) data + sizeof(value), len - sizeof(value), this);
+            (const char*) data + sizeof(value), len - sizeof(value));
 }
 
 std::string EthernetPacket::source() const
@@ -31,7 +31,8 @@ bool EthernetPacket::filter_dstMac(const Packet* packet, const std::smatch& res)
 void EthernetPacket::getLocalHeaders(headers_t &headers) const
 {
     headers_category_t map;
-    map.push_back({"Source Mac:", ether_ntoa((struct ether_addr*) this->value.ether_shost)});
-    map.push_back({"Destination Mac:", ether_ntoa((struct ether_addr*) this->value.ether_dhost)});
-    headers.push_back({this->protocol->getName(), map});
+    map.push_back({"Source Mac", ether_ntoa((struct ether_addr*) this->value.ether_shost)});
+    map.push_back({"Destination Mac", ether_ntoa((struct ether_addr*) this->value.ether_dhost)});
+    map.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value.ether_type))});
+    headers.push_back({this->protocol->getName(), std::move(map)});
 }

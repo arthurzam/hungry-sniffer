@@ -11,7 +11,7 @@ class TCPPacket: public PacketStructed<struct tcphdr> {
         virtual std::string source() const;
         virtual std::string destination() const;
     public:
-        TCPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev = nullptr);
+        TCPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~TCPPacket() {}
         virtual void getLocalHeaders(headers_t& headers) const;};
 

@@ -1,6 +1,7 @@
 // http://gnodebian.blogspot.com.es/2013/07/a-thread-safe-asynchronous-queue-in-c11.html
 #ifndef _SafeQueue
 #define _SafeQueue
+
 #include <queue>
 #include <list>
 #include <mutex>
@@ -8,25 +9,22 @@
 #include <cstdint>
 #include <condition_variable>
 
-
-
 /** A thread-safe asynchronous queue */
 template <class T, class Container = std::list<T>>
 class SafeQueue
 {
-
     typedef typename Container::value_type value_type;
     typedef typename Container::size_type size_type;
     typedef Container container_type;
-
   public:
-
     /*! Create safe queue. */
     SafeQueue() = default;
+
     SafeQueue (SafeQueue&& sq)
     {
       m_queue = std::move (sq.m_queue);
     }
+
     SafeQueue (const SafeQueue& sq)
     {
       std::lock_guard<std::mutex> lock (sq.m_mutex);

@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <iostream>
 #include <cstring>
-#include <ctime>
 #include <functional>
 #include <exception>
 #include <regex>
@@ -47,7 +46,7 @@ namespace hungry_sniffer {
             std::string name; /*!<The name for the protocol*/
 
             bool isStats; /*!<is this Protocol part part of statistics calculations*/
-            mutable int countPackets; /*!<The amount of packets sniffed of this Protocol*/
+            mutable int countPackets = 0; /*!<The amount of packets sniffed of this Protocol*/
 
             bool isNameService;
             names_t names;
@@ -61,21 +60,19 @@ namespace hungry_sniffer {
              *
              */
             Protocol(initFunction function) :
-                    name("unknown"), names()
+                    name("unknown")
             {
                 this->function = function;
                 this->isStats = true;
-                this->countPackets = 0;
                 this->isNameService = false;
             }
 
             Protocol(initFunction function, bool isStats, const std::string& name,
                     bool isNameService) :
-                    name(name), names()
+                    name(name)
             {
                 this->function = function;
                 this->isStats = isStats;
-                this->countPackets = 0;
                 this->isNameService = isNameService;
             }
 
@@ -88,8 +85,8 @@ namespace hungry_sniffer {
                 this->isNameService = other.isNameService;
             }
 
-            Protocol(const Protocol&& other) :
-                    name(other.name), names(other.names)
+            Protocol(Protocol&& other) :
+                    name(std::move(other.name)), names(std::move(other.names))
             {
                 this->function = other.function;
                 this->isStats = other.isStats;
@@ -104,8 +101,7 @@ namespace hungry_sniffer {
             void addProtocol(int type, initFunction function, bool isStats = true,
                     const std::string& name = "unknown", bool isNameService = false)
             {
-                this->addProtocol(type,
-                        Protocol(function, isStats, name, isNameService));
+                this->subProtocols.insert({type, Protocol(function, isStats, name, isNameService)});
             }
 
             /**
@@ -114,9 +110,9 @@ namespace hungry_sniffer {
              * @param protocol Protocol object that will be added
              */
             // TODO: add return non-const reference to Protocol in map. Use return value of insert.
-            void addProtocol(int type, const Protocol& protocol)
+            void addProtocol(int type, Protocol& protocol)
             {
-                this->subProtocols.insert(protocols_t::value_type(type, protocol));
+                this->subProtocols.insert({type, std::move(protocol)});
             }
 
             /**
@@ -179,14 +175,6 @@ namespace hungry_sniffer {
             }
 
             /**
-             * @brief decrement count of packets
-             */
-            void decPacketCount() const
-            {
-                --this->countPackets;
-            }
-
-            /**
              * @brief get the count of packet within protocol
              *
              * @return the count of packets if count statistics is true, otherwise 0
@@ -219,7 +207,7 @@ namespace hungry_sniffer {
                 return this->name;
             }
 
-            typedef std::map<std::string, const int*> stats_table_t;
+            typedef std::list<std::pair<std::string, const int*>> stats_table_t;
             /**
              * @brief return statistics table
              *
@@ -231,7 +219,7 @@ namespace hungry_sniffer {
             void getStats(stats_table_t& stats) const
             {
                 if (this->isStats)
-                    stats.insert(stats_table_t::value_type(name, &countPackets));
+                    stats.push_back({name, &countPackets});
                 for (protocols_t::const_iterator i = subProtocols.cbegin();
                         i != subProtocols.cend(); ++i)
                 {
@@ -242,17 +230,12 @@ namespace hungry_sniffer {
 
             void addFilter(const std::string& filterRegex, filterFunction function)
             {
-                this->filters.insert(filterFunctions_t::value_type(filterRegex, function));
+                this->filters.insert({filterRegex, function});
             }
 
-            filterFunctions_t::const_iterator getFilterCbegin() const
+            const filterFunctions_t& getFilters() const
             {
-                return this->filters.cbegin();
-            }
-
-            filterFunctions_t::const_iterator getFilterCend() const
-            {
-                return this->filters.cend();
+                return this->filters;
             }
     };
 
@@ -267,7 +250,7 @@ namespace hungry_sniffer {
             typedef std::list<std::pair<std::string, headers_category_t> >  headers_t;
         protected:
             const Protocol* protocol; /*!<The protocol by which this Packet was created*/
-            Packet* next; /*!<The next packet*/
+            std::shared_ptr<Packet> next; /*!<The next packet*/
             const Packet* prev; /*!<The previous packet*/
 
             /**
@@ -278,11 +261,11 @@ namespace hungry_sniffer {
              * @param data pointer to the start of the next part
              * @param len total len from the start of next packet until end
              */
-            bool setNext(int type, const void* data, size_t len, const Packet* prev)
+            bool setNext(int type, const void* data, size_t len)
             {
                 const Protocol* p = this->protocol->getProtocol(type);
                 if (p)
-                    this->next = p->getFunction()(data, len, p, prev);
+                    this->next = std::shared_ptr<Packet>((p->getFunction()(data, len, p, this)));
                 return (p != nullptr);
             }
 
@@ -298,8 +281,6 @@ namespace hungry_sniffer {
 
             virtual ~Packet()
             {
-                delete this->next;
-                this->next = nullptr;
                 //this->protocol->decPacketCount(); // TODO: think if we really need to decrement
             }
 
@@ -314,6 +295,11 @@ namespace hungry_sniffer {
                 return *next;
             }
 
+            void setPrev(const Packet* prev)
+            {
+                this->prev = prev;
+            }
+
             /**
              * @brief get last Packet
              *
@@ -321,7 +307,7 @@ namespace hungry_sniffer {
              */
             const Packet& getLast() const
             {
-                if (this->next)
+                if (this->next.get())
                     return this->next->getLast();
                 return *this;
             }
@@ -333,7 +319,7 @@ namespace hungry_sniffer {
              */
             const std::string& getName() const
             {
-                if (this->next)
+                if (this->next.get())
                     return this->next->getName();
                 else
                     return this->protocol->getName();
@@ -343,7 +329,7 @@ namespace hungry_sniffer {
             {
                 if(this->protocol == protocol)
                     return this;
-                if(this->next)
+                if(this->next.get())
                     return this->next->hasProtocol(protocol);
                 return nullptr;
             }
@@ -360,7 +346,7 @@ namespace hungry_sniffer {
 
             std::string getSource() const
             {
-                if (this->next)
+                if (this->next.get())
                 {
                     std::string nextStr = this->next->getSource();
                     if (nextStr.length() != 0)
@@ -371,7 +357,7 @@ namespace hungry_sniffer {
 
             std::string getDestination() const
             {
-                if (this->next)
+                if (this->next.get())
                 {
                     std::string nextStr = this->next->getDestination();
                     if (nextStr.length() != 0)
@@ -383,7 +369,7 @@ namespace hungry_sniffer {
             void getHeaders(headers_t& headers) const
             {
                 this->getLocalHeaders(headers);
-                if(this->next)
+                if(this->next.get())
                     this->next->getHeaders(headers);
             }
     };

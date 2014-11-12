@@ -6,14 +6,11 @@
 #include "ThreadQueue.h"
 #include <thread>
 #include <QTableWidgetItem>
+#include <ctime>
+#include "EthernetPacket.h"
 
 namespace Ui {
 class SniffWindow;
-}
-
-namespace hungry_sniffer {
-class Protocol;
-class Packet;
 }
 
 class SniffWindow : public QMainWindow
@@ -41,16 +38,27 @@ private slots:
 
     void on_actionSniff_triggered();
 
+    void on_actionTable_triggered();
+
 private:
     Ui::SniffWindow *ui;
 
+private:
+    struct localPacket {
+        pcappp::Packet rawPacket;
+        std::shared_ptr<EthernetPacket> decodedPacket;
+        time_t _time;
+    };
+
     ThreadSafeQueue<pcappp::Packet> toAdd;
-    QList<pcappp::Packet> local;
+    QList<struct localPacket> local;
+
     QList<std::thread*> threads;
+    std::thread manageThread;
     bool toNotStop;
 
 public:
-    void addPacket(const pcappp::Packet& packet);
+    void addPacket(const struct localPacket& packet);
 
     void runLivePcap(const std::string& name);
     void runOfflinePcap(const std::string& filename);
@@ -62,7 +70,7 @@ private:
     void runOfflinePcap_p(const std::string& filename);
 
 private:
-    void setCurrentPacket(const pcappp::Packet& packet);
+    void setCurrentPacket(const struct localPacket& pack);
     void addPacketTable(const hungry_sniffer::Packet& packet);
 };
 

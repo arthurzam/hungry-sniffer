@@ -12,18 +12,21 @@ TEMPLATE = app
 SOURCES += main.cpp\
     devicechoose.cpp \
     sniff_window.cpp \
-    EthernetPacket.cpp
+    EthernetPacket.cpp \
+    packetstats.cpp
 
 HEADERS  += \
     devicechoose.h \
     sniff_window.h \
     ThreadQueue.h \
     Protocol.h \
-    EthernetPacket.h
+    EthernetPacket.h \
+    packetstats.h
 
 FORMS    += \
     devicechoose.ui \
-    sniff_window.ui
+    sniff_window.ui \
+    packetstats.ui
 
 RESOURCES += \
     icons.qrc

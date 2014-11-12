@@ -1,18 +1,18 @@
 #include "sniff_window.h"
-#include "devicechoose.h"
 
 #include <QApplication>
-#include <thread>
-
-#include <pcap++.h>
 #include <QLibrary>
 #include <QDir>
+
+#ifndef PLUGINS_DIRECTORY
+#define PLUGINS_DIRECTORY "/home/arthur/QT/build-hungry-sniffer-Desktop-Debug/plugins/"
+#endif
 
 void loadLibs()
 {
     typedef void (*function_t)(hungry_sniffer::Protocol&);
 
-    QDir dir("/home/arthur/QT/build-hungry-sniffer-Desktop-Debug/plugins/");
+    QDir dir(PLUGINS_DIRECTORY);
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
     QListIterator<QString> iter(allFiles);
     while(iter.hasNext())
@@ -31,19 +31,12 @@ void loadLibs()
 hungry_sniffer::Protocol* SniffWindow::baseProtocol = nullptr;
 #include "EthernetPacket.h"
 
-#include <unistd.h>
-#include <QMessageBox>
-
 int main(int argc, char *argv[])
 {
-
     SniffWindow::baseProtocol = new hungry_sniffer::Protocol(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true);
     loadLibs();
 
     QApplication a(argc, argv);
-
-
-
     SniffWindow w;
     w.show();
 

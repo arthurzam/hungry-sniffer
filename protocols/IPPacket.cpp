@@ -12,7 +12,7 @@ using namespace std;
 
 IPPacket::IPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev) : PacketStructed(data, len, protocol, prev)
 {
-    this->setNext(this->value.ip_p, (const char*)data + sizeof(value), len - sizeof(value), this);
+    this->setNext(this->value.ip_p, (const char*)data + sizeof(value), len - sizeof(value));
 }
 
 std::string IPPacket::source() const

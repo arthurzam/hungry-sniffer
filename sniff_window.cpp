@@ -3,37 +3,20 @@
 
 #include <QMessageBox>
 #include <QThread>
-#include "EthernetPacket.h"
 #include "devicechoose.h"
 #include <unistd.h>
+#include "packetstats.h"
 
 SniffWindow::SniffWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::SniffWindow)
+    ui(new Ui::SniffWindow),
+    manageThread(&SniffWindow::managePacketsList, this)
 {
     ui->setupUi(this);
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
-    ui->table_packets->setColumnCount(4);
-    ui->tree_packet->setColumnCount(2);
-
-    /*QString line = "hello";
-    for(int i=0; i<ui->table_packets->rowCount(); i++)
     {
-        for(int j=0; j<ui->table_packets->columnCount(); j++)
-        {
-            QTableWidgetItem *pCell = ui->table_packets->item(i, j);
-            if(!pCell)
-            {
-                pCell = new QTableWidgetItem;
-                ui->table_packets->setItem(i, j, pCell);
-            }
-            pCell->setText(line);
-        }
-        QTableWidgetItem* rowHeader = new QTableWidgetItem(QString::number(i + 1));
-        ui->table_packets->setVerticalHeaderItem(i, rowHeader);
-    }*/
-    {
+        ui->table_packets->setColumnCount(4);
         QStringList l;
         l << "No." << "Protocol" << "Source" << "Destination";
         ui->table_packets->setHorizontalHeaderLabels(l);
@@ -45,12 +28,14 @@ SniffWindow::SniffWindow(QWidget *parent) :
         QStringList l;
         l << "Key" << "Value";
         ui->tree_packet->setHeaderLabels(l);
+        ui->tree_packet->setColumnCount(2);
     }
 }
 
 SniffWindow::~SniffWindow()
 {
     this->on_actionStop_triggered();
+    this->manageThread.join();
     delete ui;
 }
 
@@ -79,14 +64,9 @@ void SniffWindow::on_bt_filter_clear_clicked()
     ui->bt_filter_apply->setEnabled(false);
 }
 
-void SniffWindow::addPacket(const pcappp::Packet &packet)
+void SniffWindow::addPacket(const struct localPacket& packet)
 {
-    // compute packet
-    EthernetPacket eth(packet.get_data(), packet.get_length(), SniffWindow::baseProtocol);
-    this->addPacketTable(eth);
-    //ui->table_packets->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(eth.getName())));
-
-    //this->toAdd.push(packet);
+    this->addPacketTable(*packet.decodedPacket);
 }
 
 void SniffWindow::runLivePcap(const std::string &name)
@@ -104,15 +84,14 @@ void SniffWindow::managePacketsList()
     pcappp::Packet packet;
     while(this->toNotStop)
     {
-        if(!this->toAdd.empty())
+        if(this->toAdd.try_pop(packet))
         {
-            this->toAdd.pop(packet);
-            this->addPacket(packet);
-            this->local.append(packet);
+            this->local.append({packet, std::shared_ptr<EthernetPacket>(new EthernetPacket(packet.get_data(), packet.get_length(), SniffWindow::baseProtocol)), std::time(NULL)});
+            this->addPacket(this->local.last());
         }
-        else if(this->threads.size() == 0 && this->toNotStop)
+        else if(this->threads.empty() && this->toNotStop)
         {
-            QThread::sleep(1);
+            QThread::msleep(500);
         }
     }
 }
@@ -124,11 +103,7 @@ void SniffWindow::runLivePcap_p(const std::string &name)
     while(this->toNotStop && live.next(p))
     {
         p.manage();
-
-        this->addPacket(p);
-        this->local.append(p);
-
-        //this->toAdd.push(p);
+        this->toAdd.push(p);
     }
 }
 
@@ -139,18 +114,14 @@ void SniffWindow::runOfflinePcap_p(const std::string &filename)
     while(this->toNotStop && off.next(p))
     {
         p.manage();
-
-        this->addPacket(p);
-        this->local.append(p);
-
-        //this->toAdd.push(p);
+        this->toAdd.push(p);
     }
 }
 
-void SniffWindow::setCurrentPacket(const pcappp::Packet& packet)
+void SniffWindow::setCurrentPacket(const struct localPacket& pack)
 {
     hungry_sniffer::Packet::headers_t headers;
-    EthernetPacket eth(packet.get_data(), packet.get_length(), SniffWindow::baseProtocol);
+    const EthernetPacket& eth = *pack.decodedPacket;
     eth.getHeaders(headers);
 
     ui->tree_packet->clear();
@@ -168,7 +139,7 @@ void SniffWindow::setCurrentPacket(const pcappp::Packet& packet)
         ui->tree_packet->addTopLevelItem(head);
     }
 
-    ui->hexEdit->setData(QByteArray((char*)packet.get_data(), (int)packet.get_length()));
+    ui->hexEdit->setData(QByteArray((char*)pack.rawPacket.get_data(), (int)pack.rawPacket.get_length()));
 }
 
 void SniffWindow::addPacketTable(const hungry_sniffer::Packet &packet)
@@ -189,8 +160,7 @@ void SniffWindow::addPacketTable(const hungry_sniffer::Packet &packet)
 
 void SniffWindow::on_table_packets_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem*)
 {
-    const pcappp::Packet& packet = this->local.at(ui->table_packets->item(current->row(), 0)->text().toInt() - 1);
-    this->setCurrentPacket(packet);
+    this->setCurrentPacket(this->local.at(ui->table_packets->item(current->row(), 0)->text().toInt() - 1));
 }
 
 void SniffWindow::on_actionSave_triggered()
@@ -231,4 +201,10 @@ void SniffWindow::on_actionSniff_triggered()
     {
         this->runLivePcap(i->toStdString());
     }
+}
+
+void SniffWindow::on_actionTable_triggered()
+{
+    PacketStats w;
+    w.exec();
 }

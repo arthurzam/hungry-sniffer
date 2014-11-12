@@ -13,8 +13,8 @@ using namespace std;
 TCPPacket::TCPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
     : PacketStructed(data, len, protocol, prev)
 {
-    if(!Packet::setNext(this->value.th_sport, (const char*)data + sizeof(value), len - sizeof(value), this))
-        Packet::setNext(this->value.th_dport, (const char*)data + sizeof(value), len - sizeof(value), this);
+    if(!Packet::setNext(ntohs(this->value.th_sport), (const char*)data + sizeof(value), len - sizeof(value)))
+        Packet::setNext(ntohs(this->value.th_dport), (const char*)data + sizeof(value), len - sizeof(value));
 }
 
 std::string TCPPacket::source() const
@@ -23,7 +23,7 @@ std::string TCPPacket::source() const
         return "";
     std::string r = this->prev->source();
     r.append(":");
-    r.append(std::to_string(this->value.th_sport));
+    r.append(std::to_string(ntohs(this->value.th_sport)));
     return r;
 }
 
@@ -33,7 +33,7 @@ std::string TCPPacket::destination() const
         return "";
     std::string r = this->prev->destination();
     r.append(":");
-    r.append(std::to_string(this->value.th_dport));
+    r.append(std::to_string(ntohs(this->value.th_dport)));
     return r;
 }
 

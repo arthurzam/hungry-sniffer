@@ -18,7 +18,7 @@ class IPPacket : public PacketStructed<struct ip> {
         virtual std::string source() const;
         virtual std::string destination() const;
     public:
-        IPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev = nullptr);
+        IPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual void getLocalHeaders(headers_t& headers) const;
         virtual ~IPPacket() {}
 };

@@ -69,6 +69,9 @@
          <property name="sortingEnabled">
           <bool>true</bool>
          </property>
+         <property name="wordWrap">
+          <bool>false</bool>
+         </property>
          <attribute name="verticalHeaderVisible">
           <bool>false</bool>
          </attribute>
@@ -135,9 +138,16 @@
     <addaction name="actionStop"/>
     <addaction name="actionSniff"/>
    </widget>
+   <widget class="QMenu" name="menuStats">
+    <property name="title">
+     <string>S&amp;tats</string>
+    </property>
+    <addaction name="actionTable"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Sniff"/>
    <addaction name="menuAbout"/>
+   <addaction name="menuStats"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -152,8 +162,10 @@
    <addaction name="actionSave_As"/>
    <addaction name="actionSave"/>
    <addaction name="actionOpen"/>
-   <addaction name="actionStop"/>
    <addaction name="actionQuit"/>
+   <addaction name="separator"/>
+   <addaction name="actionSniff"/>
+   <addaction name="actionStop"/>
   </widget>
   <action name="actionOpen">
    <property name="icon">
@@ -207,13 +219,26 @@
    </property>
   </action>
   <action name="actionStop">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/capture_stop.png</normaloff>:/icons/capture_stop.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Stop</string>
    </property>
   </action>
   <action name="actionSniff">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icons/capture_start.png</normaloff>:/icons/capture_start.png</iconset>
+   </property>
    <property name="text">
     <string>Sni&amp;ff</string>
+   </property>
+  </action>
+  <action name="actionTable">
+   <property name="text">
+    <string>Table</string>
    </property>
   </action>
  </widget>

@@ -12,6 +12,7 @@ class EthernetPacket : public PacketStructed<struct ether_header> {
         virtual std::string destination() const;
     public:
         EthernetPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev = nullptr);
+
         virtual ~EthernetPacket() {}
 
         static bool filter_dstMac(const Packet* packet, const std::smatch&);

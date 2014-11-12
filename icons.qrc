@@ -5,5 +5,7 @@
         <file>icons/exit.png</file>
         <file>icons/save-as.png</file>
         <file>icons/about.png</file>
+        <file>icons/capture_stop.png</file>
+        <file>icons/capture_start.png</file>
     </qresource>
 </RCC>
