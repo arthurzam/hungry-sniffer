@@ -2,10 +2,14 @@
 #define PACKETSTATS_H
 
 #include <QDialog>
-#include "Protocol.h"
+#include <QTreeWidgetItem>
 
 namespace Ui {
 class PacketStats;
+}
+
+namespace hungry_sniffer {
+class Protocol;
 }
 
 class PacketStats : public QDialog
@@ -20,8 +24,10 @@ private slots:
     void setStats();
 
 private:
+    void setStatsPerProtocol(const hungry_sniffer::Protocol* protocol, QTreeWidgetItem* currentItem);
+
+private:
     Ui::PacketStats *ui;
-    hungry_sniffer::Protocol::stats_table_t table;
 };
 
 #endif // PACKETSTATS_H

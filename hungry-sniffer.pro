@@ -29,9 +29,6 @@ FORMS    += \
     packetstats.ui
 
 RESOURCES += \
-    icons.qrc
-
-TRANSLATIONS = languages/hungry-sniffer_en.ts \
-               languages/hungry-sniffer_he.ts
+    icons/icons.qrc
 
 OTHER_FILES +=

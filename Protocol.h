@@ -40,7 +40,7 @@ namespace hungry_sniffer {
             typedef std::map<std::string, std::string> names_t;
             typedef std::map<std::string, filterFunction> filterFunctions_t;
 
-            protocols_t subProtocols;
+            std::shared_ptr<protocols_t> subProtocols;
             initFunction function;
 
             std::string name; /*!<The name for the protocol*/
@@ -60,6 +60,7 @@ namespace hungry_sniffer {
              *
              */
             Protocol(initFunction function) :
+                    subProtocols(std::make_shared<protocols_t>()),
                     name("unknown")
             {
                 this->function = function;
@@ -69,6 +70,7 @@ namespace hungry_sniffer {
 
             Protocol(initFunction function, bool isStats, const std::string& name,
                     bool isNameService) :
+                    subProtocols(std::make_shared<protocols_t>()),
                     name(name)
             {
                 this->function = function;
@@ -77,6 +79,7 @@ namespace hungry_sniffer {
             }
 
             Protocol(const Protocol& other) :
+                    subProtocols(other.subProtocols),
                     name(other.name), names(other.names)
             {
                 this->function = other.function;
@@ -85,7 +88,18 @@ namespace hungry_sniffer {
                 this->isNameService = other.isNameService;
             }
 
+            Protocol(const Protocol& other, initFunction function, const std::string& name) :
+                    subProtocols(other.subProtocols),
+                    name(name), names(other.names)
+            {
+                this->function = function;
+                this->isStats = other.isStats;
+                this->countPackets = other.countPackets;
+                this->isNameService = other.isNameService;
+            }
+
             Protocol(Protocol&& other) :
+                    subProtocols(other.subProtocols),
                     name(std::move(other.name)), names(std::move(other.names))
             {
                 this->function = other.function;
@@ -101,7 +115,7 @@ namespace hungry_sniffer {
             void addProtocol(int type, initFunction function, bool isStats = true,
                     const std::string& name = "unknown", bool isNameService = false)
             {
-                this->subProtocols.insert({type, Protocol(function, isStats, name, isNameService)});
+                this->subProtocols->insert({type, Protocol(function, isStats, name, isNameService)});
             }
 
             /**
@@ -110,9 +124,14 @@ namespace hungry_sniffer {
              * @param protocol Protocol object that will be added
              */
             // TODO: add return non-const reference to Protocol in map. Use return value of insert.
-            void addProtocol(int type, Protocol& protocol)
+            void addProtocol(int type, Protocol&& protocol)
             {
-                this->subProtocols.insert({type, std::move(protocol)});
+                this->subProtocols->insert({type, Protocol(std::move(protocol))});
+            }
+
+            void addProtocol(int type, const Protocol& protocol, initFunction function, const std::string& name)
+            {
+                this->subProtocols->insert({type, Protocol(protocol, function, name)});
             }
 
             /**
@@ -124,8 +143,8 @@ namespace hungry_sniffer {
              */
             const Protocol* getProtocol(int type) const
             {
-                protocols_t::const_iterator res = subProtocols.find(type);
-                if (res != subProtocols.end())
+                protocols_t::const_iterator res = subProtocols->find(type);
+                if (res != subProtocols->end())
                     return &res->second;
                 return nullptr;
             }
@@ -140,7 +159,7 @@ namespace hungry_sniffer {
              */
             Protocol& operator[](int type)
             {
-                return subProtocols.at(type);
+                return subProtocols->at(type);
             }
 
             /**
@@ -153,7 +172,12 @@ namespace hungry_sniffer {
              */
             const Protocol& operator[](int type) const
             {
-                return subProtocols.at(type);
+                return subProtocols->at(type);
+            }
+
+            const protocols_t& getProtocolsDB() const
+            {
+                return *this->subProtocols.get();
             }
 
             /**
@@ -191,8 +215,8 @@ namespace hungry_sniffer {
             int getRawPacketsCount() const
             {
                 int count = this->countPackets;
-                for (protocols_t::const_iterator i = subProtocols.cbegin();
-                        i != subProtocols.cend(); ++i)
+                for (protocols_t::const_iterator i = subProtocols->cbegin();
+                        i != subProtocols->cend(); ++i)
                 {
                     count -= i->second.getPacketsCount();
                 }
@@ -220,8 +244,8 @@ namespace hungry_sniffer {
             {
                 if (this->isStats)
                     stats.push_back({name, &countPackets});
-                for (protocols_t::const_iterator i = subProtocols.cbegin();
-                        i != subProtocols.cend(); ++i)
+                for (protocols_t::const_iterator i = subProtocols->cbegin();
+                        i != subProtocols->cend(); ++i)
                 {
                     i->second.getStats(stats);
                 }

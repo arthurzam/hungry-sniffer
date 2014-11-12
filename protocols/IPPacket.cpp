@@ -30,5 +30,6 @@ void IPPacket::getLocalHeaders(headers_t& headers) const
     headers_category_t map;
     map.push_back({"Source IP", inet_ntoa(this->value.ip_src)});
     map.push_back({"Destination IP", inet_ntoa(this->value.ip_dst)});
+    map.push_back({"TTL", std::to_string(this->value.ip_ttl)});
     headers.push_back({"IP", map});
 }

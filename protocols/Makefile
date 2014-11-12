@@ -3,7 +3,8 @@ CXXFLAGS+=-std=c++0x -c -Wall -Wextra -fPIC -O2
 LDFLAGS+=-shared
 
 SOURCES=ArpPacket.cpp call.cpp ICMPPacket.cpp \
-        IPPacket.cpp TCPPacket.cpp UDPPacket.cpp
+        IPPacket.cpp TCPPacket.cpp UDPPacket.cpp \
+        DNSPacket.cpp IPv6Packet.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=libprotocols.so
