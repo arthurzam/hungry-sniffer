@@ -2,10 +2,7 @@
 #define PROTOCOL_H_
 
 #include <map>
-#include <cstddef>
-#include <iostream>
 #include <cstring>
-#include <functional>
 #include <exception>
 #include <regex>
 #include <list>
@@ -270,8 +267,8 @@ namespace hungry_sniffer {
      */
     class Packet {
         public:
-            typedef std::list<std::pair<std::string, std::string> > headers_category_t;
-            typedef std::list<std::pair<std::string, headers_category_t> >  headers_t;
+            typedef std::list<std::pair<std::string, std::string>> headers_category_t;
+            typedef std::list<std::pair<std::string, headers_category_t>>  headers_t;
         protected:
             const Protocol* protocol; /*!<The protocol by which this Packet was created*/
             std::shared_ptr<Packet> next; /*!<The next packet*/
@@ -471,11 +468,6 @@ namespace hungry_sniffer {
     Packet* init(const void* data, size_t len, const Protocol* protocol, const Packet* prev = nullptr)
     {
         return new T(data, len, protocol, prev);
-    }
-
-    inline size_t hash_combine(size_t seed, size_t part)
-    {
-        return ((seed ^ part) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
     }
 }
 #endif /* PROTOCOL_H_ */

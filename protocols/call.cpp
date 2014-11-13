@@ -11,7 +11,6 @@
 extern "C" void add(Protocol& base)
 {
     base.addProtocol(ETHERTYPE_IP, init<IPPacket>, true, "IP", true);
-    //base.addProtocol(ETHERTYPE_IPV6, init<IPv6Packet>, true, "IPv6", false);
     base.addProtocol(ETHERTYPE_IPV6, base[ETHERTYPE_IP], init<IPv6Packet>, "IPv6");
     base.addProtocol(ETHERTYPE_ARP, init<ArpPacket>, true, "ARP", false);
 
@@ -24,6 +23,7 @@ extern "C" void add(Protocol& base)
     tcp.addProtocol(80, init<PacketEmpty>, true, "HTTP", false);
     tcp.addProtocol(443, init<PacketEmpty>, true, "HTTPS", false);
     tcp.addProtocol(25, init<PacketEmpty>, true, "SMTP", false);
+    tcp.addProtocol(587, init<PacketEmpty>, true, "SMTP", false);
 
     Protocol& udp = ip[17];
     udp.addProtocol(53, init<DNSPacket>, true, "DNS", false);

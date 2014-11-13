@@ -10,6 +10,8 @@
 SniffWindow::SniffWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::SniffWindow),
+    toNotStop(true),
+    isNotExiting(true),
     manageThread(&SniffWindow::managePacketsList, this)
 {
     ui->setupUi(this);
@@ -35,6 +37,7 @@ SniffWindow::SniffWindow(QWidget *parent) :
 SniffWindow::~SniffWindow()
 {
     this->on_actionStop_triggered();
+    this->isNotExiting = false;
     this->manageThread.join();
     delete ui;
 }
@@ -71,18 +74,20 @@ void SniffWindow::addPacket(const struct localPacket& packet)
 
 void SniffWindow::runLivePcap(const std::string &name)
 {
+    this->toNotStop = true;
     this->threads.append(new std::thread(&SniffWindow::runLivePcap_p, this, name));
 }
 
 void SniffWindow::runOfflinePcap(const std::string &filename)
 {
+    this->toNotStop = true;
     this->threads.append(new std::thread(&SniffWindow::runOfflinePcap_p, this, filename));
 }
 
 void SniffWindow::managePacketsList()
 {
     pcappp::Packet packet;
-    while(this->toNotStop)
+    while(this->isNotExiting)
     {
         if(this->toAdd.try_pop(packet))
         {
@@ -177,14 +182,12 @@ void SniffWindow::on_actionSave_triggered()
 void SniffWindow::on_actionStop_triggered()
 {
     this->toNotStop = false;
-    QListIterator<std::thread*> iter(this->threads);
-    while(iter.hasNext())
+
+    for(auto iter = this->threads.begin(); iter != this->threads.end(); iter = this->threads.erase(iter))
     {
-        std::thread* t = iter.next();
-        t->join();
-        delete t;
+        (*iter)->join();
+        delete (*iter);
     }
-    this->threads.clear();
 }
 
 void SniffWindow::on_actionSniff_triggered()

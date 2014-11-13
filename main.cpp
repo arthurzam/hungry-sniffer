@@ -29,7 +29,6 @@ void loadLibs()
 }
 
 hungry_sniffer::Protocol* SniffWindow::baseProtocol = nullptr;
-#include "EthernetPacket.h"
 
 int main(int argc, char *argv[])
 {

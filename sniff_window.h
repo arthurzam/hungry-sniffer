@@ -54,8 +54,9 @@ private:
     QList<struct localPacket> local;
 
     QList<std::thread*> threads;
-    std::thread manageThread;
     bool toNotStop;
+    bool isNotExiting;
+    std::thread manageThread;
 
 public:
     void addPacket(const struct localPacket& packet);
