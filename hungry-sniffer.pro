@@ -13,7 +13,9 @@ SOURCES += main.cpp\
     devicechoose.cpp \
     sniff_window.cpp \
     EthernetPacket.cpp \
-    packetstats.cpp
+    packetstats.cpp \
+    filter_tree.cpp \
+    filter_tree_parse.cpp
 
 HEADERS  += \
     devicechoose.h \
@@ -21,7 +23,8 @@ HEADERS  += \
     ThreadQueue.h \
     Protocol.h \
     EthernetPacket.h \
-    packetstats.h
+    packetstats.h \
+    filter_tree.h
 
 FORMS    += \
     devicechoose.ui \
