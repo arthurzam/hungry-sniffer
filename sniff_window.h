@@ -40,6 +40,8 @@ private slots:
 
     void on_actionTable_triggered();
 
+    void on_bt_filter_apply_clicked();
+
 private:
     Ui::SniffWindow *ui;
 
@@ -58,6 +60,7 @@ private:
     bool isNotExiting;
     std::thread manageThread;
 
+    hungry_sniffer::Protocol::filterFunction filterFunc;
 public:
     void addPacket(const struct localPacket& packet);
 

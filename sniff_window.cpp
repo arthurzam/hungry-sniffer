@@ -5,6 +5,7 @@
 #include <QThread>
 #include "devicechoose.h"
 #include <unistd.h>
+#include <regex>
 #include "packetstats.h"
 
 SniffWindow::SniffWindow(QWidget *parent) :
@@ -12,7 +13,8 @@ SniffWindow::SniffWindow(QWidget *parent) :
     ui(new Ui::SniffWindow),
     toNotStop(true),
     isNotExiting(true),
-    manageThread(&SniffWindow::managePacketsList, this)
+    manageThread(&SniffWindow::managePacketsList, this),
+    filterFunc(nullptr)
 {
     ui->setupUi(this);
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
@@ -103,12 +105,18 @@ void SniffWindow::managePacketsList()
 
 void SniffWindow::runLivePcap_p(const std::string &name)
 {
-    pcappp::PcapLive live(name);
-    pcappp::Packet p;
-    while(this->toNotStop && live.next(p))
+    try {
+        pcappp::PcapLive live(name);
+        pcappp::Packet p;
+        while(this->toNotStop && live.next(p))
+        {
+            p.manage();
+            this->toAdd.push(p);
+        }
+    }
+    catch(const pcappp::PcapError& e)
     {
-        p.manage();
-        this->toAdd.push(p);
+        QMessageBox::warning(this, "Error", QString::fromLatin1(e.what()));
     }
 }
 
@@ -210,4 +218,35 @@ void SniffWindow::on_actionTable_triggered()
 {
     PacketStats w;
     w.exec();
+}
+
+void SniffWindow::on_bt_filter_apply_clicked()
+{
+    int dotPlace = ui->tb_filter->text().indexOf('.');
+    QString name = ui->tb_filter->text().mid(0, dotPlace);
+    std::string parts = ui->tb_filter->text().mid(dotPlace + 1).toStdString();
+
+    const hungry_sniffer::Protocol* protocol = this->baseProtocol->findProtocol(name.toStdString());
+    if(!protocol)
+    {
+        QMessageBox::warning(this, "No Protcol", "No protocol");
+        return;
+    }
+
+    hungry_sniffer::Protocol::filterFunction resFunc = nullptr;
+    std::smatch smatch;
+    for(auto i = protocol->getFilters().cbegin(); i != protocol->getFilters().cend(); ++i)
+    {
+        if(std::regex_search(parts, smatch, i->first))
+        {
+            resFunc = i->second;
+            break;
+        }
+    }
+    if(!resFunc)
+    {
+        QMessageBox::warning(this, "No filter", "No filter found to this one");
+        return;
+    }
+
 }

@@ -14,6 +14,7 @@ void loadLibs()
 
     QDir dir(PLUGINS_DIRECTORY);
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
+    allFiles.sort(Qt::CaseSensitive);
     QListIterator<QString> iter(allFiles);
     while(iter.hasNext())
     {
@@ -30,9 +31,15 @@ void loadLibs()
 
 hungry_sniffer::Protocol* SniffWindow::baseProtocol = nullptr;
 
+#include "filter_tree.h"
+
 int main(int argc, char *argv[])
 {
+//    FilterTree(std::string("(ip.dst == 6&(tcp|udp))&ip"));
+//    return 0;
+
     SniffWindow::baseProtocol = new hungry_sniffer::Protocol(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true);
+    SniffWindow::baseProtocol->addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     loadLibs();
 
     QApplication a(argc, argv);

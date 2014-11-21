@@ -3,23 +3,11 @@
 
 #include <map>
 #include <cstring>
-#include <exception>
 #include <regex>
 #include <list>
 #include <utility>
 
 namespace hungry_sniffer {
-
-    /**
-     * @brief Exception for Truncated Packet
-     */
-    class TruncatedPacketException : public std::exception {
-            virtual const char* what() const throw ()
-            {
-                return "Packet was Truncated";
-            }
-    };
-
     class Packet;
 
     /**
@@ -28,15 +16,15 @@ namespace hungry_sniffer {
      * This class holds the initialize function to create Packet object and also associated data
      */
     class Protocol {
-        private:
+        public:
             typedef Packet* (*initFunction)(const void* data, size_t len,
                     const Protocol* protocol, const Packet* prev);
             typedef bool (*filterFunction)(const Packet*, const std::smatch&);
 
             typedef std::map<int, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;
-            typedef std::map<std::string, filterFunction> filterFunctions_t;
-
+            typedef std::list<std::pair<std::regex, filterFunction>> filterFunctions_t;
+        private:
             std::shared_ptr<protocols_t> subProtocols;
             initFunction function;
 
@@ -58,7 +46,8 @@ namespace hungry_sniffer {
              */
             Protocol(initFunction function) :
                     subProtocols(std::make_shared<protocols_t>()),
-                    name("unknown")
+                    name("unknown"),
+                    filters()
             {
                 this->function = function;
                 this->isStats = true;
@@ -68,7 +57,8 @@ namespace hungry_sniffer {
             Protocol(initFunction function, bool isStats, const std::string& name,
                     bool isNameService) :
                     subProtocols(std::make_shared<protocols_t>()),
-                    name(name)
+                    name(name),
+                    filters()
             {
                 this->function = function;
                 this->isStats = isStats;
@@ -77,7 +67,8 @@ namespace hungry_sniffer {
 
             Protocol(const Protocol& other) :
                     subProtocols(other.subProtocols),
-                    name(other.name), names(other.names)
+                    name(other.name), names(other.names),
+                    filters(other.filters)
             {
                 this->function = other.function;
                 this->isStats = other.isStats;
@@ -87,7 +78,8 @@ namespace hungry_sniffer {
 
             Protocol(const Protocol& other, initFunction function, const std::string& name) :
                     subProtocols(other.subProtocols),
-                    name(name), names(other.names)
+                    name(name), names(other.names),
+                    filters(other.filters)
             {
                 this->function = function;
                 this->isStats = other.isStats;
@@ -97,7 +89,8 @@ namespace hungry_sniffer {
 
             Protocol(Protocol&& other) :
                     subProtocols(other.subProtocols),
-                    name(std::move(other.name)), names(std::move(other.names))
+                    name(std::move(other.name)), names(std::move(other.names)),
+                    filters(std::move(other.filters))
             {
                 this->function = other.function;
                 this->isStats = other.isStats;
@@ -251,12 +244,25 @@ namespace hungry_sniffer {
 
             void addFilter(const std::string& filterRegex, filterFunction function)
             {
-                this->filters.insert({filterRegex, function});
+                this->filters.push_back({std::regex(filterRegex, std::regex_constants::icase), function});
             }
 
             const filterFunctions_t& getFilters() const
             {
                 return this->filters;
+            }
+
+            const Protocol* findProtocol(const std::string& name) const
+            {
+                if(this->name == name)
+                    return this;
+                const Protocol* res;
+                for(auto& i : *subProtocols)
+                {
+                    if((res = i.second.findProtocol(name)))
+                        return res;
+                }
+                return nullptr;
             }
     };
 
@@ -273,6 +279,7 @@ namespace hungry_sniffer {
             const Protocol* protocol; /*!<The protocol by which this Packet was created*/
             std::shared_ptr<Packet> next; /*!<The next packet*/
             const Packet* prev; /*!<The previous packet*/
+            bool isGood = true;
 
             /**
              * @brief set the next packet
@@ -393,6 +400,11 @@ namespace hungry_sniffer {
                 if(this->next.get())
                     this->next->getHeaders(headers);
             }
+
+            virtual std::string getInfo() const
+            {
+                return this->getName();
+            }
     };
 
     /**
@@ -409,7 +421,7 @@ namespace hungry_sniffer {
                     Packet(protocol, prev)
             {
                 if (len < sizeof(value))
-                    throw TruncatedPacketException();
+                    this->isGood = false;
                 memcpy(&value, data, sizeof(value));
             }
     };
@@ -417,23 +429,18 @@ namespace hungry_sniffer {
     class PacketText : public Packet {
         protected:
             std::string data;
+
+            PacketText(const Protocol* protocol, const Packet* prev) :
+                Packet(protocol, prev) {}
     };
 
     class PacketTextHeaders : public PacketText {
         protected:
-            typedef std::map<std::string, std::string> headers_t;
-            headers_t headers;
+            headers_category_t headers;
 
-            /**
-             *  @brief  Access to headers.
-             *  @param  header  Header name
-             *  @return  A reference to header data.
-             *  @throw  std::out_of_range  If no such header is present.
-             */
-            const std::string& operator[](const std::string& header) const
-            {
-                return this->headers.at(header);
-            }
+
+            PacketTextHeaders(const Protocol* protocol, const Packet* prev) :
+                PacketText(protocol, prev) {}
     };
 
     class PacketEmpty : public Packet {
