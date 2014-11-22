@@ -40,7 +40,6 @@ class FilterTree
         };
     private:
         Node* root;
-        Node* parse(std::string::const_iterator start, std::string::const_iterator end) const;
     public:
         FilterTree(const std::string& filterString);
         ~FilterTree();

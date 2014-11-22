@@ -1,18 +1,20 @@
 #include "filter_tree.h"
 #include "sniff_window.h"
 
-static std::string::const_iterator findMatchingBracket(std::string::const_iterator start, std::string::const_iterator end);
+using std::string;
+
+static string::const_iterator findMatchingBracket(string::const_iterator start, string::const_iterator end);
 
 /**
  * @brief Parse Expression that start with not ('~')
  *
- * @param start from where to search
+ * @param start from where to search, after the ~
  * @param end until where to search
  * @return Node in tree
  *
  * two cases are handled "~ip" or "~(...)"
  */
-static FilterTree::Node* parseNot(std::string::const_iterator start, std::string::const_iterator end);
+static FilterTree::Node* parseNot(string::const_iterator start, string::const_iterator end);
 
 /**
  * @brief Parse full Expression
@@ -21,11 +23,14 @@ static FilterTree::Node* parseNot(std::string::const_iterator start, std::string
  * @param end until where to search
  * @return Node in tree
  */
-static FilterTree::Node* parseExpr(std::string::const_iterator start, std::string::const_iterator end);
-static hungry_sniffer::Protocol::filterFunction extractRegex(const hungry_sniffer::Protocol* protocol, const std::string& regexParts, std::smatch& sm);
-static FilterTree::Node* parseEndExpr(std::string::const_iterator start, std::string::const_iterator end);
+static FilterTree::Node* parseExpr(string::const_iterator start, string::const_iterator end);
+static hungry_sniffer::Protocol::filterFunction extractRegex(const hungry_sniffer::Protocol* protocol, const string& regexParts, std::smatch& sm);
+static FilterTree::Node* parseEndExpr(string::const_iterator start, string::const_iterator end);
 
-static std::string::const_iterator findMatchingBracket(std::string::const_iterator start, std::string::const_iterator end)
+
+
+
+static string::const_iterator findMatchingBracket(string::const_iterator start, string::const_iterator end)
 {
     int num = 1;
     for(; start != end && num != 0; ++start)
@@ -39,33 +44,87 @@ static std::string::const_iterator findMatchingBracket(std::string::const_iterat
     return start;
 }
 
-static FilterTree::Node* parseNot(std::string::const_iterator start, std::string::const_iterator end)
+static void findMatchingExprEnd(string::const_iterator& start, string::const_iterator end)
 {
-    if(*start == '(') // is part of brackets
+    for(; start != end && *start != '&' && *start != '|'; ++start)
+        if(*start == '(')
+           start = findMatchingBracket(start, end) - 1;
+}
+
+static void stripSpaces(string::const_iterator& start, string::const_iterator& end)
+{
+    while(*start == ' ')
+        ++start;
+    while(*(end - 1) == ' ')
+        --end;
+}
+
+static FilterTree::Node* parseNot(string::const_iterator start, string::const_iterator end)
+{
+    stripSpaces(start, end);
+    switch(*start)
     {
-        return new FilterTree::Node(parseExpr(start + 1, end - 1), nullptr, FilterTree::Node::Not);
-    }
-    else
-    {
-        return new FilterTree::Node(parseEndExpr(start, end), nullptr, FilterTree::Node::Not);
+        case '(':
+            return new FilterTree::Node(parseExpr(start + 1, end - 1), nullptr, FilterTree::Node::Not);
+        case '~':
+            return parseExpr(start + 1, end - 1);
+        default:
+            return new FilterTree::Node(parseEndExpr(start, end), nullptr, FilterTree::Node::Not);
     }
 }
 
-static FilterTree::Node* parseExpr(std::string::const_iterator start, std::string::const_iterator end)
+static FilterTree::Node* parseExpr(string::const_iterator start, string::const_iterator end)
 {
-    FilterTree::Node* res = nullptr;
-    if(*start == '(') // is part of brackets
-    {
-        std::string::const_iterator temp = findMatchingBracket(start + 1, end);
-        //return new FilterTree::Node(parse(str, i2, i1 - 1), nullptr, FilterTree::Node::Not);
-    }
-    else
-    {
+    stripSpaces(start, end);
+    FilterTree::Node* temp = nullptr;
 
+    string::const_iterator i = start, exprStart;
+
+    while(i != end)
+    {
+        switch(*i)
+        {
+            case ' ':
+                ++i;
+                break;
+            case '(':
+                exprStart = ++i;
+                i = findMatchingBracket(i, end) - 1;
+                temp = parseExpr(exprStart, i);
+                if(i == end)
+                    return temp;
+                ++i;
+                break;
+            case '~':
+                exprStart = ++i;
+                findMatchingExprEnd(i, end);
+
+                temp = parseNot(exprStart, i);
+                if(i == end)
+                    return temp;
+                ++i;
+                break;
+            case '&':
+            case '|':
+                exprStart = ++i;
+                findMatchingExprEnd(i, end);
+
+                temp = new FilterTree::Node(temp, parseExpr(exprStart, i),
+                        (*(exprStart - 1) == '&' ? FilterTree::Node::Type::And : FilterTree::Node::Type::Or));
+                if(i == end)
+                    return temp;
+                ++i;
+                break;
+            default:
+                findMatchingExprEnd(i, end);
+                temp = parseEndExpr(start, i);
+                break;
+        }
     }
+    return temp;
 }
 
-static hungry_sniffer::Protocol::filterFunction extractRegex(const hungry_sniffer::Protocol* protocol, const std::string& regexParts, std::smatch& sm)
+static hungry_sniffer::Protocol::filterFunction extractRegex(const hungry_sniffer::Protocol* protocol, const string& regexParts, std::smatch& sm)
 {
     for(auto i = protocol->getFilters().cbegin(); i != protocol->getFilters().cend(); ++i)
     {
@@ -77,96 +136,31 @@ static hungry_sniffer::Protocol::filterFunction extractRegex(const hungry_sniffe
     return nullptr;
 }
 
-static FilterTree::Node* parseEndExpr(std::string::const_iterator start, std::string::const_iterator end)
+static FilterTree::Node* parseEndExpr(string::const_iterator start, string::const_iterator end)
 {
-    FilterTree::Node* res = nullptr;
-    if(*start == '(') // is part of brackets
-    {
-        std::string::const_iterator temp = findMatchingBracket(start + 1, end);
-        //return new FilterTree::Node(parse(str, i2, i1 - 1), nullptr, FilterTree::Node::Not);
-    }
-    else
-    {
+    stripSpaces(start, end);
+    string::const_iterator dot = std::find(start, end, '.');
+    string name(start, dot);
+    const hungry_sniffer::Protocol* protocol = SniffWindow::baseProtocol->findProtocol(name);
 
+    if(!protocol)
+    {
+        qDebug("protocol %s not found", name.c_str());
+        return nullptr;
+    }
+
+    if(end != dot)
+    {
+        std::smatch sm;
+        return new FilterTree::Node(protocol, extractRegex(protocol, string(dot + 1, end), sm), std::move(sm));
+    }
+    else // only name
+    {
+        return new FilterTree::Node(protocol);
     }
 }
 
-FilterTree::Node* FilterTree::parse(std::string::const_iterator start, std::string::const_iterator end) const
+FilterTree::FilterTree(const std::string &filterString)
 {
-    std::string::const_iterator i1 = start, i2 = start, dotPlace;
-    Node *node1 = nullptr, *node2 = nullptr;
-    int num;
-    for(; i1 != end; ++i1)
-    {
-        switch(*i1)
-        {
-            case '(':
-                i2 = ++i1;
-                num = 1;
-                for(; i1 != end && num != 0; ++i1)
-                {
-                    switch(*i1)
-                    {
-                        case ')': --num; break;
-                        case '(': ++num; break;
-                    }
-                }
-                node1 = parse(i2, i1 - 1);
-                if(i1 == end)
-                    return node1;
-                i2 = ++i1;
-                break;
-            case '|':
-            case '&':
-                i2 = ++i1;
-                dotPlace = i2 - 1;
-                for(; i1 != end && *i1 != '&' && *i1 != '|'; ++i1)
-                    if(*i1 == '.')
-                        dotPlace = i1;
-                if(dotPlace == i2 - 1)
-                    dotPlace = i1;
-            {
-                std::string name(i2, dotPlace);
-                const hungry_sniffer::Protocol* protocol = SniffWindow::baseProtocol->findProtocol(name);
-
-                if(i2 != dotPlace)
-                {
-                    std::smatch sm;
-                    node2 = new Node(protocol, extractRegex(protocol, std::string(dotPlace + 1, i1), sm), std::move(sm));
-                }
-                else // only name
-                {
-                    node2 = new Node(protocol);
-                }
-            }
-                break;
-            case '~':
-                i2 = ++i1;
-                dotPlace = i2 - 1;
-                for(; i1 != end && *i1 != '&' && *i1 != '|'; ++i1)
-                    if(*i1 == '.')
-                        dotPlace = i1;
-                if(dotPlace == i2 - 1)
-                    dotPlace = i1;
-            {
-                std::string name(i2, dotPlace);
-                const hungry_sniffer::Protocol* protocol = SniffWindow::baseProtocol->findProtocol(name);
-
-                if(i2 != dotPlace)
-                {
-                    std::smatch sm;
-                    node2 = new Node(protocol, extractRegex(protocol, std::string(dotPlace + 1, i1), sm), std::move(sm));
-                }
-                else // only name
-                {
-                    node2 = new Node(protocol);
-                }
-                node1 = new Node(node2, nullptr, Node::Type::Not);
-                node2 = nullptr;
-            }
-                break;
-        }
-    }
-    return node1;
+    this->root = parseExpr(filterString.cbegin(), filterString.cend());
 }
-

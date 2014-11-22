@@ -309,7 +309,6 @@ namespace hungry_sniffer {
 
             virtual ~Packet()
             {
-                //this->protocol->decPacketCount(); // TODO: think if we really need to decrement
             }
 
             /**

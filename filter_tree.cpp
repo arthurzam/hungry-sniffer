@@ -1,5 +1,4 @@
 #include "filter_tree.h"
-#include "sniff_window.h"
 
 
 FilterTree::Node::Node(const Protocol *protocol)
@@ -50,11 +49,6 @@ bool FilterTree::Node::get(const EthernetPacket *eth) const
             return false;
         return this->data.filter.function(p, this->matches);
     }
-}
-
-FilterTree::FilterTree(const std::string &filterString)
-{
-    this->root = this->parse(filterString.cbegin(), filterString.cend());
 }
 
 FilterTree::~FilterTree()
