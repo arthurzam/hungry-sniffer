@@ -33,7 +33,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="tb_filter"/>
+         <widget class="QLineEdit" name="tb_filter">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="bt_filter_clear">
@@ -137,6 +141,7 @@
     </property>
     <addaction name="actionStop"/>
     <addaction name="actionSniff"/>
+    <addaction name="actionClear"/>
    </widget>
    <widget class="QMenu" name="menuStats">
     <property name="title">
@@ -239,6 +244,11 @@
   <action name="actionTable">
    <property name="text">
     <string>Table</string>
+   </property>
+  </action>
+  <action name="actionClear">
+   <property name="text">
+    <string>&amp;Clear</string>
    </property>
   </action>
  </widget>

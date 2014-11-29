@@ -3,6 +3,7 @@
 
 #include "EthernetPacket.h"
 #include <regex>
+#include <vector>
 #include <string>
 
 class FilterTree
@@ -29,10 +30,10 @@ class FilterTree
                     } filter;
                 } data;
                 enum Type type;
-                std::smatch matches;
+                std::vector<std::string> matches;
             public:
                 Node(const hungry_sniffer::Protocol *protocol);
-                Node(const hungry_sniffer::Protocol* protocol, hungry_sniffer::Protocol::filterFunction function, std::smatch&& matches);
+                Node(const hungry_sniffer::Protocol* protocol, hungry_sniffer::Protocol::filterFunction function, const std::smatch& matches);
                 Node(Node* left, Node* right, enum Type type);
                 ~Node();
 

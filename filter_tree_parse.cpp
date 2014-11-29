@@ -53,9 +53,9 @@ static void findMatchingExprEnd(string::const_iterator& start, string::const_ite
 
 static void stripSpaces(string::const_iterator& start, string::const_iterator& end)
 {
-    while(*start == ' ')
+    while(*start == ' ' && start != end)
         ++start;
-    while(*(end - 1) == ' ')
+    while(*(end - 1) == ' ' && start != end)
         --end;
 }
 
@@ -152,7 +152,7 @@ static FilterTree::Node* parseEndExpr(string::const_iterator start, string::cons
     if(end != dot)
     {
         std::smatch sm;
-        return new FilterTree::Node(protocol, extractRegex(protocol, string(dot + 1, end), sm), std::move(sm));
+        return new FilterTree::Node(protocol, extractRegex(protocol, string(dot + 1, end), sm), sm);
     }
     else // only name
     {

@@ -14,20 +14,13 @@ SniffWindow::SniffWindow(QWidget *parent) :
     toNotStop(true),
     isNotExiting(true),
     manageThread(&SniffWindow::managePacketsList, this),
-    filterFunc(nullptr)
+    filterTree(nullptr),
+    isCalculatingFilter(false)
 {
     ui->setupUi(this);
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
-    {
-        ui->table_packets->setColumnCount(4);
-        QStringList l;
-        l << "No." << "Protocol" << "Source" << "Destination";
-        ui->table_packets->setHorizontalHeaderLabels(l);
-
-        ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-        //ui->table_packets->resizeRowsToContents();
-    }
+    this->setTableHeaders();
     {
         QStringList l;
         l << "Key" << "Value";
@@ -67,113 +60,32 @@ void SniffWindow::on_bt_filter_clear_clicked()
     ui->tb_filter->setText("");
     ui->bt_filter_clear->setEnabled(false);
     ui->bt_filter_apply->setEnabled(false);
-}
 
-void SniffWindow::addPacket(const struct localPacket& packet)
-{
-    this->addPacketTable(*packet.decodedPacket);
-}
 
-void SniffWindow::runLivePcap(const std::string &name)
-{
-    this->toNotStop = true;
-    this->threads.append(new std::thread(&SniffWindow::runLivePcap_p, this, name));
-}
+    if(this->filterTree)
+        delete this->filterTree;
+    this->filterTree = nullptr;
 
-void SniffWindow::runOfflinePcap(const std::string &filename)
-{
-    this->toNotStop = true;
-    this->threads.append(new std::thread(&SniffWindow::runOfflinePcap_p, this, filename));
-}
+    this->isCalculatingFilter = true;
 
-void SniffWindow::managePacketsList()
-{
-    pcappp::Packet packet;
-    while(this->isNotExiting)
+    ui->table_packets->clear();
+    ui->table_packets->setRowCount(0);
+    this->setTableHeaders();
+
+    for(auto p = this->local.cbegin(); p != this->local.cend(); ++p)
     {
-        if(this->toAdd.try_pop(packet))
-        {
-            this->local.append({packet, std::shared_ptr<EthernetPacket>(new EthernetPacket(packet.get_data(), packet.get_length(), SniffWindow::baseProtocol)), std::time(NULL)});
-            this->addPacket(this->local.last());
-        }
-        else if(this->threads.empty() && this->toNotStop)
-        {
-            QThread::msleep(500);
-        }
+        this->addPacketTable(*p->decodedPacket, p - this->local.cbegin() + 1);
     }
-}
-
-void SniffWindow::runLivePcap_p(const std::string &name)
-{
-    try {
-        pcappp::PcapLive live(name);
-        pcappp::Packet p;
-        while(this->toNotStop && live.next(p))
-        {
-            p.manage();
-            this->toAdd.push(p);
-        }
-    }
-    catch(const pcappp::PcapError& e)
-    {
-        QMessageBox::warning(this, "Error", QString::fromLatin1(e.what()));
-    }
-}
-
-void SniffWindow::runOfflinePcap_p(const std::string &filename)
-{
-    pcappp::PcapOffline off(filename);
-    pcappp::Packet p;
-    while(this->toNotStop && off.next(p))
-    {
-        p.manage();
-        this->toAdd.push(p);
-    }
-}
-
-void SniffWindow::setCurrentPacket(const struct localPacket& pack)
-{
-    hungry_sniffer::Packet::headers_t headers;
-    const EthernetPacket& eth = *pack.decodedPacket;
-    eth.getHeaders(headers);
-
-    ui->tree_packet->clear();
-    for(auto i = headers.cbegin(); i != headers.cend(); ++i)
-    {
-        QTreeWidgetItem* head = new QTreeWidgetItem((QTreeWidget*)0, QStringList(QString::fromStdString(i->first)));
-        auto map = i->second;
-        for(auto j = map.cbegin(); j != map.cend(); ++j)
-        {
-            QStringList str;
-            str << QString::fromStdString(j->first) << QString::fromStdString(j->second);
-            head->addChild(new QTreeWidgetItem((QTreeWidget*)0, str));
-        }
-
-        ui->tree_packet->addTopLevelItem(head);
-    }
-
-    ui->hexEdit->setData(QByteArray((char*)pack.rawPacket.get_data(), (int)pack.rawPacket.get_length()));
-}
-
-void SniffWindow::addPacketTable(const hungry_sniffer::Packet &packet)
-{
-    int row = ui->table_packets->rowCount();
-    ui->table_packets->setRowCount(row + 1);
-    {
-        QTableWidgetItem* item = new QTableWidgetItem();
-        item->setData(Qt::DisplayRole, row + 1);
-        ui->table_packets->setItem(row, 0, item);
-    }
-    ui->table_packets->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(packet.getName())));
-    ui->table_packets->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(packet.getSource())));
-    ui->table_packets->setItem(row, 3, new QTableWidgetItem(QString::fromStdString(packet.getDestination())));
-    ui->table_packets->resizeRowToContents(row);
-    //ui->table_packets->resizeRowToContents(row);
+    this->isCalculatingFilter = false;
 }
 
 void SniffWindow::on_table_packets_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem*)
 {
-    this->setCurrentPacket(this->local.at(ui->table_packets->item(current->row(), 0)->text().toInt() - 1));
+    if(!current)
+        return;
+    QTableWidgetItem* item = ui->table_packets->item(current->row(), 0);
+    if(item)
+        this->setCurrentPacket(this->local.at(item->text().toInt() - 1));
 }
 
 void SniffWindow::on_actionSave_triggered()
@@ -222,31 +134,46 @@ void SniffWindow::on_actionTable_triggered()
 
 void SniffWindow::on_bt_filter_apply_clicked()
 {
-    int dotPlace = ui->tb_filter->text().indexOf('.');
-    QString name = ui->tb_filter->text().mid(0, dotPlace);
-    std::string parts = ui->tb_filter->text().mid(dotPlace + 1).toStdString();
+    if(this->filterTree)
+        delete this->filterTree;
+    this->filterTree = new FilterTree(ui->tb_filter->text().toStdString());
+    int i = 1;
 
-    const hungry_sniffer::Protocol* protocol = this->baseProtocol->findProtocol(name.toStdString());
-    if(!protocol)
-    {
-        QMessageBox::warning(this, "No Protcol", "No protocol");
-        return;
-    }
+    this->isCalculatingFilter = true;
 
-    hungry_sniffer::Protocol::filterFunction resFunc = nullptr;
-    std::smatch smatch;
-    for(auto i = protocol->getFilters().cbegin(); i != protocol->getFilters().cend(); ++i)
+    ui->table_packets->clear();
+    ui->table_packets->setRowCount(0);
+    this->setTableHeaders();
+
+    for(auto p = this->local.cbegin(); p != this->local.cend(); ++p, ++i)
     {
-        if(std::regex_search(parts, smatch, i->first))
+        if((*this->filterTree).get(&*p->decodedPacket))
         {
-            resFunc = i->second;
-            break;
+            this->addPacketTable(*p->decodedPacket, i);
         }
     }
-    if(!resFunc)
-    {
-        QMessageBox::warning(this, "No filter", "No filter found to this one");
-        return;
-    }
+    this->isCalculatingFilter = false;
+}
 
+void SniffWindow::on_actionClear_triggered()
+{
+    this->isCalculatingFilter = true;
+
+    ui->table_packets->clear();
+    ui->table_packets->setRowCount(0);
+    this->setTableHeaders();
+
+    this->local.clear();
+
+    this->isCalculatingFilter = false;
+}
+
+void SniffWindow::setTableHeaders()
+{
+    ui->table_packets->setColumnCount(4);
+    QStringList l;
+    l << "No." << "Protocol" << "Source" << "Destination";
+    ui->table_packets->setHorizontalHeaderLabels(l);
+
+    ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }

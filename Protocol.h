@@ -19,7 +19,7 @@ namespace hungry_sniffer {
         public:
             typedef Packet* (*initFunction)(const void* data, size_t len,
                     const Protocol* protocol, const Packet* prev);
-            typedef bool (*filterFunction)(const Packet*, const std::smatch&);
+            typedef bool (*filterFunction)(const Packet*, const std::vector<std::string>&);
 
             typedef std::map<int, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;
@@ -102,10 +102,10 @@ namespace hungry_sniffer {
             {
             }
 
-            void addProtocol(int type, initFunction function, bool isStats = true,
+            Protocol& addProtocol(int type, initFunction function, bool isStats = true,
                     const std::string& name = "unknown", bool isNameService = false)
             {
-                this->subProtocols->insert({type, Protocol(function, isStats, name, isNameService)});
+                return this->subProtocols->insert({type, Protocol(function, isStats, name, isNameService)}).first->second;
             }
 
             /**
@@ -113,10 +113,9 @@ namespace hungry_sniffer {
              * @param type the type to which the protocol will be associated
              * @param protocol Protocol object that will be added
              */
-            // TODO: add return non-const reference to Protocol in map. Use return value of insert.
-            void addProtocol(int type, Protocol&& protocol)
+            Protocol& addProtocol(int type, Protocol&& protocol)
             {
-                this->subProtocols->insert({type, Protocol(std::move(protocol))});
+                return this->subProtocols->insert({type, Protocol(std::move(protocol))}).first->second;
             }
 
             void addProtocol(int type, const Protocol& protocol, initFunction function, const std::string& name)

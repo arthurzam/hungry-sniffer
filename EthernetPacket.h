@@ -15,7 +15,7 @@ class EthernetPacket : public PacketStructed<struct ether_header> {
 
         virtual ~EthernetPacket() {}
 
-        static bool filter_dstMac(const Packet* packet, const std::smatch&);
+        static bool filter_dstMac(const Packet* packet, const std::vector<std::string>&);
 
         virtual void getLocalHeaders(headers_t& headers) const;
 };

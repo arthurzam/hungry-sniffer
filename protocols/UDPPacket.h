@@ -21,6 +21,8 @@ class UDPPacket: public PacketStructed<struct udphdr> {
         UDPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~UDPPacket() {}
         virtual void getLocalHeaders(headers_t& headers) const;
+
+        static bool filter_dstPort(const Packet* packet, const std::vector<std::string>&);
 };
 
 #endif /* UDPPACKET_H_ */

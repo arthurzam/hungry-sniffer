@@ -26,7 +26,6 @@ void UDPPacket::getLocalHeaders(
     headers.push_back({"UDP", map});
 }
 
-
 std::string UDPPacket::source() const
 {
     if(!this->prev)
@@ -45,4 +44,10 @@ std::string UDPPacket::destination() const
     r.append(":");
     r.append(std::to_string(ntohs(this->value.uh_dport)));
     return r;
+}
+
+bool UDPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>& res)
+{
+    const UDPPacket* udp = static_cast<const UDPPacket*>(packet);
+    return res[1] == std::to_string(ntohs(udp->value.uh_dport));
 }

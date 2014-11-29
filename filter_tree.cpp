@@ -1,6 +1,5 @@
 #include "filter_tree.h"
 
-
 FilterTree::Node::Node(const Protocol *protocol)
     : matches()
 {
@@ -9,12 +8,17 @@ FilterTree::Node::Node(const Protocol *protocol)
     this->data.filter.function = nullptr;
 }
 
-FilterTree::Node::Node(const Protocol *protocol, Protocol::filterFunction function, std::smatch&& matches)
-    : matches(std::move(matches))
+FilterTree::Node::Node(const Protocol *protocol, Protocol::filterFunction function, const std::smatch& _matches)
 {
     this->type = this->Type::Value;
     this->data.filter.protocol = protocol;
     this->data.filter.function = function;
+
+    matches.reserve(_matches.size());
+    for(auto& i : _matches)
+    {
+        matches.push_back(i.str());
+    }
 }
 
 FilterTree::Node::Node(FilterTree::Node *left, FilterTree::Node *right, FilterTree::Node::Type type)
@@ -47,7 +51,7 @@ bool FilterTree::Node::get(const EthernetPacket *eth) const
         const hungry_sniffer::Packet* p = eth->hasProtocol(this->data.filter.protocol);
         if(!p)
             return false;
-        return this->data.filter.function(p, this->matches);
+        return !this->data.filter.function || this->data.filter.function(p, this->matches);
     }
 }
 
@@ -58,5 +62,5 @@ FilterTree::~FilterTree()
 
 bool FilterTree::get(const EthernetPacket *eth) const
 {
-    return this->root->get(eth);
+    return !this->root || this->root->get(eth);
 }

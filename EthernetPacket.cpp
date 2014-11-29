@@ -22,10 +22,10 @@ std::string EthernetPacket::destination() const
     return std::string(ether_ntoa((struct ether_addr*) this->value.ether_dhost));
 }
 
-bool EthernetPacket::filter_dstMac(const Packet* packet, const std::smatch& res)
+bool EthernetPacket::filter_dstMac(const Packet* packet, const std::vector<std::string>& res)
 {
     const EthernetPacket* eth = static_cast<const EthernetPacket*>(packet);
-    return res[1].str() == ether_ntoa((struct ether_addr*) eth->value.ether_dhost);
+    return res[1] == ether_ntoa((struct ether_addr*) eth->value.ether_dhost);
 }
 
 void EthernetPacket::getLocalHeaders(headers_t &headers) const

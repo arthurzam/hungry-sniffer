@@ -8,7 +8,7 @@
 #define PLUGINS_DIRECTORY "/home/arthur/QT/build-hungry-sniffer-Desktop-Debug/plugins/"
 #endif
 
-void loadLibs()
+static void loadLibs()
 {
     typedef void (*function_t)(hungry_sniffer::Protocol&);
 

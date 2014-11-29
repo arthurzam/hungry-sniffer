@@ -8,6 +8,8 @@
 #include <QTableWidgetItem>
 #include <ctime>
 #include "EthernetPacket.h"
+#include "filter_tree.h"
+#include <atomic>
 
 namespace Ui {
 class SniffWindow;
@@ -42,7 +44,9 @@ private slots:
 
     void on_bt_filter_apply_clicked();
 
-private:
+    void on_actionClear_triggered();
+
+    private:
     Ui::SniffWindow *ui;
 
 private:
@@ -60,10 +64,9 @@ private:
     bool isNotExiting;
     std::thread manageThread;
 
-    hungry_sniffer::Protocol::filterFunction filterFunc;
+    std::atomic<FilterTree*> filterTree;
+    std::atomic<bool> isCalculatingFilter;
 public:
-    void addPacket(const struct localPacket& packet);
-
     void runLivePcap(const std::string& name);
     void runOfflinePcap(const std::string& filename);
 
@@ -75,7 +78,8 @@ private:
 
 private:
     void setCurrentPacket(const struct localPacket& pack);
-    void addPacketTable(const hungry_sniffer::Packet& packet);
+    void addPacketTable(const hungry_sniffer::Packet& packet, int number);
+    void setTableHeaders();
 };
 
 
