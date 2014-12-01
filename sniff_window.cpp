@@ -62,8 +62,7 @@ void SniffWindow::on_bt_filter_clear_clicked()
     ui->bt_filter_apply->setEnabled(false);
 
 
-    if(this->filterTree)
-        delete this->filterTree;
+    delete this->filterTree;
     this->filterTree = nullptr;
 
     this->isCalculatingFilter = true;
@@ -134,10 +133,8 @@ void SniffWindow::on_actionTable_triggered()
 
 void SniffWindow::on_bt_filter_apply_clicked()
 {
-    if(this->filterTree)
-        delete this->filterTree;
+    delete this->filterTree;
     this->filterTree = new FilterTree(ui->tb_filter->text().toStdString());
-    int i = 1;
 
     this->isCalculatingFilter = true;
 
@@ -145,6 +142,7 @@ void SniffWindow::on_bt_filter_apply_clicked()
     ui->table_packets->setRowCount(0);
     this->setTableHeaders();
 
+    int i = 1;
     for(auto p = this->local.cbegin(); p != this->local.cend(); ++p, ++i)
     {
         if((*this->filterTree).get(&*p->decodedPacket))
@@ -152,6 +150,7 @@ void SniffWindow::on_bt_filter_apply_clicked()
             this->addPacketTable(*p->decodedPacket, i);
         }
     }
+
     this->isCalculatingFilter = false;
 }
 
@@ -164,16 +163,19 @@ void SniffWindow::on_actionClear_triggered()
     this->setTableHeaders();
 
     this->local.clear();
+    baseProtocol->cleanStats();
 
     this->isCalculatingFilter = false;
 }
 
 void SniffWindow::setTableHeaders()
 {
-    ui->table_packets->setColumnCount(4);
-    QStringList l;
-    l << "No." << "Protocol" << "Source" << "Destination";
-    ui->table_packets->setHorizontalHeaderLabels(l);
+    static QStringList list;
+    if(list.empty())
+        list << "No." << "Protocol" << "Source" << "Destination" << "Info";
+
+    ui->table_packets->setColumnCount(list.size());
+    ui->table_packets->setHorizontalHeaderLabels(list);
 
     ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }

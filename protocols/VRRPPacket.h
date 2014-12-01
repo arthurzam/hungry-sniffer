@@ -38,9 +38,7 @@ struct vrrphdr {
 
 class VRRPPacket : public PacketStructed<struct vrrphdr> {
     public:
-        VRRPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
-            : PacketStructed(data, len, protocol, prev) {}
-        virtual void getLocalHeaders(headers_t& headers) const;
+        VRRPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~VRRPPacket() {}
 };
 

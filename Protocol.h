@@ -5,7 +5,6 @@
 #include <cstring>
 #include <regex>
 #include <list>
-#include <utility>
 
 namespace hungry_sniffer {
     class Packet;
@@ -24,6 +23,7 @@ namespace hungry_sniffer {
             typedef std::map<int, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;
             typedef std::list<std::pair<std::regex, filterFunction>> filterFunctions_t;
+            typedef std::list<std::pair<std::string, const int*>> stats_table_t;
         private:
             std::shared_ptr<protocols_t> subProtocols;
             initFunction function;
@@ -204,12 +204,23 @@ namespace hungry_sniffer {
             int getRawPacketsCount() const
             {
                 int count = this->countPackets;
-                for (protocols_t::const_iterator i = subProtocols->cbegin();
-                        i != subProtocols->cend(); ++i)
+                for(auto& i : *subProtocols)
                 {
-                    count -= i->second.getPacketsCount();
+                    count -= i.second.getPacketsCount();
                 }
                 return count;
+            }
+
+            /**
+             * @brief reset the packet counter of this and evry sub-protocols
+             */
+            void cleanStats()
+            {
+                this->countPackets = 0;
+                for(auto& i : *subProtocols)
+                {
+                    i.second.cleanStats();
+                }
             }
 
             /**
@@ -220,7 +231,6 @@ namespace hungry_sniffer {
                 return this->name;
             }
 
-            typedef std::list<std::pair<std::string, const int*>> stats_table_t;
             /**
              * @brief return statistics table
              *
@@ -233,10 +243,9 @@ namespace hungry_sniffer {
             {
                 if (this->isStats)
                     stats.push_back({name, &countPackets});
-                for (protocols_t::const_iterator i = subProtocols->cbegin();
-                        i != subProtocols->cend(); ++i)
+                for(auto& i : *subProtocols)
                 {
-                    i->second.getStats(stats);
+                    i.second.getStats(stats);
                 }
             }
 
@@ -276,9 +285,15 @@ namespace hungry_sniffer {
             typedef std::list<std::pair<std::string, headers_category_t>>  headers_t;
         protected:
             const Protocol* protocol; /*!<The protocol by which this Packet was created*/
-            std::shared_ptr<Packet> next; /*!<The next packet*/
+            Packet* next; /*!<The next packet*/
             const Packet* prev; /*!<The previous packet*/
             bool isGood = true;
+
+            headers_category_t headers;
+            std::string source;
+            std::string destination;
+            std::string info;
+            const std::string* name;
 
             /**
              * @brief set the next packet
@@ -287,16 +302,19 @@ namespace hungry_sniffer {
              * @param type the type number of the sub Protocol
              * @param data pointer to the start of the next part
              * @param len total len from the start of next packet until end
+             *
+             * @note after the call to this function the name is set to the coresponding next name
              */
             bool setNext(int type, const void* data, size_t len)
             {
                 const Protocol* p = this->protocol->getProtocol(type);
                 if (p)
-                    this->next = std::shared_ptr<Packet>((p->getFunction()(data, len, p, this)));
+                {
+                    this->next = p->getFunction()(data, len, p, this);
+                    this->name = &this->next->getName();
+                }
                 return (p != nullptr);
             }
-
-            virtual void getLocalHeaders(headers_t& headers) const = 0;
         public:
             Packet(const Protocol* protocol, const Packet* prev = nullptr)
             {
@@ -304,10 +322,18 @@ namespace hungry_sniffer {
                 this->protocol = protocol;
                 protocol->incPacketCount();
                 this->prev = prev;
+                this->name = &protocol->getName();
             }
+
+            Packet(const Packet&) = delete;
+            Packet(Packet&&) = delete;
+
+            Packet& operator=(const Packet&) = delete;
+            Packet& operator=(Packet&&) = delete;
 
             virtual ~Packet()
             {
+                delete this->next;
             }
 
             /**
@@ -321,11 +347,6 @@ namespace hungry_sniffer {
                 return *next;
             }
 
-            void setPrev(const Packet* prev)
-            {
-                this->prev = prev;
-            }
-
             /**
              * @brief get last Packet
              *
@@ -333,7 +354,7 @@ namespace hungry_sniffer {
              */
             const Packet& getLast() const
             {
-                if (this->next.get())
+                if (this->next)
                     return this->next->getLast();
                 return *this;
             }
@@ -345,63 +366,61 @@ namespace hungry_sniffer {
              */
             const std::string& getName() const
             {
-                if (this->next.get())
-                    return this->next->getName();
-                else
-                    return this->protocol->getName();
+                return *this->name;
             }
 
             const Packet* hasProtocol(const Protocol* protocol) const
             {
                 if(this->protocol == protocol)
                     return this;
-                if(this->next.get())
+                if(this->next)
                     return this->next->hasProtocol(protocol);
                 return nullptr;
             }
 
-            virtual std::string source() const
+            const std::string& localSource() const
             {
-                return "";
+                return this->source;
             }
 
-            virtual std::string destination() const
+            const std::string& localDestination() const
             {
-                return "";
+                return this->destination;
             }
 
-            std::string getSource() const
+            const std::string& getSource() const
             {
-                if (this->next.get())
+                if (this->next)
                 {
-                    std::string nextStr = this->next->getSource();
+                    const std::string& nextStr = this->next->getSource();
                     if (nextStr.length() != 0)
                         return nextStr;
                 }
-                return this->source();
+                return this->source;
             }
 
-            std::string getDestination() const
+            const std::string& getDestination() const
             {
-                if (this->next.get())
+                if (this->next)
                 {
-                    std::string nextStr = this->next->getDestination();
+                    const std::string& nextStr = this->next->getDestination();
                     if (nextStr.length() != 0)
                         return nextStr;
                 }
-                return this->destination();
+                return this->destination;
             }
 
             void getHeaders(headers_t& headers) const
             {
-                this->getLocalHeaders(headers);
-                if(this->next.get())
+                if(!this->headers.empty())
+                    headers.push_back({this->protocol->getName(), this->headers});
+                if(this->next)
                     this->next->getHeaders(headers);
             }
 
-            virtual std::string getInfo() const
+            const std::string& getInfo() const
             {
-                return this->getName();
+                return this->info;
             }
     };
 
@@ -419,7 +438,10 @@ namespace hungry_sniffer {
                     Packet(protocol, prev)
             {
                 if (len < sizeof(value))
+                {
                     this->isGood = false;
+                    return;
+                }
                 memcpy(&value, data, sizeof(value));
             }
     };
@@ -427,41 +449,29 @@ namespace hungry_sniffer {
     class PacketText : public Packet {
         protected:
             std::string data;
+        public:
+            virtual std::string getInfo() const
+            {
+                return this->data;
+            }
 
-            PacketText(const Protocol* protocol, const Packet* prev) :
+            PacketText(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
+                Packet(protocol, prev),
+                data((const char*)data, len) {}
+    };
+
+    class PacketTextHeaders : public Packet {
+        protected:
+            PacketTextHeaders(const Protocol* protocol, const Packet* prev) :
                 Packet(protocol, prev) {}
     };
 
-    class PacketTextHeaders : public PacketText {
-        protected:
-            headers_category_t headers;
-
-
-            PacketTextHeaders(const Protocol* protocol, const Packet* prev) :
-                PacketText(protocol, prev) {}
-    };
-
     class PacketEmpty : public Packet {
-    protected:
-        virtual std::string source() const
-        {
-            return this->prev->source();
-        }
+        public:
+            PacketEmpty(const void*, size_t, const Protocol* protocol, const Packet* prev = nullptr)
+                : Packet(protocol, prev) { }
 
-        virtual std::string destination() const
-        {
-            return this->prev->destination();
-        }
-
-        virtual std::ostream& print(std::ostream& out) const
-        {
-            return out;
-        }
-    public:
-        PacketEmpty(const void*, size_t, const Protocol* protocol, const Packet* prev = nullptr) : Packet(protocol, prev) {}
-        virtual ~PacketEmpty() {}
-        virtual void getLocalHeaders(headers_t&) const {}
-
+            virtual ~PacketEmpty() {}
     };
 
     /**

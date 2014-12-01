@@ -55,10 +55,7 @@ class DNSPacket : public PacketStructed<struct dnshdr> {
         std::vector<struct query> queries;
     public:
         DNSPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
-        virtual void getLocalHeaders(headers_t& headers) const;
-        virtual ~DNSPacket()
-        {
-        }
+        virtual ~DNSPacket() {}
 };
 
 #endif /* DNSPACKET_H_ */

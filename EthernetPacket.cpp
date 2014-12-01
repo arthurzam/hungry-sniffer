@@ -8,31 +8,24 @@ EthernetPacket::EthernetPacket(const void* data, size_t len,
         const Protocol* protocol, const Packet* prev) :
         PacketStructed(data, len, protocol, prev)
 {
-    this->setNext(ntohs(this->value.ether_type),
-            (const char*) data + sizeof(value), len - sizeof(value));
-}
+    this->source = ether_ntoa((struct ether_addr*) this->value.ether_shost);
+    this->destination = ether_ntoa((struct ether_addr*) this->value.ether_dhost);
 
-std::string EthernetPacket::source() const
-{
-    return std::string(ether_ntoa((struct ether_addr*) this->value.ether_shost));
-}
+    this->headers.push_back({"Source Mac", this->source});
+    this->headers.push_back({"Destination Mac", this->destination});
+    this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value.ether_type))});
 
-std::string EthernetPacket::destination() const
-{
-    return std::string(ether_ntoa((struct ether_addr*) this->value.ether_dhost));
+    this->setNext(ntohs(this->value.ether_type), (const char*) data + sizeof(value), len - sizeof(value));
 }
 
 bool EthernetPacket::filter_dstMac(const Packet* packet, const std::vector<std::string>& res)
 {
     const EthernetPacket* eth = static_cast<const EthernetPacket*>(packet);
-    return res[1] == ether_ntoa((struct ether_addr*) eth->value.ether_dhost);
+    return res[1] == eth->destination;
 }
 
-void EthernetPacket::getLocalHeaders(headers_t &headers) const
+bool EthernetPacket::filter_srcMac(const Packet* packet, const std::vector<string>& res)
 {
-    headers_category_t map;
-    map.push_back({"Source Mac", ether_ntoa((struct ether_addr*) this->value.ether_shost)});
-    map.push_back({"Destination Mac", ether_ntoa((struct ether_addr*) this->value.ether_dhost)});
-    map.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value.ether_type))});
-    headers.push_back({this->protocol->getName(), std::move(map)});
+    const EthernetPacket* eth = static_cast<const EthernetPacket*>(packet);
+    return res[1] == eth->source;
 }

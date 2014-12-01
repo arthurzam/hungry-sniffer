@@ -10,40 +10,22 @@
 
 using namespace std;
 
-UDPPacket::UDPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
-    : PacketStructed(data, len, protocol, prev)
+UDPPacket::UDPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
+      PacketStructed(data, len, protocol, prev)
 {
     if(!Packet::setNext(ntohs(this->value.uh_sport), (const char*)data + sizeof(value), len - sizeof(value)))
         Packet::setNext(ntohs(this->value.uh_dport), (const char*)data + sizeof(value), len - sizeof(value));
-}
 
-void UDPPacket::getLocalHeaders(
-        headers_t& headers) const
-{
-    headers_category_t map;
-    map.push_back({"Source Port", std::to_string(ntohs(this->value.uh_sport))});
-    map.push_back({"Destination Port", std::to_string(ntohs(this->value.uh_dport))});
-    headers.push_back({"UDP", map});
-}
+    this->source = this->prev->localSource();
+    this->source.append(":");
+    this->source.append(std::to_string(ntohs(this->value.uh_sport)));
 
-std::string UDPPacket::source() const
-{
-    if(!this->prev)
-        return "";
-    std::string r = this->prev->source();
-    r.append(":");
-    r.append(std::to_string(ntohs(this->value.uh_sport)));
-    return r;
-}
+    this->destination = this->prev->localDestination();
+    this->destination.append(":");
+    this->destination.append(std::to_string(ntohs(this->value.uh_dport)));
 
-std::string UDPPacket::destination() const
-{
-    if(!this->prev)
-        return "";
-    std::string r = this->prev->destination();
-    r.append(":");
-    r.append(std::to_string(ntohs(this->value.uh_dport)));
-    return r;
+    this->headers.push_back({"Source Port", std::to_string(ntohs(this->value.uh_sport))});
+    this->headers.push_back({"Destination Port", std::to_string(ntohs(this->value.uh_dport))});
 }
 
 bool UDPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>& res)

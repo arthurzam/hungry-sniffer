@@ -15,9 +15,7 @@ using namespace hungry_sniffer;
 
 class ICMPPacket: public PacketStructed<struct icmphdr> {
     public:
-        ICMPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
-            : PacketStructed(data, len, protocol, prev) {}
-        virtual void getLocalHeaders(headers_t& headers) const;
+        ICMPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~ICMPPacket() {}
 };
 

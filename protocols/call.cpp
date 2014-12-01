@@ -22,8 +22,8 @@ extern "C" void add(Protocol& base)
 
     tcp.addProtocol(80, init<PacketEmpty>, true, "HTTP", false);
     tcp.addProtocol(443, init<PacketEmpty>, true, "HTTPS", false);
-    tcp.addProtocol(25, init<PacketEmpty>, true, "SMTP", false);
-    tcp.addProtocol(587, init<PacketEmpty>, true, "SMTP", false);
+    tcp.addProtocol(25, init<PacketText>, true, "SMTP", false);
+    tcp.addProtocol(587, init<PacketText>, true, "SMTP", false);
 
     udp.addFilter("^dst *== *([^ ]+)$", UDPPacket::filter_dstPort);
 

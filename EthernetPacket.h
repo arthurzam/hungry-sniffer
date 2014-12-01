@@ -7,17 +7,13 @@
 using namespace hungry_sniffer;
 
 class EthernetPacket : public PacketStructed<struct ether_header> {
-    protected:
-        virtual std::string source() const;
-        virtual std::string destination() const;
     public:
         EthernetPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev = nullptr);
 
         virtual ~EthernetPacket() {}
 
-        static bool filter_dstMac(const Packet* packet, const std::vector<std::string>&);
-
-        virtual void getLocalHeaders(headers_t& headers) const;
+        static bool filter_dstMac(const Packet* packet, const std::vector<std::string>& res);
+        static bool filter_srcMac(const Packet* packet, const std::vector<std::string>& res);
 };
 
 #endif /* ETHERNETPACKET_H_ */

@@ -85,6 +85,7 @@ void SniffWindow::addPacketTable(const hungry_sniffer::Packet &packet, int numbe
     ui->table_packets->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(packet.getName())));
     ui->table_packets->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(packet.getSource())));
     ui->table_packets->setItem(row, 3, new QTableWidgetItem(QString::fromStdString(packet.getDestination())));
+    ui->table_packets->setItem(row, 4, new QTableWidgetItem(QString::fromStdString(packet.getInfo())));
     ui->table_packets->resizeRowToContents(row);
     //ui->table_packets->resizeRowToContents(row);
 }

@@ -15,11 +15,9 @@ static void loadLibs()
     QDir dir(PLUGINS_DIRECTORY);
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
     allFiles.sort(Qt::CaseSensitive);
-    QListIterator<QString> iter(allFiles);
-    while(iter.hasNext())
+    for(auto& iter : allFiles)
     {
-        QString name = iter.next();
-        QLibrary lib(dir.absoluteFilePath(name));
+        QLibrary lib(dir.absoluteFilePath(iter));
         function_t foo = (function_t)lib.resolve("add");
         if(!foo)
         {
@@ -35,6 +33,7 @@ int main(int argc, char *argv[])
 {
     SniffWindow::baseProtocol = new hungry_sniffer::Protocol(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true);
     SniffWindow::baseProtocol->addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
+    SniffWindow::baseProtocol->addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
     loadLibs();
 
     QApplication a(argc, argv);
