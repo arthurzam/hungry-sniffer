@@ -67,6 +67,9 @@
          <enum>Qt::Vertical</enum>
         </property>
         <widget class="QTableWidget" name="table_packets">
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>

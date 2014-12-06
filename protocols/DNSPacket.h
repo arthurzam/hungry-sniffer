@@ -53,9 +53,13 @@ class DNSPacket : public PacketStructed<struct dnshdr> {
         };
 
         std::vector<struct query> queries;
+        std::string id;
     public:
         DNSPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~DNSPacket() {}
+        virtual std::string getConversationFilterText() const;
+
+        static bool filter_id(const Packet* packet, const std::vector<std::string>& res);
 };
 
 #endif /* DNSPACKET_H_ */

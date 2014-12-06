@@ -37,6 +37,7 @@ namespace hungry_sniffer {
             names_t names;
 
             filterFunctions_t filters;
+            bool isConversationEnabeled;
         public:
             /**
              * @brief basic constructor for creating Protocol from function pointer
@@ -47,7 +48,8 @@ namespace hungry_sniffer {
             Protocol(initFunction function) :
                     subProtocols(std::make_shared<protocols_t>()),
                     name("unknown"),
-                    filters()
+                    filters(),
+                    isConversationEnabeled(false)
             {
                 this->function = function;
                 this->isStats = true;
@@ -55,7 +57,7 @@ namespace hungry_sniffer {
             }
 
             Protocol(initFunction function, bool isStats, const std::string& name,
-                    bool isNameService) :
+                    bool isNameService, bool isConversationEnabeled = false) :
                     subProtocols(std::make_shared<protocols_t>()),
                     name(name),
                     filters()
@@ -63,6 +65,7 @@ namespace hungry_sniffer {
                 this->function = function;
                 this->isStats = isStats;
                 this->isNameService = isNameService;
+                this->isConversationEnabeled = isConversationEnabeled;
             }
 
             Protocol(const Protocol& other) :
@@ -74,6 +77,7 @@ namespace hungry_sniffer {
                 this->isStats = other.isStats;
                 this->countPackets = other.countPackets;
                 this->isNameService = other.isNameService;
+                this->isConversationEnabeled = other.isConversationEnabeled;
             }
 
             Protocol(const Protocol& other, initFunction function, const std::string& name) :
@@ -85,6 +89,7 @@ namespace hungry_sniffer {
                 this->isStats = other.isStats;
                 this->countPackets = other.countPackets;
                 this->isNameService = other.isNameService;
+                this->isConversationEnabeled = other.isConversationEnabeled;
             }
 
             Protocol(Protocol&& other) :
@@ -96,6 +101,7 @@ namespace hungry_sniffer {
                 this->isStats = other.isStats;
                 this->countPackets = other.countPackets;
                 this->isNameService = other.isNameService;
+                this->isConversationEnabeled = other.isConversationEnabeled;
             }
 
             virtual ~Protocol()
@@ -103,9 +109,10 @@ namespace hungry_sniffer {
             }
 
             Protocol& addProtocol(int type, initFunction function, bool isStats = true,
-                    const std::string& name = "unknown", bool isNameService = false)
+                    const std::string& name = "unknown", bool isNameService = false,
+                    bool isConversationEnabeled = false)
             {
-                return this->subProtocols->insert({type, Protocol(function, isStats, name, isNameService)}).first->second;
+                return this->subProtocols->insert({type, Protocol(function, isStats, name, isNameService, isConversationEnabeled)}).first->second;
             }
 
             /**
@@ -272,6 +279,25 @@ namespace hungry_sniffer {
                 }
                 return nullptr;
             }
+
+            const std::string& getNameAssociated(const std::string& key) const
+            {
+                auto value = this->names.find(key);
+                if(value == this->names.end())
+                    return key;
+                else
+                    return value->second;
+            }
+
+            void associateName(const std::string& key, const std::string& value)
+            {
+                this->names.insert({key, value});
+            }
+
+            bool getIsConversationEnabeled() const
+            {
+                return isConversationEnabeled;
+            }
     };
 
     /**
@@ -340,11 +366,15 @@ namespace hungry_sniffer {
              * @brief get next Packet
              *
              * @return the next Packet
-             * @note Be sure there is a Packet next, or else an exception will be thrown
              */
-            const Packet& getNext() const
+            const Packet* getNext() const
             {
-                return *next;
+                return next;
+            }
+
+            const Protocol* getProtocol() const
+            {
+                return protocol;
             }
 
             /**
@@ -422,6 +452,11 @@ namespace hungry_sniffer {
             {
                 return this->info;
             }
+
+            virtual std::string getConversationFilterText() const
+            {
+                return this->protocol->getName();
+            }
     };
 
     /**
@@ -472,6 +507,11 @@ namespace hungry_sniffer {
                 : Packet(protocol, prev) { }
 
             virtual ~PacketEmpty() {}
+
+            virtual std::string getConversationFilterText() const
+            {
+                return this->protocol->getName();
+            }
     };
 
     /**

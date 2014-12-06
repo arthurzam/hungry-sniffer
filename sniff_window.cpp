@@ -111,7 +111,7 @@ void SniffWindow::on_actionStop_triggered()
 
 void SniffWindow::on_actionSniff_triggered()
 {
-    if(getuid() != 0)
+    if(getuid() != 0 && geteuid() != 0)
     {
         QMessageBox::warning(nullptr, "Not Root", "You should be Root", QMessageBox::StandardButton::Ok);
         return;
@@ -178,4 +178,36 @@ void SniffWindow::setTableHeaders()
     ui->table_packets->setHorizontalHeaderLabels(list);
 
     ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+}
+
+void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
+{
+    QTableWidgetItem* item = ui->table_packets->itemAt(pos);
+    if(item)
+    {
+        QList<QAction*> list;
+        QMenu menu;
+        int row = item->row();
+        const EthernetPacket* packet = this->local[row].decodedPacket.get();
+        {
+            const hungry_sniffer::Packet* p = packet;
+            while(p)
+            {
+                if(p->getProtocol()->getIsConversationEnabeled())
+                {
+                    QAction* action = new QAction(QString("Follow %1").arg(QString::fromStdString(p->getProtocol()->getName())), nullptr);
+                    connect(action, &QAction::triggered, [action, this, p]() {
+                        ui->tb_filter->setText(QString::fromStdString(p->getConversationFilterText()));
+                        this->on_bt_filter_apply_clicked();
+                        ui->tb_filter->setEnabled(true);
+                    });
+                    list.append(action);
+                }
+                p = p->getNext();
+            }
+        }
+        menu.addActions(list);
+        menu.exec(ui->table_packets->mapToGlobal(pos));
+        qDeleteAll(list);
+    }
 }

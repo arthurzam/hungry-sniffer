@@ -11,11 +11,20 @@ EthernetPacket::EthernetPacket(const void* data, size_t len,
     this->source = ether_ntoa((struct ether_addr*) this->value.ether_shost);
     this->destination = ether_ntoa((struct ether_addr*) this->value.ether_dhost);
 
-    this->headers.push_back({"Source Mac", this->source});
-    this->headers.push_back({"Destination Mac", this->destination});
+    this->headers.push_back({"Source MAC", this->source});
+    this->headers.push_back({"Destination MAC", this->destination});
     this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value.ether_type))});
 
     this->setNext(ntohs(this->value.ether_type), (const char*) data + sizeof(value), len - sizeof(value));
+}
+
+std::string EthernetPacket::getConversationFilterText() const
+{
+    std::string res("Ethernet.src==");
+    res.append(this->source);
+    res.append(" & Ethernet.dst==");
+    res.append(this->destination);
+    return res;
 }
 
 bool EthernetPacket::filter_dstMac(const Packet* packet, const std::vector<std::string>& res)

@@ -31,7 +31,7 @@ hungry_sniffer::Protocol* SniffWindow::baseProtocol = nullptr;
 
 int main(int argc, char *argv[])
 {
-    SniffWindow::baseProtocol = new hungry_sniffer::Protocol(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true);
+    SniffWindow::baseProtocol = new hungry_sniffer::Protocol(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true, true);
     SniffWindow::baseProtocol->addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     SniffWindow::baseProtocol->addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
     loadLibs();
@@ -39,6 +39,5 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     SniffWindow w;
     w.show();
-
     return a.exec();
 }

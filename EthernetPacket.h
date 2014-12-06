@@ -11,6 +11,7 @@ class EthernetPacket : public PacketStructed<struct ether_header> {
         EthernetPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev = nullptr);
 
         virtual ~EthernetPacket() {}
+        virtual std::string getConversationFilterText() const;
 
         static bool filter_dstMac(const Packet* packet, const std::vector<std::string>& res);
         static bool filter_srcMac(const Packet* packet, const std::vector<std::string>& res);

@@ -1,10 +1,11 @@
 CXX=g++
 CXXFLAGS+=-std=c++0x -c -Wall -Wextra -fPIC -O2
-LDFLAGS+=-shared
+LDFLAGS+=-shared -ljsoncpp
 
-SOURCES=ArpPacket.cpp call.cpp ICMPPacket.cpp \
+SOURCES=call.cpp ArpPacket.cpp ICMPPacket.cpp \
         IPPacket.cpp TCPPacket.cpp UDPPacket.cpp \
-        DNSPacket.cpp IPv6Packet.cpp
+        DNSPacket.cpp IPv6Packet.cpp VRRPPacket.cpp \
+        PacketJson.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=libprotocols.so
