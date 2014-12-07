@@ -125,9 +125,9 @@ namespace hungry_sniffer {
                 return this->subProtocols->insert({type, Protocol(std::move(protocol))}).first->second;
             }
 
-            void addProtocol(int type, const Protocol& protocol, initFunction function, const std::string& name)
+            Protocol& addProtocol(int type, const Protocol& protocol, initFunction function, const std::string& name)
             {
-                this->subProtocols->insert({type, Protocol(protocol, function, name)});
+                return this->subProtocols->insert({type, Protocol(protocol, function, name)}).first->second;
             }
 
             /**
@@ -450,6 +450,12 @@ namespace hungry_sniffer {
 
             const std::string& getInfo() const
             {
+                if(this->next)
+                {
+                    const std::string& str = this->next->getInfo();
+                    if(str.length() > 0)
+                        return str;
+                }
                 return this->info;
             }
 

@@ -23,3 +23,24 @@ IPv6Packet::IPv6Packet(const void* data, size_t len, const Protocol* protocol,
 
     this->setNext(this->value.ip6_ctlun.ip6_un1.ip6_un1_nxt, (const char*)data + sizeof(value), len - sizeof(value));
 }
+
+std::string IPv6Packet::getConversationFilterText() const
+{
+    std::string res("IPv6.src==");
+    res.append(this->source);
+    res.append(" & IPv6.dst==");
+    res.append(this->destination);
+    return res;
+}
+
+bool IPv6Packet::filter_dstIP(const Packet* packet, const std::vector<std::string>& res)
+{
+    const IPv6Packet* eth = static_cast<const IPv6Packet*>(packet);
+    return res[1] == eth->destination;
+}
+
+bool IPv6Packet::filter_srcIP(const Packet* packet, const std::vector<std::string>& res)
+{
+    const IPv6Packet* eth = static_cast<const IPv6Packet*>(packet);
+    return res[1] == eth->source;
+}

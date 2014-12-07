@@ -1,6 +1,7 @@
 CXX=g++
-CXXFLAGS+=-std=c++0x -c -Wall -Wextra -fPIC -O2
-LDFLAGS+=-shared -ljsoncpp
+LTO_FLAGS=-flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+CXXFLAGS+=-std=c++0x -c -Wall -Wextra -fPIC -O2 $(LTO_FLAGS)
+LDFLAGS+=-shared -ljsoncpp -flto $(LTO_FLAGS)
 
 SOURCES=call.cpp ArpPacket.cpp ICMPPacket.cpp \
         IPPacket.cpp TCPPacket.cpp UDPPacket.cpp \

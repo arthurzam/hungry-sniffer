@@ -21,3 +21,24 @@ IPPacket::IPPacket(const void* data, size_t len, const Protocol* protocol, const
 
     this->setNext(this->value.ip_p, (const char*)data + sizeof(value), len - sizeof(value));
 }
+
+std::string IPPacket::getConversationFilterText() const
+{
+    std::string res("IP.src==");
+    res.append(this->source);
+    res.append(" & IP.dst==");
+    res.append(this->destination);
+    return res;
+}
+
+bool IPPacket::filter_dstIP(const Packet* packet, const std::vector<std::string>& res)
+{
+    const IPPacket* eth = static_cast<const IPPacket*>(packet);
+    return res[1] == eth->destination;
+}
+
+bool IPPacket::filter_srcIP(const Packet* packet, const std::vector<std::string>& res)
+{
+    const IPPacket* eth = static_cast<const IPPacket*>(packet);
+    return res[1] == eth->source;
+}

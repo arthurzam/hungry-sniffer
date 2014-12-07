@@ -143,15 +143,18 @@ void SniffWindow::on_bt_filter_apply_clicked()
     this->setTableHeaders();
 
     int i = 1;
-    for(auto p = this->local.cbegin(); p != this->local.cend(); ++p, ++i)
+    for(const auto& p : this->local)
     {
-        if((*this->filterTree).get(&*p->decodedPacket))
+        if((*this->filterTree).get(&*p.decodedPacket))
         {
-            this->addPacketTable(*p->decodedPacket, i);
+            this->addPacketTable(*p.decodedPacket, i);
         }
+        ++i;
     }
 
     this->isCalculatingFilter = false;
+
+    ui->bt_filter_apply->setEnabled(false);
 }
 
 void SniffWindow::on_actionClear_triggered()
@@ -199,7 +202,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                     connect(action, &QAction::triggered, [action, this, p]() {
                         ui->tb_filter->setText(QString::fromStdString(p->getConversationFilterText()));
                         this->on_bt_filter_apply_clicked();
-                        ui->tb_filter->setEnabled(true);
+                        ui->bt_filter_clear->setEnabled(true);
                     });
                     list.append(action);
                 }

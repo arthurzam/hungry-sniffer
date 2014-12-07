@@ -17,6 +17,10 @@ class IPPacket : public PacketStructed<struct ip> {
     public:
         IPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~IPPacket() {}
+        virtual std::string getConversationFilterText() const;
+
+        static bool filter_dstIP(const Packet* packet, const std::vector<std::string>& res);
+        static bool filter_srcIP(const Packet* packet, const std::vector<std::string>& res);
 };
 
 #endif /* IPPACKET_H_ */

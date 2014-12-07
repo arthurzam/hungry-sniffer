@@ -72,7 +72,6 @@ void SniffWindow::runOfflinePcap_p(const std::string &filename)
     }
 }
 
-
 void SniffWindow::addPacketTable(const hungry_sniffer::Packet &packet, int number)
 {
     int row = ui->table_packets->rowCount();
@@ -93,19 +92,15 @@ void SniffWindow::addPacketTable(const hungry_sniffer::Packet &packet, int numbe
 void SniffWindow::setCurrentPacket(const struct localPacket& pack)
 {
     hungry_sniffer::Packet::headers_t headers;
-    const EthernetPacket& eth = *pack.decodedPacket;
-    eth.getHeaders(headers);
+    pack.decodedPacket->getHeaders(headers);
 
     ui->tree_packet->clear();
     for(auto i = headers.cbegin(); i != headers.cend(); ++i)
     {
         QTreeWidgetItem* head = new QTreeWidgetItem((QTreeWidget*)0, QStringList(QString::fromStdString(i->first)));
-        auto map = i->second;
-        for(auto j = map.cbegin(); j != map.cend(); ++j)
+        for(auto& j : i->second)
         {
-            QStringList str;
-            str << QString::fromStdString(j->first) << QString::fromStdString(j->second);
-            head->addChild(new QTreeWidgetItem((QTreeWidget*)0, str));
+            head->addChild(new QTreeWidgetItem((QTreeWidget*)0, QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));
         }
 
         ui->tree_packet->addTopLevelItem(head);
