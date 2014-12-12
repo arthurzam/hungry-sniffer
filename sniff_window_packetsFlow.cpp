@@ -57,7 +57,7 @@ void SniffWindow::runLivePcap_p(const std::string &name)
     }
     catch(const pcappp::PcapError& e)
     {
-        QMessageBox::warning(this, "Error", QString::fromLatin1(e.what()));
+        QMessageBox::warning(this, tr("Sniff Error"), QString::fromLatin1(e.what()));
     }
 }
 
@@ -97,10 +97,10 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
     ui->tree_packet->clear();
     for(auto i = headers.cbegin(); i != headers.cend(); ++i)
     {
-        QTreeWidgetItem* head = new QTreeWidgetItem((QTreeWidget*)0, QStringList(QString::fromStdString(i->first)));
+        QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(i->first)));
         for(auto& j : i->second)
         {
-            head->addChild(new QTreeWidgetItem((QTreeWidget*)0, QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));
+            head->addChild(new QTreeWidgetItem(QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));
         }
 
         ui->tree_packet->addTopLevelItem(head);

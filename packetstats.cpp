@@ -16,8 +16,9 @@ PacketStats::PacketStats(QWidget *parent) :
     ui->buttonBox->addButton(btRefresh, QDialogButtonBox::ActionRole);
 
     {
-        QStringList l;
-        l << "Protocol" << "Number";
+        static QStringList l;
+        if(l.empty())
+            l << tr("Protocol") << tr("Number");
         ui->treeWidget->setHeaderLabels(l);
     }
 

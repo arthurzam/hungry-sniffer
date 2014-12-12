@@ -27,12 +27,18 @@ extern "C" void add(Protocol& base)
     ipv4.addProtocol(1, init<ICMPPacket>, true, "ICMP", false, false);
     ipv4.addProtocol(112, init<VRRPPacket>, true, "VRRP", false, false);
 
+    tcp.addFilter("^dst *== *([^ ]+)$", TCPPacket::filter_dstPort);
+    tcp.addFilter("^src *== *([^ ]+)$", TCPPacket::filter_srcPort);
+    tcp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", TCPPacket::filter_follow);
+
     tcp.addProtocol(80, init<PacketEmpty>, true, "HTTP", false, false);
     tcp.addProtocol(443, init<PacketEmpty>, true, "HTTPS", false, false);
     tcp.addProtocol(25, init<PacketText>, true, "SMTP", false, false);
     tcp.addProtocol(587, init<PacketText>, true, "SMTP", false, false);
 
     udp.addFilter("^dst *== *([^ ]+)$", UDPPacket::filter_dstPort);
+    udp.addFilter("^src *== *([^ ]+)$", UDPPacket::filter_srcPort);
+    udp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", UDPPacket::filter_follow);
 
     {
         Protocol& dns = udp.addProtocol(53, init<DNSPacket>, true, "DNS", false, true);

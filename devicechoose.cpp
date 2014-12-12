@@ -28,7 +28,6 @@ DeviceChoose::DeviceChoose(QWidget *parent) :
 
 void DeviceChoose::refreshDevices()
 {
-
     // clear the table
     while(ui->gridLayout->count() > 0)
     {
@@ -46,7 +45,7 @@ void DeviceChoose::refreshDevices()
         QFile file(QString("/sys/class/net/%1/address").arg(name));
         if(!file.open(QIODevice::ReadOnly))
         {
-            QMessageBox::warning(this, "Error", "Error getting the interfaces\n""Are you root?");
+            QMessageBox::warning(this, tr("Error"), tr("Error getting the interfaces\n""Are you root?"));
             this->close();
             return;
         }
@@ -76,10 +75,5 @@ void DeviceChoose::on_buttonBox_accepted()
             cb->setChecked(false);
         }
     }
-    this->close();
-}
-
-void DeviceChoose::on_buttonBox_rejected()
-{
     this->close();
 }

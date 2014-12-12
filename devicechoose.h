@@ -10,18 +10,25 @@ class DeviceChoose;
 class DeviceChoose : public QDialog
 {
     Q_OBJECT
-
+private:
+    QStringList results;
 public:
     explicit DeviceChoose(QWidget *parent = 0);
     ~DeviceChoose();
 
-    QStringList results;
+    QStringList::const_iterator end() const
+    {
+        return results.cend();
+    }
+
+    QStringList::const_iterator begin() const
+    {
+        return results.cbegin();
+    }
 
 private slots:
 
     void on_buttonBox_accepted();
-
-    void on_buttonBox_rejected();
 
     void refreshDevices();
 private:

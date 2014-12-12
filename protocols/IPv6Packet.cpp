@@ -19,7 +19,10 @@ IPv6Packet::IPv6Packet(const void* data, size_t len, const Protocol* protocol,
 
     this->headers.push_back({"Source IP", this->source});
     this->headers.push_back({"Destination IP", this->destination});
+    this->headers.push_back({"Payload Length", std::to_string(ntohs(this->value.ip6_ctlun.ip6_un1.ip6_un1_plen))});
     this->headers.push_back({"Next Protocol (number)", std::to_string(this->value.ip6_ctlun.ip6_un1.ip6_un1_nxt)});
+    this->headers.push_back({"Hop Limit", std::to_string(this->value.ip6_ctlun.ip6_un1.ip6_un1_hlim)});
+
 
     this->setNext(this->value.ip6_ctlun.ip6_un1.ip6_un1_nxt, (const char*)data + sizeof(value), len - sizeof(value));
 }
