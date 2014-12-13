@@ -195,6 +195,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
         QList<QAction*> list;
         QMenu menu;
         int row = ui->table_packets->item(item->row(), 0)->text().toInt() - 1;
+        QMenu follow("Follow"), nameSrc("Associate Name For Source"), nameDst("Associate Name For Destination");
         const EthernetPacket* packet = this->local[row].decodedPacket.get();
         {
             const hungry_sniffer::Packet* p = packet;
@@ -202,18 +203,71 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
             {
                 if(p->getProtocol()->getIsConversationEnabeled())
                 {
-                    QAction* action = new QAction(QString(tr("Follow %1")).arg(QString::fromStdString(p->getProtocol()->getName())), nullptr);
+                    QAction* action = new QAction(QString::fromStdString(p->getProtocol()->getName()), nullptr);
                     connect(action, &QAction::triggered, [action, this, p]() {
                         ui->tb_filter->setText(QString::fromStdString(p->getConversationFilterText()));
                         this->on_bt_filter_apply_clicked();
                         ui->bt_filter_clear->setEnabled(true);
                     });
+                    follow.addAction(action);
                     list.append(action);
+                }
+                if(p->getProtocol()->getIsNameService())
+                {
+                    QAction* action = new QAction(QString::fromStdString(p->getProtocol()->getName()), nullptr);
+                    connect(action, &QAction::triggered, [action, this, p]() {
+                        bool ok;
+                        QString text = QInputDialog::getText(this, tr("Name Assication"), tr("Associated Name"), QLineEdit::Normal,
+                                                             QString::fromStdString(p->getProtocol()->getNameAssociated(p->localSource())),
+                                                             &ok);
+                        if(ok)
+                        {
+                            const_cast<hungry_sniffer::Protocol*>(p->getProtocol())->associateName(p->localSource(), text.toStdString());
+                            for(auto& i : this->local)
+                            {
+                                hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(p->getProtocol()));
+                                if(ptr)
+                                {
+                                    ptr->updateNameAssociation();
+                                }
+                            }
+                        }
+                    });
+                    list.append(action);
+                    nameSrc.addAction(action);
+
+                    action = new QAction(QString::fromStdString(p->getProtocol()->getName()), nullptr);
+                    connect(action, &QAction::triggered, [action, this, p]() {
+                        bool ok;
+                        QString text = QInputDialog::getText(this, tr("Name Assication"), tr("Associated Name"), QLineEdit::Normal,
+                                                             QString::fromStdString(p->getProtocol()->getNameAssociated(p->localSource())),
+                                                             &ok);
+                        if(ok)
+                        {
+                            const_cast<hungry_sniffer::Protocol*>(p->getProtocol())->associateName(p->localSource(), text.toStdString());
+                            for(auto& i : this->local)
+                            {
+                                hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(p->getProtocol()));
+                                if(ptr)
+                                {
+                                    ptr->updateNameAssociation();
+                                }
+                            }
+                        }
+                    });
+                    list.append(action);
+                    nameDst.addAction(action);
                 }
                 p = p->getNext();
             }
         }
-        menu.addActions(list);
+        if(follow.actions().size() > 0)
+            menu.addMenu(&follow);
+        if(nameDst.actions().size() > 0)
+        {
+            menu.addMenu(&nameSrc);
+            menu.addMenu(&nameDst);
+        }
         menu.exec(ui->table_packets->mapToGlobal(pos));
         qDeleteAll(list);
     }

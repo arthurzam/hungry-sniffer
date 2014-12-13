@@ -294,6 +294,11 @@ namespace hungry_sniffer {
                 this->names.insert({key, value});
             }
 
+            bool getIsNameService() const
+            {
+                return isNameService;
+            }
+
             bool getIsConversationEnabeled() const
             {
                 return isConversationEnabeled;
@@ -463,6 +468,8 @@ namespace hungry_sniffer {
             {
                 return this->protocol->getName();
             }
+
+            virtual void updateNameAssociation() {}
     };
 
     /**
