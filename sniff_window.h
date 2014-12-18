@@ -66,7 +66,7 @@ class SniffWindow : public QMainWindow
         bool isNotExiting;
         std::thread manageThread;
 
-        std::atomic<FilterTree*> filterTree;
+        std::unique_ptr<FilterTree> filterTree;
         std::atomic<bool> isCalculatingFilter;
     public:
         void runLivePcap(const std::string& name);
@@ -81,7 +81,10 @@ class SniffWindow : public QMainWindow
     private:
         void setCurrentPacket(const struct localPacket& pack);
         void addPacketTable(const hungry_sniffer::Packet& packet, int number);
+        void updateTableShown();
+
         void setTableHeaders();
+        void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);
 };
 
 

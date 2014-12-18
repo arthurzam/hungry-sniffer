@@ -14,7 +14,7 @@ static void loadLibs()
 
     QDir dir(PLUGINS_DIRECTORY);
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
-    allFiles.sort(Qt::CaseSensitive);
+    allFiles.sort(Qt::CaseInsensitive);
     for(auto& iter : allFiles)
     {
         QLibrary lib(dir.absoluteFilePath(iter));

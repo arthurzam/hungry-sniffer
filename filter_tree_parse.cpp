@@ -126,11 +126,11 @@ static FilterTree::Node* parseExpr(string::const_iterator start, string::const_i
 
 static hungry_sniffer::Protocol::filterFunction extractRegex(const hungry_sniffer::Protocol* protocol, const string& regexParts, std::smatch& sm)
 {
-    for(auto i = protocol->getFilters().cbegin(); i != protocol->getFilters().cend(); ++i)
+    for(auto& i : protocol->getFilters())
     {
-        if(std::regex_search(regexParts, sm, i->first))
+        if(std::regex_search(regexParts, sm, i.first))
         {
-            return i->second;
+            return i.second;
         }
     }
     return nullptr;

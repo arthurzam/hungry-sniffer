@@ -89,16 +89,37 @@ void SniffWindow::addPacketTable(const hungry_sniffer::Packet &packet, int numbe
     //ui->table_packets->resizeRowToContents(row);
 }
 
+void SniffWindow::updateTableShown()
+{
+    this->isCalculatingFilter = true;
+
+    ui->table_packets->clear();
+    ui->table_packets->setRowCount(0);
+    this->setTableHeaders();
+
+    int i = 1;
+    for(const auto& p : this->local)
+    {
+        if(!(bool)this->filterTree || this->filterTree->get(&*p.decodedPacket))
+        {
+            this->addPacketTable(*p.decodedPacket, i);
+        }
+        ++i;
+    }
+
+    this->isCalculatingFilter = false;
+}
+
 void SniffWindow::setCurrentPacket(const struct localPacket& pack)
 {
     hungry_sniffer::Packet::headers_t headers;
     pack.decodedPacket->getHeaders(headers);
 
     ui->tree_packet->clear();
-    for(auto i = headers.cbegin(); i != headers.cend(); ++i)
+    for(auto& i : headers)
     {
-        QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(i->first)));
-        for(auto& j : i->second)
+        QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(i.first)));
+        for(auto& j : i.second)
         {
             head->addChild(new QTreeWidgetItem(QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));
         }

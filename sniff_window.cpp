@@ -2,10 +2,8 @@
 #include "ui_sniff_window.h"
 
 #include <QMessageBox>
-#include <QThread>
-#include "devicechoose.h"
 #include <unistd.h>
-#include <regex>
+#include "devicechoose.h"
 #include "packetstats.h"
 
 SniffWindow::SniffWindow(QWidget *parent) :
@@ -60,21 +58,9 @@ void SniffWindow::on_bt_filter_clear_clicked()
     ui->bt_filter_clear->setEnabled(false);
     ui->bt_filter_apply->setEnabled(false);
 
-    delete this->filterTree;
     this->filterTree = nullptr;
 
-    this->isCalculatingFilter = true;
-
-    ui->table_packets->clear();
-    ui->table_packets->setRowCount(0);
-    this->setTableHeaders();
-
-    int i = 1;
-    for(auto& p : this->local)
-    {
-        this->addPacketTable(*p.decodedPacket, i++);
-    }
-    this->isCalculatingFilter = false;
+    this->updateTableShown();
 }
 
 void SniffWindow::on_table_packets_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem*)
@@ -137,26 +123,9 @@ void SniffWindow::on_bt_filter_apply_clicked()
         return this->on_bt_filter_clear_clicked();
     }
 
-    delete this->filterTree;
-    this->filterTree = new FilterTree(ui->tb_filter->text().toStdString());
+    this->filterTree.reset(new FilterTree(ui->tb_filter->text().toStdString()));
 
-    this->isCalculatingFilter = true;
-
-    ui->table_packets->clear();
-    ui->table_packets->setRowCount(0);
-    this->setTableHeaders();
-
-    int i = 1;
-    for(const auto& p : this->local)
-    {
-        if((*this->filterTree).get(&*p.decodedPacket))
-        {
-            this->addPacketTable(*p.decodedPacket, i);
-        }
-        ++i;
-    }
-
-    this->isCalculatingFilter = false;
+    this->updateTableShown();
 
     ui->bt_filter_apply->setEnabled(false);
 }
@@ -187,6 +156,28 @@ void SniffWindow::setTableHeaders()
     ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
+void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText)
+{
+    bool ok;
+    QString text = QInputDialog::getText(this, tr("Name Assication"), tr("Associated Name for\n""(%1)").arg(QString::fromStdString(origText)),
+                                         QLineEdit::Normal,
+                                         QString::fromStdString(localPacket->getProtocol()->getNameAssociated(origText)),
+                                         &ok);
+    if(ok && !text.isEmpty())
+    {
+        const_cast<hungry_sniffer::Protocol*>(localPacket->getProtocol())->associateName(origText, text.toStdString());
+        for(auto& i : this->local)
+        {
+            hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(localPacket->getProtocol()));
+            if(ptr)
+            {
+                ptr->updateNameAssociation();
+            }
+        }
+        this->updateTableShown();
+    }
+}
+
 void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
 {
     QTableWidgetItem* item = ui->table_packets->itemAt(pos);
@@ -198,67 +189,37 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
         QMenu follow("Follow"), nameSrc("Associate Name For Source"), nameDst("Associate Name For Destination");
         const EthernetPacket* packet = this->local[row].decodedPacket.get();
         {
-            const hungry_sniffer::Packet* p = packet;
-            while(p)
+            const hungry_sniffer::Packet* localPacket = packet;
+            while(localPacket)
             {
-                if(p->getProtocol()->getIsConversationEnabeled())
+                if(localPacket->getProtocol()->getIsConversationEnabeled())
                 {
-                    QAction* action = new QAction(QString::fromStdString(p->getProtocol()->getName()), nullptr);
-                    connect(action, &QAction::triggered, [action, this, p]() {
-                        ui->tb_filter->setText(QString::fromStdString(p->getConversationFilterText()));
+                    QAction* action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+                    connect(action, &QAction::triggered, [this, localPacket]() {
+                        ui->tb_filter->setText(QString::fromStdString(localPacket->getConversationFilterText()));
                         this->on_bt_filter_apply_clicked();
                         ui->bt_filter_clear->setEnabled(true);
                     });
                     follow.addAction(action);
                     list.append(action);
                 }
-                if(p->getProtocol()->getIsNameService())
+                if(localPacket->getProtocol()->getIsNameService())
                 {
-                    QAction* action = new QAction(QString::fromStdString(p->getProtocol()->getName()), nullptr);
-                    connect(action, &QAction::triggered, [action, this, p]() {
-                        bool ok;
-                        QString text = QInputDialog::getText(this, tr("Name Assication"), tr("Associated Name"), QLineEdit::Normal,
-                                                             QString::fromStdString(p->getProtocol()->getNameAssociated(p->localSource())),
-                                                             &ok);
-                        if(ok)
-                        {
-                            const_cast<hungry_sniffer::Protocol*>(p->getProtocol())->associateName(p->localSource(), text.toStdString());
-                            for(auto& i : this->local)
-                            {
-                                hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(p->getProtocol()));
-                                if(ptr)
-                                {
-                                    ptr->updateNameAssociation();
-                                }
-                            }
-                        }
+                    QAction* action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+                    connect(action, &QAction::triggered, [this, localPacket]() {
+                        this->associateName(localPacket, localPacket->realSource());
                     });
                     list.append(action);
                     nameSrc.addAction(action);
 
-                    action = new QAction(QString::fromStdString(p->getProtocol()->getName()), nullptr);
-                    connect(action, &QAction::triggered, [action, this, p]() {
-                        bool ok;
-                        QString text = QInputDialog::getText(this, tr("Name Assication"), tr("Associated Name"), QLineEdit::Normal,
-                                                             QString::fromStdString(p->getProtocol()->getNameAssociated(p->localSource())),
-                                                             &ok);
-                        if(ok)
-                        {
-                            const_cast<hungry_sniffer::Protocol*>(p->getProtocol())->associateName(p->localSource(), text.toStdString());
-                            for(auto& i : this->local)
-                            {
-                                hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(p->getProtocol()));
-                                if(ptr)
-                                {
-                                    ptr->updateNameAssociation();
-                                }
-                            }
-                        }
+                    action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+                    connect(action, &QAction::triggered, [this, localPacket]() {
+                        this->associateName(localPacket, localPacket->realDestination());
                     });
                     list.append(action);
                     nameDst.addAction(action);
                 }
-                p = p->getNext();
+                localPacket = localPacket->getNext();
             }
         }
         if(follow.actions().size() > 0)

@@ -44,7 +44,7 @@ bool FilterTree::Node::get(const EthernetPacket *eth) const
     case Type::And:
         return this->data.tree.left->get(eth) && this->data.tree.right->get(eth);
     case Type::Or:
-        return this->data.tree.left->get(eth) ||this->data.tree.right->get(eth);
+        return this->data.tree.left->get(eth) || this->data.tree.right->get(eth);
     case Type::Not:
         return !this->data.tree.left->get(eth);
     default:

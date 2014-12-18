@@ -291,7 +291,7 @@ namespace hungry_sniffer {
 
             void associateName(const std::string& key, const std::string& value)
             {
-                this->names.insert({key, value});
+                this->names[key] = value;
             }
 
             bool getIsNameService() const
@@ -321,8 +321,13 @@ namespace hungry_sniffer {
             bool isGood = true;
 
             headers_category_t headers;
+
             std::string source;
             std::string destination;
+
+            std::string _realSource;
+            std::string _realDestination;
+
             std::string info;
             const std::string* name;
 
@@ -421,6 +426,16 @@ namespace hungry_sniffer {
             const std::string& localDestination() const
             {
                 return this->destination;
+            }
+
+            const std::string& realSource() const
+            {
+                return this->_realSource;
+            }
+
+            const std::string& realDestination() const
+            {
+                return this->_realDestination;
             }
 
             const std::string& getSource() const
