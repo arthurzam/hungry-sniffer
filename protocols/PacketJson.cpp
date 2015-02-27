@@ -8,7 +8,7 @@
 #include "PacketJson.h"
 #include <jsoncpp/json/json.h>
 PacketJson::PacketJson(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
-    : PacketTextHeaders(protocol, prev)
+    : PacketTextHeaders(data, len, protocol, prev)
 {
     Json::Value root;
     Json::Reader reader;

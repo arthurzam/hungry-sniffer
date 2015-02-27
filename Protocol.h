@@ -20,7 +20,7 @@ namespace hungry_sniffer {
                     const Protocol* protocol, const Packet* prev);
             typedef bool (*filterFunction)(const Packet*, const std::vector<std::string>&);
 
-            typedef std::map<int, Protocol> protocols_t;
+            typedef std::map<size_t, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;
             typedef std::list<std::pair<std::regex, filterFunction>> filterFunctions_t;
             typedef std::list<std::pair<std::string, const int*>> stats_table_t;
@@ -108,7 +108,7 @@ namespace hungry_sniffer {
             {
             }
 
-            Protocol& addProtocol(int type, initFunction function, bool isStats = true,
+            Protocol& addProtocol(size_t type, initFunction function, bool isStats = true,
                     const std::string& name = "unknown", bool isNameService = false,
                     bool isConversationEnabeled = false)
             {
@@ -120,12 +120,12 @@ namespace hungry_sniffer {
              * @param type the type to which the protocol will be associated
              * @param protocol Protocol object that will be added
              */
-            Protocol& addProtocol(int type, Protocol&& protocol)
+            Protocol& addProtocol(size_t type, Protocol&& protocol)
             {
                 return this->subProtocols->insert({type, Protocol(std::move(protocol))}).first->second;
             }
 
-            Protocol& addProtocol(int type, const Protocol& protocol, initFunction function, const std::string& name)
+            Protocol& addProtocol(size_t type, const Protocol& protocol, initFunction function, const std::string& name)
             {
                 return this->subProtocols->insert({type, Protocol(protocol, function, name)}).first->second;
             }
@@ -137,7 +137,7 @@ namespace hungry_sniffer {
              *  @return  A pointer to the Protocol whose type is equivalent to @a type, if
              *           such a data is present in the protocols. Otherwise returns nullptr
              */
-            const Protocol* getProtocol(int type) const
+            const Protocol* getProtocol(size_t type) const
             {
                 protocols_t::const_iterator res = subProtocols->find(type);
                 if (res != subProtocols->end())
@@ -153,7 +153,7 @@ namespace hungry_sniffer {
              *           such a data is present in the protocols.
              *  @throw  std::out_of_range  If no such type is present.
              */
-            Protocol& operator[](int type)
+            Protocol& operator[](size_t type)
             {
                 return subProtocols->at(type);
             }
@@ -166,7 +166,7 @@ namespace hungry_sniffer {
              *           such a data is present in the protocols.
              *  @throw  std::out_of_range  If no such type is present.
              */
-            const Protocol& operator[](int type) const
+            const Protocol& operator[](size_t type) const
             {
                 return subProtocols->at(type);
             }
@@ -294,6 +294,11 @@ namespace hungry_sniffer {
                 this->names[key] = value;
             }
 
+            void removeNameAssociation(const std::string& key)
+            {
+                this->names.erase(key);
+            }
+
             bool getIsNameService() const
             {
                 return isNameService;
@@ -341,7 +346,7 @@ namespace hungry_sniffer {
              *
              * @note after the call to this function the name is set to the coresponding next name
              */
-            bool setNext(int type, const void* data, size_t len)
+            bool setNext(size_t type, const void* data, size_t len)
             {
                 const Protocol* p = this->protocol->getProtocol(type);
                 if (p)
@@ -485,6 +490,11 @@ namespace hungry_sniffer {
             }
 
             virtual void updateNameAssociation() {}
+
+            bool isGoodPacket() const
+            {
+                return this->isGood && (!this->next || this->next->isGoodPacket());
+            }
     };
 
     /**
@@ -523,10 +533,38 @@ namespace hungry_sniffer {
                 data((const char*)data, len) {}
     };
 
-    class PacketTextHeaders : public Packet {
+    class PacketTextHeaders : public PacketText {
         protected:
-            PacketTextHeaders(const Protocol* protocol, const Packet* prev) :
-                Packet(protocol, prev) {}
+            PacketTextHeaders(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
+                PacketText(data, len, protocol, prev) {}
+
+            void extractTextHeaders(int start, int end)
+            {
+                int colon, endLine = -1, part;
+                while(start < end)
+                {
+                    colon = this->data.find_first_of(":\n", start);
+                    if(colon == (int)std::string::npos || colon >= end)
+                        return;
+                    switch(this->data[colon])
+                    {
+                        case ':':
+                            endLine = this->data.find_first_of('\n', colon);
+                            part = colon + 1;
+                            while(this->data[part] == ' ')
+                                part++;
+                            if(this->data[endLine - 1] == '\r')
+                                this->data[endLine - 1] = ' ';
+                            break;
+                        case '\n':
+                            endLine = -1;
+                            break;
+                    }
+                    this->headers.push_back({this->data.substr(start, colon - start),
+                        (endLine == -1 ? "" : this->data.substr(part, endLine - part))});
+                    start = (endLine == -1 ? colon + 1 : endLine + 1);
+                }
+            }
     };
 
     class PacketEmpty : public Packet {

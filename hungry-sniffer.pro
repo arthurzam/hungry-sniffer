@@ -1,13 +1,13 @@
 CONFIG += c++11
 QT     += core gui widgets printsupport
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 LIBS   += -lpcap++ -lpcap -ldl -lqhexedit -lqwt
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QMAKE_LFLAGS_RELEASE += -s -flto
+QMAKE_CXXFLAGS_RELEASE += -flto
 
 TARGET = hungry-sniffer
 TEMPLATE = app
-
 
 SOURCES += main.cpp\
     devicechoose.cpp \

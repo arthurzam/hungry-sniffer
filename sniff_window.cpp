@@ -74,13 +74,19 @@ void SniffWindow::on_table_packets_currentItemChanged(QTableWidgetItem *current,
 
 void SniffWindow::on_actionSave_triggered()
 {
-    /*QString filename = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Pcap (*.pcap)"));
+    if(ui->table_packets->rowCount() == 0)
+    {
+        QMessageBox::warning(nullptr, tr("Empty Table"), tr("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
+        return;
+    }
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Pcap (*.pcap)"));
+    pcappp::Dumper& d = this->firstPcap->get_dumper();
     d.open(filename.toStdString());
     for(auto i = this->local.cbegin(); i != this->local.cend(); ++i)
     {
-        d.dump(*i);
+        d.dump(i->rawPacket);
     }
-    d.close();*/
+    d.close();
 }
 
 void SniffWindow::on_actionStop_triggered()
@@ -148,7 +154,7 @@ void SniffWindow::setTableHeaders()
 {
     static QStringList list;
     if(list.empty())
-        list << tr("No.") << tr("Protocol") << tr("Source") << tr("Destination") << tr("Info");
+        list << tr("No.") << tr("Arrival Time") << tr("Protocol") << tr("Source") << tr("Destination") << tr("Info");
 
     ui->table_packets->setColumnCount(list.size());
     ui->table_packets->setHorizontalHeaderLabels(list);
@@ -163,9 +169,12 @@ void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const
                                          QLineEdit::Normal,
                                          QString::fromStdString(localPacket->getProtocol()->getNameAssociated(origText)),
                                          &ok);
-    if(ok && !text.isEmpty())
+    if(ok)
     {
-        const_cast<hungry_sniffer::Protocol*>(localPacket->getProtocol())->associateName(origText, text.toStdString());
+        if(text.isEmpty())
+            const_cast<hungry_sniffer::Protocol*>(localPacket->getProtocol())->removeNameAssociation(origText);
+        else
+            const_cast<hungry_sniffer::Protocol*>(localPacket->getProtocol())->associateName(origText, text.toStdString());
         for(auto& i : this->local)
         {
             hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(localPacket->getProtocol()));
@@ -186,7 +195,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
         QList<QAction*> list;
         QMenu menu;
         int row = ui->table_packets->item(item->row(), 0)->text().toInt() - 1;
-        QMenu follow("Follow"), nameSrc("Associate Name For Source"), nameDst("Associate Name For Destination");
+        QMenu follow(tr("Follow")), nameSrc(tr("Associate Name For Source")), nameDst(tr("Associate Name For Destination"));
         const EthernetPacket* packet = this->local[row].decodedPacket.get();
         {
             const hungry_sniffer::Packet* localPacket = packet;

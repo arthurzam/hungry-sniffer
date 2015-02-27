@@ -32,10 +32,10 @@ void SniffWindow::managePacketsList()
         }
         if(this->toAdd.try_pop(packet))
         {
-            this->local.append({packet, std::shared_ptr<EthernetPacket>(new EthernetPacket(packet.get_data(), packet.get_length(), SniffWindow::baseProtocol)), std::time(NULL)});
+            this->local.append({packet, std::make_shared<EthernetPacket>(packet.get_data(), packet.get_length(), SniffWindow::baseProtocol), std::time(NULL)});
             const struct localPacket& localPacket = this->local.last();
             if(!filterTree || (*filterTree).get(localPacket.decodedPacket.get()))
-                this->addPacketTable(*localPacket.decodedPacket, this->local.size());
+                this->addPacketTable(localPacket, this->local.size());
         }
         else if(this->threads.empty() && this->toNotStop)
         {
@@ -47,9 +47,11 @@ void SniffWindow::managePacketsList()
 void SniffWindow::runLivePcap_p(const std::string &name)
 {
     try {
-        pcappp::PcapLive live(name);
+        std::shared_ptr<pcappp::PcapLive> live = std::make_shared<pcappp::PcapLive>(name);
+        if(!this->firstPcap)
+            this->firstPcap = live;
         pcappp::Packet p;
-        while(this->toNotStop && live.next(p))
+        while(this->toNotStop && live->next(p))
         {
             p.manage();
             this->toAdd.push(p);
@@ -63,30 +65,49 @@ void SniffWindow::runLivePcap_p(const std::string &name)
 
 void SniffWindow::runOfflinePcap_p(const std::string &filename)
 {
-    pcappp::PcapOffline off(filename);
+    std::shared_ptr<pcappp::PcapOffline> off = std::make_shared<pcappp::PcapOffline>(filename);
+    if(!this->firstPcap)
+        this->firstPcap = off;
     pcappp::Packet p;
-    while(this->toNotStop && off.next(p))
+    while(this->toNotStop && off->next(p))
     {
         p.manage();
         this->toAdd.push(p);
     }
 }
 
-void SniffWindow::addPacketTable(const hungry_sniffer::Packet &packet, int number)
+static QTableWidgetItem* createItem(QVariant data, bool isGood)
 {
+    QTableWidgetItem* item = new QTableWidgetItem();
+    item->setData(Qt::DisplayRole, data);
+    if(!isGood)
+        item->setBackground(Qt::yellow);
+    return item;
+}
+
+inline static QTableWidgetItem* createItem(const std::string& data, bool isGood)
+{
+    return createItem(QString::fromStdString(data), isGood);
+}
+
+void SniffWindow::addPacketTable(const struct localPacket &local, int number)
+{
+    const hungry_sniffer::Packet &packet = *local.decodedPacket;
     int row = ui->table_packets->rowCount();
+    bool isGood = packet.isGoodPacket();
+
     ui->table_packets->setRowCount(row + 1);
-    {
-        QTableWidgetItem* item = new QTableWidgetItem();
-        item->setData(Qt::DisplayRole, number);
-        ui->table_packets->setItem(row, 0, item);
-    }
-    ui->table_packets->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(packet.getName())));
-    ui->table_packets->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(packet.getSource())));
-    ui->table_packets->setItem(row, 3, new QTableWidgetItem(QString::fromStdString(packet.getDestination())));
-    ui->table_packets->setItem(row, 4, new QTableWidgetItem(QString::fromStdString(packet.getInfo())));
+
+#define SET_ITEM(n, variant) ui->table_packets->setItem(row, n, createItem(variant, isGood))
+    SET_ITEM(0, number);
+    SET_ITEM(1, (int)(local.rawPacket.get_seconds() - this->local[0].rawPacket.get_seconds()));
+    SET_ITEM(2, packet.getName());
+    SET_ITEM(3, packet.getSource());
+    SET_ITEM(4, packet.getDestination());
+    SET_ITEM(5, (isGood ? packet.getInfo() : "Bad Packet"));
+#undef SET_ITEM
+
     ui->table_packets->resizeRowToContents(row);
-    //ui->table_packets->resizeRowToContents(row);
 }
 
 void SniffWindow::updateTableShown()
@@ -102,7 +123,7 @@ void SniffWindow::updateTableShown()
     {
         if(!(bool)this->filterTree || this->filterTree->get(&*p.decodedPacket))
         {
-            this->addPacketTable(*p.decodedPacket, i);
+            this->addPacketTable(p, i);
         }
         ++i;
     }
@@ -116,10 +137,10 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
     pack.decodedPacket->getHeaders(headers);
 
     ui->tree_packet->clear();
-    for(auto& i : headers)
+    for(const auto& i : headers)
     {
         QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(i.first)));
-        for(auto& j : i.second)
+        for(const auto& j : i.second)
         {
             head->addChild(new QTreeWidgetItem(QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));
         }

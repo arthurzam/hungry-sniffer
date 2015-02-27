@@ -18,9 +18,11 @@ class IPv6Packet : public PacketStructed<struct ip6_hdr> {
         IPv6Packet(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~IPv6Packet() {}
         virtual std::string getConversationFilterText() const;
+        virtual void updateNameAssociation();
 
         static bool filter_dstIP(const Packet* packet, const std::vector<std::string>& res);
         static bool filter_srcIP(const Packet* packet, const std::vector<std::string>& res);
+        static bool filter_follow(const Packet* packet, const std::vector<std::string>& res);
 
 };
 

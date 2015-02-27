@@ -8,6 +8,7 @@
 #include "DNSPacket.h"
 #include "VRRPPacket.h"
 #include "PacketJson.h"
+#include "HTTPPacket.h"
 #include <netinet/ether.h>
 
 extern "C" void add(Protocol& base)
@@ -18,12 +19,14 @@ extern "C" void add(Protocol& base)
 
     ipv4.addFilter("^dst *== *([^ ]+)$", IPPacket::filter_dstIP);
     ipv4.addFilter("^src *== *([^ ]+)$", IPPacket::filter_srcIP);
+    ipv4.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", IPPacket::filter_follow);
 
     ipv6.addFilter("^dst *== *([^ ]+)$", IPv6Packet::filter_dstIP);
     ipv6.addFilter("^src *== *([^ ]+)$", IPv6Packet::filter_srcIP);
+    ipv6.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", IPv6Packet::filter_follow);
 
-    Protocol& tcp = ipv4.addProtocol(6, init<TCPPacket>, true, "TCP", false, true);
-    Protocol& udp = ipv4.addProtocol(17, init<UDPPacket>, true, "UDP", false, true);
+    Protocol& tcp = ipv4.addProtocol(6, init<TCPPacket>, true, "TCP", true, true);
+    Protocol& udp = ipv4.addProtocol(17, init<UDPPacket>, true, "UDP", true, true);
     ipv4.addProtocol(1, init<ICMPPacket>, true, "ICMP", false, false);
     ipv4.addProtocol(112, init<VRRPPacket>, true, "VRRP", false, false);
 
@@ -31,7 +34,7 @@ extern "C" void add(Protocol& base)
     tcp.addFilter("^src *== *([^ ]+)$", TCPPacket::filter_srcPort);
     tcp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", TCPPacket::filter_follow);
 
-    tcp.addProtocol(80, init<PacketEmpty>, true, "HTTP", false, false);
+    tcp.addProtocol(80, init<HTTPPacket>, true, "HTTP", false, false);
     tcp.addProtocol(443, init<PacketEmpty>, true, "HTTPS", false, false);
     tcp.addProtocol(25, init<PacketText>, true, "SMTP", false, false);
     tcp.addProtocol(587, init<PacketText>, true, "SMTP", false, false);

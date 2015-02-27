@@ -41,18 +41,21 @@ FilterTree::Node::~Node()
 bool FilterTree::Node::get(const EthernetPacket *eth) const
 {
     switch (this->type) {
-    case Type::And:
-        return this->data.tree.left->get(eth) && this->data.tree.right->get(eth);
-    case Type::Or:
-        return this->data.tree.left->get(eth) || this->data.tree.right->get(eth);
-    case Type::Not:
-        return !this->data.tree.left->get(eth);
-    default:
-        const hungry_sniffer::Packet* p = eth->hasProtocol(this->data.filter.protocol);
-        if(!p)
-            return false;
-        return !this->data.filter.function || this->data.filter.function(p, this->matches);
+        case Type::Value:
+        {
+            const hungry_sniffer::Packet* p = eth->hasProtocol(this->data.filter.protocol);
+            if(!p)
+                return false;
+            return !this->data.filter.function || this->data.filter.function(p, this->matches);
+        }
+        case Type::Or:
+            return this->data.tree.left->get(eth) || this->data.tree.right->get(eth);
+        case Type::And:
+            return this->data.tree.left->get(eth) && this->data.tree.right->get(eth);
+        case Type::Not:
+            return !this->data.tree.left->get(eth);
     }
+    return false;
 }
 
 FilterTree::~FilterTree()

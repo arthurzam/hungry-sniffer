@@ -52,6 +52,7 @@ class SniffWindow : public QMainWindow
         Ui::SniffWindow *ui;
 
     private:
+        std::shared_ptr<pcappp::Pcap> firstPcap = nullptr;
         struct localPacket {
                 pcappp::Packet rawPacket;
                 std::shared_ptr<EthernetPacket> decodedPacket;
@@ -80,7 +81,7 @@ class SniffWindow : public QMainWindow
 
     private:
         void setCurrentPacket(const struct localPacket& pack);
-        void addPacketTable(const hungry_sniffer::Packet& packet, int number);
+        void addPacketTable(const struct localPacket &local, int number);
         void updateTableShown();
 
         void setTableHeaders();
