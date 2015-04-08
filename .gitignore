@@ -1,3 +1,5 @@
 *.qm
 *.o
 moc_*
+html/*
+latex/*
