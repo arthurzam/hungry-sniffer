@@ -11,11 +11,11 @@
 #include "HTTPPacket.h"
 #include <netinet/ether.h>
 
-extern "C" void add(Protocol& base)
+extern "C" void add(HungrySniffer_Core& core)
 {
-    Protocol& ipv4 = base.addProtocol(ETHERTYPE_IP, init<IPPacket>, true, "IP", true, true);
-    Protocol& ipv6 = base.addProtocol(ETHERTYPE_IPV6, ipv4, init<IPv6Packet>, "IPv6");
-    base.addProtocol(ETHERTYPE_ARP, init<ArpPacket>, true, "ARP", false, false);
+    Protocol& ipv4 = core.base.addProtocol(ETHERTYPE_IP, init<IPPacket>, true, "IP", true, true);
+    Protocol& ipv6 = core.base.addProtocol(ETHERTYPE_IPV6, ipv4, init<IPv6Packet>, "IPv6");
+    core.base.addProtocol(ETHERTYPE_ARP, init<ArpPacket>, true, "ARP", false, false);
 
     ipv4.addFilter("^dst *== *([^ ]+)$", IPPacket::filter_dstIP);
     ipv4.addFilter("^src *== *([^ ]+)$", IPPacket::filter_srcIP);

@@ -23,7 +23,7 @@ class SniffWindow : public QMainWindow
         explicit SniffWindow(QWidget *parent = 0);
         ~SniffWindow();
 
-        static hungry_sniffer::Protocol* baseProtocol;
+        static HungrySniffer_Core* core;
 
     private slots:
         void on_actionOpen_triggered();
@@ -86,6 +86,8 @@ class SniffWindow : public QMainWindow
 
         void setTableHeaders();
         void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);
+
+        void setOutputFunctions();
 };
 
 

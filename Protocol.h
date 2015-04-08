@@ -171,6 +171,11 @@ namespace hungry_sniffer {
                 return subProtocols->at(type);
             }
 
+            /**
+             * @brief get the protocols container
+             *
+             * @return the protocols container
+             */
             const protocols_t& getProtocolsDB() const
             {
                 return *this->subProtocols.get();
@@ -256,17 +261,37 @@ namespace hungry_sniffer {
                 }
             }
 
-
+            /**
+             * @brief set filter for the regex, and the associated function
+             *
+             * when filter is searched, if the filter string matches the regex, the functoin will be called
+             *
+             * @param filterRegex the searching regex
+             * @param function the called function
+             *
+             * @note don't add the protocol name is start of regex, it is added automatically
+             */
             void addFilter(const std::string& filterRegex, filterFunction function)
             {
                 this->filters.push_back({std::regex(filterRegex, std::regex_constants::icase), function});
             }
 
+            /**
+             * @brief get the filters container
+             *
+             * @return the filters container
+             */
             const filterFunctions_t& getFilters() const
             {
                 return this->filters;
             }
 
+            /**
+             * @brief tries to get protocol with the same name as given
+             *
+             * @param name the searching name of protocol
+             * @return if found, the protocol. otherwise nullptr
+             */
             const Protocol* findProtocol(const std::string& name) const
             {
                 if(this->name == name)
@@ -280,6 +305,12 @@ namespace hungry_sniffer {
                 return nullptr;
             }
 
+            /**
+             * @brief get the associated name with key
+             *
+             * @param key the original name
+             * @return the new, associated name
+             */
             const std::string& getNameAssociated(const std::string& key) const
             {
                 auto value = this->names.find(key);
@@ -289,16 +320,31 @@ namespace hungry_sniffer {
                     return value->second;
             }
 
+            /**
+             * @brief set associated name for key
+             *
+             * @param key the original name
+             * @param value the new, associated name
+             */
             void associateName(const std::string& key, const std::string& value)
             {
                 this->names[key] = value;
             }
 
+            /**
+             * @brief remove the association from key
+             *
+             * @param key the original name
+             */
             void removeNameAssociation(const std::string& key)
             {
                 this->names.erase(key);
             }
 
+            /**
+             * @brief returns if this protocol has naming association service
+             * @return if this protocol has naming association service
+             */
             bool getIsNameService() const
             {
                 return isNameService;
@@ -323,18 +369,18 @@ namespace hungry_sniffer {
             const Protocol* protocol; /*!<The protocol by which this Packet was created*/
             Packet* next; /*!<The next packet*/
             const Packet* prev; /*!<The previous packet*/
-            bool isGood = true;
+            bool isGood = true; /*!<Is the packet not corrupted*/
 
-            headers_category_t headers;
+            headers_category_t headers; /*!<The headers to be add to the tree*/
 
-            std::string source;
-            std::string destination;
+            std::string source; /*!<The displayed source*/
+            std::string destination; /*!<The displayed destination*/
 
-            std::string _realSource;
-            std::string _realDestination;
+            std::string _realSource; /*!<The real source*/
+            std::string _realDestination; /*!<The real destination*/
 
-            std::string info;
-            const std::string* name;
+            std::string info; /*!<Info field*/
+            const std::string* name; /*!<Name field*/
 
             /**
              * @brief set the next packet
@@ -387,6 +433,11 @@ namespace hungry_sniffer {
                 return next;
             }
 
+            /**
+             * @brief get the current protocol
+             *
+             * @return the current protocol
+             */
             const Protocol* getProtocol() const
             {
                 return protocol;
@@ -414,6 +465,12 @@ namespace hungry_sniffer {
                 return *this->name;
             }
 
+            /**
+             * @brief get the packet (or sub packet) whose protocol is the same as given
+             *
+             * @param protocol the wanted protocol
+             * @return the associated packet, or nullptr if not found
+             */
             const Packet* hasProtocol(const Protocol* protocol) const
             {
                 if(this->protocol == protocol)
@@ -591,4 +648,20 @@ namespace hungry_sniffer {
         return new T(data, len, protocol, prev);
     }
 }
+
+class HungrySniffer_Core {
+    public:
+        typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
+        std::map<std::string, outputFunction_t> outputFunctions;
+        hungry_sniffer::Protocol& base;
+
+        HungrySniffer_Core(hungry_sniffer::Protocol& base)
+            : base(base) {}
+
+        void addOutputFunction(const std::string& name, outputFunction_t func)
+        {
+            this->outputFunctions.insert({name, func});
+        }
+};
+
 #endif /* PROTOCOL_H_ */

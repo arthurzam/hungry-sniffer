@@ -24,6 +24,7 @@ void SniffWindow::runOfflinePcap(const std::string &filename)
 void SniffWindow::managePacketsList()
 {
     pcappp::Packet packet;
+    try {
     while(this->isNotExiting)
     {
         while(this->isCalculatingFilter)
@@ -32,7 +33,7 @@ void SniffWindow::managePacketsList()
         }
         if(this->toAdd.try_pop(packet))
         {
-            this->local.append({packet, std::make_shared<EthernetPacket>(packet.get_data(), packet.get_length(), SniffWindow::baseProtocol), std::time(NULL)});
+            this->local.append({packet, std::make_shared<EthernetPacket>(packet.get_data(), packet.get_length(), &SniffWindow::core->base), std::time(NULL)});
             const struct localPacket& localPacket = this->local.last();
             if(!filterTree || (*filterTree).get(localPacket.decodedPacket.get()))
                 this->addPacketTable(localPacket, this->local.size());
@@ -41,6 +42,9 @@ void SniffWindow::managePacketsList()
         {
             QThread::msleep(500);
         }
+    }
+    } catch (...) {
+        qDebug() << "error";
     }
 }
 

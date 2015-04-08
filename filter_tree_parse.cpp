@@ -141,7 +141,7 @@ static FilterTree::Node* parseEndExpr(string::const_iterator start, string::cons
     stripSpaces(start, end);
     string::const_iterator dot = std::find(start, end, '.');
     string name(start, dot);
-    const hungry_sniffer::Protocol* protocol = SniffWindow::baseProtocol->findProtocol(name);
+    const hungry_sniffer::Protocol* protocol = SniffWindow::core->base.findProtocol(name);
 
     if(!protocol)
     {

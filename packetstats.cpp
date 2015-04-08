@@ -33,10 +33,10 @@ PacketStats::~PacketStats()
 void PacketStats::setStats()
 {
     QStringList str;
-    str << QString::fromStdString(SniffWindow::baseProtocol->getName()) << QString::number(SniffWindow::baseProtocol->getPacketsCount());
+    str << QString::fromStdString(SniffWindow::core->base.getName()) << QString::number(SniffWindow::core->base.getPacketsCount());
     QTreeWidgetItem* root = new QTreeWidgetItem(str);
 
-    for(auto i = SniffWindow::baseProtocol->getProtocolsDB().cbegin(); i != SniffWindow::baseProtocol->getProtocolsDB().cend(); ++i)
+    for(auto i = SniffWindow::core->base.getProtocolsDB().cbegin(); i != SniffWindow::core->base.getProtocolsDB().cend(); ++i)
     {
         this->setStatsPerProtocol(&i->second, root);
     }

@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "devicechoose.h"
 #include "packetstats.h"
+#include "outputviewer.h"
 
 SniffWindow::SniffWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -26,6 +27,7 @@ SniffWindow::SniffWindow(QWidget *parent) :
         ui->tree_packet->setHeaderLabels(list);
         ui->tree_packet->setColumnCount(list.size());
     }
+    this->setOutputFunctions();
 }
 
 SniffWindow::~SniffWindow()
@@ -34,6 +36,32 @@ SniffWindow::~SniffWindow()
     this->isNotExiting = false;
     this->manageThread.join();
     delete ui;
+}
+
+void SniffWindow::setOutputFunctions()
+{
+    if(core->outputFunctions.size() == 0)
+        return;
+
+    QMenu* output = new QMenu(tr("Output"), this);
+    for(const auto& i : core->outputFunctions)
+    {
+        if(i.second == nullptr)
+            continue;
+
+        QAction* temp = new QAction(QString::fromStdString(i.first), this);
+        connect(temp, &QAction::triggered, [this, i]() {
+            std::stringstream stream;
+            for(const auto& p : this->local)
+            {
+                i.second(stream, p.decodedPacket.get());
+            }
+            OutputViewer* window = new OutputViewer(stream, i.first, this);
+            window->show();
+        });
+        output->addAction(temp);
+    }
+    ui->menubar->addMenu(output);
 }
 
 void SniffWindow::on_actionOpen_triggered()
@@ -145,7 +173,7 @@ void SniffWindow::on_actionClear_triggered()
     this->setTableHeaders();
 
     this->local.clear();
-    baseProtocol->cleanStats();
+    core->base.cleanStats();
 
     this->isCalculatingFilter = false;
 }

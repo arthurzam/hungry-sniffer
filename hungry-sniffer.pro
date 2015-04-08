@@ -2,7 +2,7 @@ CONFIG += c++11
 QT     += core gui widgets printsupport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-LIBS   += -lpcap++ -lpcap -ldl -lqhexedit -lqwt
+LIBS   += -lpcap++ -lpcap -ldl -lqhexedit
 QMAKE_LFLAGS_RELEASE += -s -flto
 QMAKE_CXXFLAGS_RELEASE += -flto
 
@@ -16,7 +16,8 @@ SOURCES += main.cpp\
     packetstats.cpp \
     filter_tree.cpp \
     filter_tree_parse.cpp \
-    sniff_window_packetsFlow.cpp
+    sniff_window_packetsFlow.cpp \
+    outputviewer.cpp
 
 HEADERS  += \
     devicechoose.h \
@@ -25,12 +26,14 @@ HEADERS  += \
     Protocol.h \
     EthernetPacket.h \
     packetstats.h \
-    filter_tree.h
+    filter_tree.h \
+    outputviewer.h
 
 FORMS    += \
     devicechoose.ui \
     sniff_window.ui \
-    packetstats.ui
+    packetstats.ui \
+    outputviewer.ui
 
 RESOURCES += \
     icons/icons.qrc
