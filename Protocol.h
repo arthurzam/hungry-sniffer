@@ -43,7 +43,6 @@ namespace hungry_sniffer {
              * @brief basic constructor for creating Protocol from function pointer
              *
              * @param function pointer to function (created by init<>)
-             *
              */
             Protocol(initFunction function) :
                     subProtocols(std::make_shared<protocols_t>()),
@@ -403,6 +402,12 @@ namespace hungry_sniffer {
                 return (p != nullptr);
             }
         public:
+            /**
+             * @brief basic constructor
+             *
+             * @param protocol the builder protocol
+             * @param prev previous packet
+             */
             Packet(const Protocol* protocol, const Packet* prev = nullptr)
             {
                 this->next = nullptr;
@@ -418,6 +423,9 @@ namespace hungry_sniffer {
             Packet& operator=(const Packet&) = delete;
             Packet& operator=(Packet&&) = delete;
 
+            /**
+             * @brief delete current packet and next
+             */
             virtual ~Packet()
             {
                 delete this->next;
@@ -480,22 +488,43 @@ namespace hungry_sniffer {
                 return nullptr;
             }
 
+            /**
+             * @brief get current packet's source
+             *
+             * @return current packet's source
+             * @note this source is after the check for name association
+             */
             const std::string& localSource() const
             {
                 return this->source;
             }
 
+            /**
+             * @brief get current packet's destination
+             *
+             * @return current packet's destination
+             * @note this destination is after the check for name association
+             */
             const std::string& localDestination() const
             {
                 return this->destination;
             }
 
+            /**
+             * @brief get current packet's original source
+             *
+             * @return current packet's original source
+             */
             const std::string& realSource() const
             {
                 return this->_realSource;
             }
 
-            const std::string& realDestination() const
+            /**
+             * @brief get current packet's original destination
+             *
+             * @return current packet's original destination
+             */const std::string& realDestination() const
             {
                 return this->_realDestination;
             }
@@ -522,6 +551,11 @@ namespace hungry_sniffer {
                 return this->destination;
             }
 
+            /**
+             * @brief push current packet's headers into headers parameter
+             *
+             * @param headers destination object to hold the appended headers
+             */
             void getHeaders(headers_t& headers) const
             {
                 if(!this->headers.empty())
@@ -530,6 +564,11 @@ namespace hungry_sniffer {
                     this->next->getHeaders(headers);
             }
 
+            /**
+             * @brief get last packet's info string
+             *
+             * @return last packet's info string
+             */
             const std::string& getInfo() const
             {
                 if(this->next)
@@ -546,23 +585,29 @@ namespace hungry_sniffer {
                 return this->protocol->getName();
             }
 
+            /**
+             * @brief update the fields that are dependent on naming service
+             *
+             * this function is called whenever naming service is changed
+             * @note implement this function if the packet has naming service
+             */
             virtual void updateNameAssociation() {}
 
             bool isGoodPacket() const
             {
-                return this->isGood && (!this->next || this->next->isGoodPacket());
+                return this->isGood & (!this->next || this->next->isGoodPacket());
             }
     };
 
     /**
      * @brief Templated Packet for use on structs
      *
-     * @note Most useful when the protocol packets are binary and same structure.
+     * @note Most useful when the protocol packets are binary and based on a structure.
      */
     template<typename T>
     class PacketStructed : public Packet {
         protected:
-            T value;
+            T value; /*!<the struct*/
 
             PacketStructed(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
                     Packet(protocol, prev)
@@ -578,7 +623,7 @@ namespace hungry_sniffer {
 
     class PacketText : public Packet {
         protected:
-            std::string data;
+            std::string data; /*!<the text of the packet*/
         public:
             virtual std::string getInfo() const
             {
@@ -595,6 +640,12 @@ namespace hungry_sniffer {
             PacketTextHeaders(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
                 PacketText(data, len, protocol, prev) {}
 
+            /**
+             * @brief extract headers that are separated by colon or newline
+             *
+             * @param start the start index
+             * @param end the end index
+             */
             void extractTextHeaders(int start, int end)
             {
                 int colon, endLine = -1, part;

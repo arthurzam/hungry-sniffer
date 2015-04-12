@@ -7,6 +7,9 @@ namespace Ui {
 class DeviceChoose;
 }
 
+/**
+ * @brief Choosing Device for Sniffing Dialog
+ */
 class DeviceChoose : public QDialog
 {
     Q_OBJECT
@@ -28,8 +31,14 @@ public:
 
 private slots:
 
+    /**
+     * @brief on_buttonBox_accepted in case OK was clicked, save the chosen in results
+     */
     void on_buttonBox_accepted();
 
+    /**
+     * @brief refreshDevices update the devices in the table
+     */
     void refreshDevices();
 private:
     Ui::DeviceChoose *ui;
