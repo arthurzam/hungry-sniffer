@@ -1,14 +1,7 @@
-/*
- * UDPPacket.cpp
- *
- *  Created on: Sep 2, 2014
- *      Author: arthur
- */
-
 #include "UDPPacket.h"
 #include <netinet/in.h>
 
-using namespace std;
+extern Protocol dataProtocol;
 
 UDPPacket::UDPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
       PacketStructed(data, len, protocol, prev)
@@ -18,8 +11,14 @@ UDPPacket::UDPPacket(const void* data, size_t len, const Protocol* protocol, con
 
     this->updateNameAssociation();
 
-    if(!Packet::setNext(ntohs(this->value.uh_sport), (const char*)data + sizeof(value), len - sizeof(value)))
-        Packet::setNext(ntohs(this->value.uh_dport), (const char*)data + sizeof(value), len - sizeof(value));
+    const void* __data = (const char*)data + sizeof(value);
+    size_t __data_len = len - sizeof(value);
+    if(!Packet::setNext(ntohs(this->value.uh_sport), __data, __data_len))
+        Packet::setNext(ntohs(this->value.uh_dport), __data, __data_len);
+    if(this->next == nullptr)
+    {
+        this->next = dataProtocol.getFunction()(__data, __data_len, &dataProtocol, this);
+    }
 }
 
 std::string UDPPacket::getConversationFilterText() const

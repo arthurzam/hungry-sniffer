@@ -1,6 +1,8 @@
 #include "TCPPacket.h"
 #include <netinet/in.h>
 
+extern Protocol dataProtocol;
+
 TCPPacket::TCPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
       PacketStructed(data, len, protocol, prev)
 {
@@ -11,9 +13,16 @@ TCPPacket::TCPPacket(const void* data, size_t len, const Protocol* protocol, con
 
     size_t tcpLen = this->value.th_off * 4;
     if(len - tcpLen > 0)
-        if(!Packet::setNext(ntohs(this->value.th_sport), (const char*)data + tcpLen, len - tcpLen))
-            Packet::setNext(ntohs(this->value.th_dport), (const char*)data + tcpLen, len - tcpLen);
-
+    {
+        const void* __data = (const char*)data + tcpLen;
+        size_t __data_len = len - tcpLen;
+        if(!Packet::setNext(ntohs(this->value.th_sport), __data, __data_len))
+            Packet::setNext(ntohs(this->value.th_dport), __data, __data_len);
+        if(this->next == nullptr)
+        {
+            this->next = dataProtocol.getFunction()(__data, __data_len, &dataProtocol, this);
+        }
+    }
 }
 
 std::string TCPPacket::getConversationFilterText() const

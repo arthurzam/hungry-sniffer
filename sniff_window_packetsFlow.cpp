@@ -25,24 +25,24 @@ void SniffWindow::managePacketsList()
 {
     pcappp::Packet packet;
     try {
-    while(this->isNotExiting)
-    {
-        while(this->isCalculatingFilter)
+        while(this->isNotExiting)
         {
-            QThread::msleep(500);
+            while(this->isCalculatingFilter)
+            {
+                QThread::msleep(500);
+            }
+            if(this->toAdd.try_pop(packet))
+            {
+                this->local.append({packet, std::make_shared<EthernetPacket>(packet.get_data(), packet.get_length(), &SniffWindow::core->base), std::time(NULL), false});
+                struct localPacket& localPacket = this->local.last();
+                if((localPacket.isShown = !filterTree || (*filterTree).get(localPacket.decodedPacket.get())))
+                    this->addPacketTable(localPacket, this->local.size());
+            }
+            else if(this->threads.empty() && this->toNotStop)
+            {
+                QThread::msleep(500);
+            }
         }
-        if(this->toAdd.try_pop(packet))
-        {
-            this->local.append({packet, std::make_shared<EthernetPacket>(packet.get_data(), packet.get_length(), &SniffWindow::core->base), std::time(NULL)});
-            const struct localPacket& localPacket = this->local.last();
-            if(!filterTree || (*filterTree).get(localPacket.decodedPacket.get()))
-                this->addPacketTable(localPacket, this->local.size());
-        }
-        else if(this->threads.empty() && this->toNotStop)
-        {
-            QThread::msleep(500);
-        }
-    }
     } catch (...) {
         qDebug() << "error";
     }
@@ -123,9 +123,9 @@ void SniffWindow::updateTableShown()
     this->setTableHeaders();
 
     int i = 1;
-    for(const auto& p : this->local)
+    for(auto& p : this->local)
     {
-        if(!(bool)this->filterTree || this->filterTree->get(&*p.decodedPacket))
+        if((p.isShown = !(bool)this->filterTree || this->filterTree->get(&*p.decodedPacket)))
         {
             this->addPacketTable(p, i);
         }

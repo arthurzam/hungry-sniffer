@@ -622,17 +622,14 @@ namespace hungry_sniffer {
     };
 
     class PacketText : public Packet {
-        protected:
-            std::string data; /*!<the text of the packet*/
         public:
-            virtual std::string getInfo() const
-            {
-                return this->data;
-            }
 
             PacketText(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
-                Packet(protocol, prev),
-                data((const char*)data, len) {}
+                Packet(protocol, prev)
+            {
+                this->headers.push_back({"Data", this->info});
+                this->info.append((const char*)data, len);
+            }
     };
 
     class PacketTextHeaders : public PacketText {
@@ -651,25 +648,25 @@ namespace hungry_sniffer {
                 int colon, endLine = -1, part;
                 while(start < end)
                 {
-                    colon = this->data.find_first_of(":\n", start);
+                    colon = this->info.find_first_of(":\n", start);
                     if(colon == (int)std::string::npos || colon >= end)
                         return;
-                    switch(this->data[colon])
+                    switch(this->info[colon])
                     {
                         case ':':
-                            endLine = this->data.find_first_of('\n', colon);
+                            endLine = this->info.find_first_of('\n', colon);
                             part = colon + 1;
-                            while(this->data[part] == ' ')
+                            while(this->info[part] == ' ')
                                 part++;
-                            if(this->data[endLine - 1] == '\r')
-                                this->data[endLine - 1] = ' ';
+                            if(this->info[endLine - 1] == '\r')
+                                this->info[endLine - 1] = ' ';
                             break;
                         case '\n':
                             endLine = -1;
                             break;
                     }
-                    this->headers.push_back({this->data.substr(start, colon - start),
-                        (endLine == -1 ? "" : this->data.substr(part, endLine - part))});
+                    this->headers.push_back({this->info.substr(start, colon - start),
+                        (endLine == -1 ? "" : this->info.substr(part, endLine - part))});
                     start = (endLine == -1 ? colon + 1 : endLine + 1);
                 }
             }

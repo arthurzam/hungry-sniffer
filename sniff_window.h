@@ -54,9 +54,10 @@ class SniffWindow : public QMainWindow
     private:
         std::shared_ptr<pcappp::Pcap> firstPcap = nullptr;
         struct localPacket {
-                pcappp::Packet rawPacket;
-                std::shared_ptr<EthernetPacket> decodedPacket;
-                time_t _time;
+            pcappp::Packet rawPacket;
+            std::shared_ptr<EthernetPacket> decodedPacket;
+            time_t _time;
+            bool isShown;
         };
 
         ThreadSafeQueue<pcappp::Packet> toAdd;

@@ -7,7 +7,7 @@ OutputViewer::OutputViewer(const std::stringstream& stream, const std::string& n
     ui(new Ui::OutputViewer)
 {
     ui->setupUi(this);
-    ui->tb->appendPlainText(QString::fromStdString(stream.str()));
+    ui->tb->appendHtml(QString::fromStdString(stream.str()).replace("\n", "<br />"));
     this->setWindowTitle(QString::fromStdString(name));
 }
 

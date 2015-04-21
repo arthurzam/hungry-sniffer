@@ -54,7 +54,8 @@ void SniffWindow::setOutputFunctions()
             std::stringstream stream;
             for(const auto& p : this->local)
             {
-                i.second(stream, p.decodedPacket.get());
+                if(p.isShown)
+                    i.second(stream, p.decodedPacket.get());
             }
             OutputViewer* window = new OutputViewer(stream, i.first, this);
             window->show();
