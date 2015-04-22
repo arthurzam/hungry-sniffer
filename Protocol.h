@@ -551,17 +551,9 @@ namespace hungry_sniffer {
                 return this->destination;
             }
 
-            /**
-             * @brief push current packet's headers into headers parameter
-             *
-             * @param headers destination object to hold the appended headers
-             */
-            void getHeaders(headers_t& headers) const
+            const headers_category_t& getHeaders() const
             {
-                if(!this->headers.empty())
-                    headers.push_back({this->protocol->getName(), this->headers});
-                if(this->next)
-                    this->next->getHeaders(headers);
+                return this->headers;
             }
 
             /**
@@ -597,6 +589,11 @@ namespace hungry_sniffer {
             {
                 return this->isGood & (!this->next || this->next->isGoodPacket());
             }
+
+            bool isLocalGood() const
+            {
+                return this->isGood;
+            }
     };
 
     /**
@@ -622,13 +619,28 @@ namespace hungry_sniffer {
     };
 
     class PacketText : public Packet {
+        protected:
+            std::string data;
         public:
 
             PacketText(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
-                Packet(protocol, prev)
+                Packet(protocol, prev),
+                data((const char*)data, len)
             {
+            }
+
+            virtual void updateNameAssociation()
+            {
+                this->info.clear();
+                auto start = data.cbegin(), end = data.cend();
+                while(*start == ' ' && start != end)
+                    ++start;
+                while(*(end - 1) == ' ' && start != end)
+                    --end;
+                this->info.append(start, end);
+
+                this->headers.clear();
                 this->headers.push_back({"Data", this->info});
-                this->info.append((const char*)data, len);
             }
     };
 
@@ -648,25 +660,25 @@ namespace hungry_sniffer {
                 int colon, endLine = -1, part;
                 while(start < end)
                 {
-                    colon = this->info.find_first_of(":\n", start);
+                    colon = this->data.find_first_of(":\n", start);
                     if(colon == (int)std::string::npos || colon >= end)
                         return;
-                    switch(this->info[colon])
+                    switch(this->data[colon])
                     {
                         case ':':
-                            endLine = this->info.find_first_of('\n', colon);
+                            endLine = this->data.find_first_of('\n', colon);
                             part = colon + 1;
-                            while(this->info[part] == ' ')
+                            while(this->data[part] == ' ')
                                 part++;
-                            if(this->info[endLine - 1] == '\r')
-                                this->info[endLine - 1] = ' ';
+                            if(this->data[endLine - 1] == '\r')
+                                this->data[endLine - 1] = ' ';
                             break;
                         case '\n':
                             endLine = -1;
                             break;
                     }
-                    this->headers.push_back({this->info.substr(start, colon - start),
-                        (endLine == -1 ? "" : this->info.substr(part, endLine - part))});
+                    this->headers.push_back({this->data.substr(start, colon - start),
+                        (endLine == -1 ? "" : this->data.substr(part, endLine - part))});
                     start = (endLine == -1 ? colon + 1 : endLine + 1);
                 }
             }

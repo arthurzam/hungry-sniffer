@@ -21,6 +21,7 @@ TCPPacket::TCPPacket(const void* data, size_t len, const Protocol* protocol, con
         if(this->next == nullptr)
         {
             this->next = dataProtocol.getFunction()(__data, __data_len, &dataProtocol, this);
+            this->next->updateNameAssociation();
         }
     }
 }

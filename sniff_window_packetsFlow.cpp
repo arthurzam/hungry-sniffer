@@ -137,19 +137,22 @@ void SniffWindow::updateTableShown()
 
 void SniffWindow::setCurrentPacket(const struct localPacket& pack)
 {
-    hungry_sniffer::Packet::headers_t headers;
-    pack.decodedPacket->getHeaders(headers);
-
     ui->tree_packet->clear();
-    for(const auto& i : headers)
+    for(const hungry_sniffer::Packet* packet = pack.decodedPacket.get(); packet; packet = packet->getNext())
     {
-        QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(i.first)));
-        for(const auto& j : i.second)
+        const hungry_sniffer::Packet::headers_category_t& headers = packet->getHeaders();
+        if(!headers.empty())
         {
-            head->addChild(new QTreeWidgetItem(QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));
-        }
+            QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(packet->getProtocol()->getName())));
+            if(!packet->isLocalGood())
+                head->setBackgroundColor(0, Qt::yellow);
+            for(const auto& j : headers)
+            {
+                head->addChild(new QTreeWidgetItem(QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));
+            }
 
-        ui->tree_packet->addTopLevelItem(head);
+            ui->tree_packet->addTopLevelItem(head);
+        }
     }
     ui->tree_packet->expandAll();
     ui->tree_packet->resizeColumnToContents(0);

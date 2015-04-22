@@ -19,15 +19,14 @@ static std::string trimSpaces(const std::string& str)
     return std::string(start, end);
 }
 
-
 HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
     : PacketTextHeaders(data, len, protocol, prev),
       isRequest(prev->realDestination() == "80")
 {
     // parse first line
 
-    std::string::const_iterator start = this->info.cbegin()
-            , end = this->info.cend()
+    std::string::const_iterator start = this->data.cbegin()
+            , end = this->data.cend()
             , temp;
 
     if((temp = std::find(start, end, ' ')) == end)
@@ -55,8 +54,8 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
     start = temp + 1;
 
     // parse headers block
-    int startOfData = this->info.find("\r\n\r\n", start - this->info.cbegin());
-    this->extractTextHeaders(start - this->info.cbegin(), startOfData);
+    int startOfData = this->data.find("\r\n\r\n", start - this->data.cbegin());
+    this->extractTextHeaders(start - this->data.cbegin(), startOfData);
 
     startOfData += 4;
 
