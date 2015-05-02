@@ -7,7 +7,16 @@
 #include <list>
 
 namespace hungry_sniffer {
+
     class Packet;
+
+    typedef bool (*optionDisableFunction)(const Packet* packet);
+    struct enabledOption {
+        std::string name;
+        const Packet* packet;
+        optionDisableFunction disable_func;
+    };
+    typedef bool (*optionEnableFunction)(const Packet* packet, std::list<struct enabledOption>& options);
 
     /**
      * @brief class for holding data about protocol
@@ -22,6 +31,7 @@ namespace hungry_sniffer {
 
             typedef std::map<size_t, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;
+            typedef std::map<std::string, optionEnableFunction> options_t;
             typedef std::list<std::pair<std::regex, filterFunction>> filterFunctions_t;
             typedef std::list<std::pair<std::string, const int*>> stats_table_t;
         private:
@@ -38,6 +48,8 @@ namespace hungry_sniffer {
 
             filterFunctions_t filters;
             bool isConversationEnabeled;
+
+            options_t options;
         public:
             /**
              * @brief basic constructor for creating Protocol from function pointer
@@ -352,6 +364,16 @@ namespace hungry_sniffer {
             bool getIsConversationEnabeled() const
             {
                 return isConversationEnabeled;
+            }
+
+            void addOption(const std::string& optionName, optionEnableFunction func)
+            {
+                this->options.insert({optionName, func});
+            }
+
+            const options_t& getOptions() const
+            {
+                return this->options;
             }
     };
 

@@ -145,6 +145,8 @@
     <addaction name="actionStop"/>
     <addaction name="actionSniff"/>
     <addaction name="actionClear"/>
+    <addaction name="separator"/>
+    <addaction name="actionDisableOptions"/>
    </widget>
    <widget class="QMenu" name="menuStats">
     <property name="title">
@@ -252,6 +254,11 @@
   <action name="actionClear">
    <property name="text">
     <string>&amp;Clear</string>
+   </property>
+  </action>
+  <action name="actionDisableOptions">
+   <property name="text">
+    <string>Disable Background Tasks</string>
    </property>
   </action>
  </widget>

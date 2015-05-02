@@ -9,6 +9,7 @@
 #include <ctime>
 #include "EthernetPacket.h"
 #include "filter_tree.h"
+#include "optionsdisabler.h"
 #include <atomic>
 
 namespace Ui {
@@ -48,6 +49,8 @@ class SniffWindow : public QMainWindow
 
         void on_table_packets_customContextMenuRequested(const QPoint &pos);
 
+        void on_actionDisableOptions_triggered();
+
     private:
         Ui::SniffWindow *ui;
 
@@ -70,6 +73,9 @@ class SniffWindow : public QMainWindow
 
         std::unique_ptr<FilterTree> filterTree;
         std::atomic<bool> isCalculatingFilter;
+
+        OptionsDisabler optionsDisablerWin;
+
     public:
         void runLivePcap(const std::string& name);
         void runOfflinePcap(const std::string& filename);
@@ -89,6 +95,8 @@ class SniffWindow : public QMainWindow
         void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);
 
         void setOutputFunctions();
+
+        void closeEvent(QCloseEvent *bar);
 };
 
 

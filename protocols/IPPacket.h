@@ -1,10 +1,3 @@
-/*
- * IPPacket.h
- *
- *  Created on: Sep 2, 2014
- *      Author: arthur
- */
-
 #ifndef IPPACKET_H_
 #define IPPACKET_H_
 
@@ -23,6 +16,9 @@ class IPPacket : public PacketStructed<struct ip> {
         static bool filter_dstIP(const Packet* packet, const std::vector<std::string>& res);
         static bool filter_srcIP(const Packet* packet, const std::vector<std::string>& res);
         static bool filter_follow(const Packet* packet, const std::vector<std::string>& res);
+
+        static bool drop_srcIP(const Packet* packet, std::list<struct enabledOption>& options);
+        static bool undrop_srcIP(const Packet* packet);
 };
 
 #endif /* IPPACKET_H_ */

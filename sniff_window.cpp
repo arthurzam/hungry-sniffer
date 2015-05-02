@@ -65,6 +65,25 @@ void SniffWindow::setOutputFunctions()
     ui->menubar->addMenu(output);
 }
 
+void SniffWindow::closeEvent(QCloseEvent* bar)
+{
+    while(this->optionsDisablerWin.enabledOptions.size() != 0)
+    {
+        if(QMessageBox::StandardButton::Yes == QMessageBox::question(nullptr,
+                                                                     tr("Background Options"),
+                                                                     tr("There are still background options.\n""Do you want to disable them?"),
+                                                                     QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No))
+        {
+            this->optionsDisablerWin.exec();
+        }
+        else
+        {
+            break;
+        }
+    }
+    bar->accept();
+}
+
 void SniffWindow::on_actionOpen_triggered()
 {
     QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), "", tr("Pcap (*.pcap)"));
@@ -224,7 +243,8 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
         QList<QAction*> list;
         QMenu menu;
         int row = ui->table_packets->item(item->row(), 0)->text().toInt() - 1;
-        QMenu follow(tr("Follow")), nameSrc(tr("Associate Name For Source")), nameDst(tr("Associate Name For Destination"));
+        QMenu follow(tr("Follow")), nameSrc(tr("Associate Name For Source")),
+                nameDst(tr("Associate Name For Destination")), optionsMenu(tr("Special Options"));
         const EthernetPacket* packet = this->local[row].decodedPacket.get();
         {
             const hungry_sniffer::Packet* localPacket = packet;
@@ -257,6 +277,23 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                     list.append(action);
                     nameDst.addAction(action);
                 }
+                auto options = localPacket->getProtocol()->getOptions();
+                if(options.size() > 0)
+                {
+                    QMenu* subMenu = new QMenu(QString::fromStdString(localPacket->getProtocol()->getName()));
+                    for(const auto& i : options)
+                    {
+                        QAction* action = new QAction(QString::fromStdString(i.first), &optionsMenu);
+                        auto func = i.second;
+                        connect(action, &QAction::triggered, [this, packet, func]() {
+                            if(func(packet, this->optionsDisablerWin.enabledOptions))
+                                this->optionsDisablerWin.refreshOptions();
+                        });
+                        subMenu->addAction(action);
+                        list.append(action);
+                    }
+                    optionsMenu.addMenu(subMenu);
+                }
                 localPacket = localPacket->getNext();
             }
         }
@@ -267,7 +304,21 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
             menu.addMenu(&nameSrc);
             menu.addMenu(&nameDst);
         }
+        if(optionsMenu.actions().size() > 0)
+            menu.addMenu(&optionsMenu);
         menu.exec(ui->table_packets->mapToGlobal(pos));
         qDeleteAll(list);
+    }
+}
+
+void SniffWindow::on_actionDisableOptions_triggered()
+{
+    if(this->optionsDisablerWin.enabledOptions.size() == 0)
+    {
+        QMessageBox::warning(nullptr, tr("Empty"), tr("No Background Options running"), QMessageBox::StandardButton::Ok);
+    }
+    else
+    {
+        this->optionsDisablerWin.show();
     }
 }

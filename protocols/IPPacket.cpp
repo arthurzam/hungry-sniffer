@@ -1,10 +1,3 @@
-/*
- * IPPacket.cpp
- *
- *  Created on: Sep 2, 2014
- *      Author: arthur
- */
-
 #include "IPPacket.h"
 #include <arpa/inet.h>
 
@@ -63,4 +56,24 @@ bool IPPacket::filter_follow(const Packet* packet, const std::vector<std::string
     if(res[1] == ip->_realDestination || res[1] == ip->destination)
         return res[2] == ip->_realSource || res[2] == ip->source;
     return false;
+}
+
+#include "iptc.h"
+bool IPPacket::drop_srcIP(const Packet* packet, std::list<struct enabledOption>& options)
+{
+    const IPPacket* ip = static_cast<const IPPacket*>(packet->getNext());
+    bool res = dropIP(ip->_realSource.c_str());
+    if(res)
+    {
+        struct enabledOption e = {"Drop from ", ip, IPPacket::undrop_srcIP};
+        e.name.append(ip->_realSource.c_str());
+        options.push_back(std::move(e));
+    }
+    return res;
+}
+
+bool IPPacket::undrop_srcIP(const Packet* packet)
+{
+    const IPPacket* ip = static_cast<const IPPacket*>(packet);
+    return removeDropIP(ip->_realSource.c_str());
 }

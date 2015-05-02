@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     filter_tree.cpp \
     filter_tree_parse.cpp \
     sniff_window_packetsFlow.cpp \
-    outputviewer.cpp
+    outputviewer.cpp \
+    optionsdisabler.cpp
 
 HEADERS  += \
     devicechoose.h \
@@ -27,13 +28,15 @@ HEADERS  += \
     EthernetPacket.h \
     packetstats.h \
     filter_tree.h \
-    outputviewer.h
+    outputviewer.h \
+    optionsdisabler.h
 
 FORMS    += \
     devicechoose.ui \
     sniff_window.ui \
     packetstats.ui \
-    outputviewer.ui
+    outputviewer.ui \
+    optionsdisabler.ui
 
 RESOURCES += \
     icons/icons.qrc
