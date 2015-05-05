@@ -5,15 +5,16 @@
 #include <cstring>
 #include <regex>
 #include <list>
+#include <vector>
 
 namespace hungry_sniffer {
 
     class Packet;
 
-    typedef bool (*optionDisableFunction)(const Packet* packet);
+    typedef bool (*optionDisableFunction)(const void* data);
     struct enabledOption {
         std::string name;
-        const Packet* packet;
+        const void* data;
         optionDisableFunction disable_func;
     };
     typedef bool (*optionEnableFunction)(const Packet* packet, std::list<struct enabledOption>& options);
@@ -24,6 +25,13 @@ namespace hungry_sniffer {
      * This class holds the initialize function to create Packet object and also associated data
      */
     class Protocol {
+        private:
+            struct option {
+                std::string name;
+                optionEnableFunction func;
+                bool isRootRequired;
+            };
+
         public:
             typedef Packet* (*initFunction)(const void* data, size_t len,
                     const Protocol* protocol, const Packet* prev);
@@ -31,7 +39,7 @@ namespace hungry_sniffer {
 
             typedef std::map<size_t, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;
-            typedef std::map<std::string, optionEnableFunction> options_t;
+            typedef std::vector<struct option> options_t;
             typedef std::list<std::pair<std::regex, filterFunction>> filterFunctions_t;
             typedef std::list<std::pair<std::string, const int*>> stats_table_t;
         private:
@@ -366,9 +374,9 @@ namespace hungry_sniffer {
                 return isConversationEnabeled;
             }
 
-            void addOption(const std::string& optionName, optionEnableFunction func)
+            void addOption(const std::string& optionName, optionEnableFunction func, bool rootNeeded = false)
             {
-                this->options.insert({optionName, func});
+                this->options.push_back({optionName, func, rootNeeded});
             }
 
             const options_t& getOptions() const

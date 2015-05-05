@@ -38,6 +38,11 @@ SniffWindow::~SniffWindow()
     delete ui;
 }
 
+bool SniffWindow::isRoot()
+{
+    return !(getuid() & geteuid());
+}
+
 void SniffWindow::setOutputFunctions()
 {
     if(core->outputFunctions.size() == 0)
@@ -150,7 +155,7 @@ void SniffWindow::on_actionStop_triggered()
 
 void SniffWindow::on_actionSniff_triggered()
 {
-    if(getuid() != 0 && geteuid() != 0)
+    if(!isRoot())
     {
         QMessageBox::warning(nullptr, tr("Not Root"), tr("You should be Root"), QMessageBox::StandardButton::Ok);
         return;
@@ -277,14 +282,18 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                     list.append(action);
                     nameDst.addAction(action);
                 }
+
                 auto options = localPacket->getProtocol()->getOptions();
+                bool _isNotRoot = !isRoot();
                 if(options.size() > 0)
                 {
                     QMenu* subMenu = new QMenu(QString::fromStdString(localPacket->getProtocol()->getName()));
                     for(const auto& i : options)
                     {
-                        QAction* action = new QAction(QString::fromStdString(i.first), &optionsMenu);
-                        auto func = i.second;
+                        if(i.isRootRequired & _isNotRoot)
+                            continue;
+                        QAction* action = new QAction(QString::fromStdString(i.name), &optionsMenu);
+                        auto func = i.func;
                         connect(action, &QAction::triggered, [this, packet, func]() {
                             if(func(packet, this->optionsDisablerWin.enabledOptions))
                                 this->optionsDisablerWin.refreshOptions();
@@ -292,7 +301,10 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                         subMenu->addAction(action);
                         list.append(action);
                     }
-                    optionsMenu.addMenu(subMenu);
+                    if(subMenu->actions().size() == 0)
+                        delete subMenu;
+                    else
+                        optionsMenu.addMenu(subMenu);
                 }
                 localPacket = localPacket->getNext();
             }

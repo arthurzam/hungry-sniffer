@@ -3,7 +3,8 @@ LTO_FLAGS=-flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 CXXFLAGS+=-std=c++0x -c -Wall -Wextra -fPIC -O2 $(LTO_FLAGS)
 LDFLAGS+=-shared -ljsoncpp $(LTO_FLAGS)
 
-SOURCES=call.cpp ArpPacket.cpp ICMPPacket.cpp \
+SOURCES=call.cpp iptc.cpp \
+        ArpPacket.cpp ICMPPacket.cpp \
         IPPacket.cpp TCPPacket.cpp UDPPacket.cpp \
         DNSPacket.cpp IPv6Packet.cpp VRRPPacket.cpp \
         PacketJson.cpp HTTPPacket.cpp

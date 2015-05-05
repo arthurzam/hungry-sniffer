@@ -34,11 +34,15 @@ extern "C" void add(HungrySniffer_Core& core)
     ipv4.addFilter("^src *== *([^ ]+)$", IPPacket::filter_srcIP);
     ipv4.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", IPPacket::filter_follow);
 
-    ipv4.addOption("Drop From Source", IPPacket::drop_srcIP);
+    ipv4.addOption("Drop From Source", IPPacket::drop_srcIP, true);
+    ipv4.addOption("Drop From Destination", IPPacket::drop_dstIP, true);
 
     ipv6.addFilter("^dst *== *([^ ]+)$", IPv6Packet::filter_dstIP);
     ipv6.addFilter("^src *== *([^ ]+)$", IPv6Packet::filter_srcIP);
     ipv6.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", IPv6Packet::filter_follow);
+
+    ipv6.addOption("Drop From Source", IPv6Packet::drop_srcIP, true);
+    ipv6.addOption("Drop From Destination", IPv6Packet::drop_dstIP, true);
 
     Protocol& tcp = ipv4.addProtocol(6, init<TCPPacket>, true, "TCP", true, true);
     Protocol& udp = ipv4.addProtocol(17, init<UDPPacket>, true, "UDP", true, true);

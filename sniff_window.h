@@ -26,6 +26,8 @@ class SniffWindow : public QMainWindow
 
         static HungrySniffer_Core* core;
 
+        static bool isRoot();
+
     private slots:
         void on_actionOpen_triggered();
 

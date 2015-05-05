@@ -1,12 +1,6 @@
-/*
- * ipv6v6Packet.cpp
- *
- *  Created on: Nov 12, 2014
- *      Author: arthur
- */
-
 #include "IPv6Packet.h"
 #include <arpa/inet.h>
+#include "iptc.h"
 
 IPv6Packet::IPv6Packet(const void* data, size_t len, const Protocol* protocol,
         const Packet* prev) : PacketStructed(data, len, protocol, prev)
@@ -67,4 +61,35 @@ bool IPv6Packet::filter_follow(const Packet* packet, const std::vector<std::stri
     if(res[1] == ipv6->_realDestination || res[1] == ipv6->destination)
         return res[2] == ipv6->_realSource || res[2] == ipv6->source;
     return false;
+}
+
+bool IPv6Packet::drop_srcIP(const Packet* packet, std::list<struct enabledOption>& options)
+{
+    const IPv6Packet* ip = static_cast<const IPv6Packet*>(packet->getNext());
+    bool res = dropIP(ip->_realSource.c_str(), false);
+    if(res)
+    {
+        struct enabledOption e = {"Drop from ", ip->_realSource.c_str(), IPv6Packet::undrop_IP};
+        e.name.append(ip->_realSource.c_str());
+        options.push_back(std::move(e));
+    }
+    return res;
+}
+
+bool IPv6Packet::drop_dstIP(const Packet* packet, std::list<struct enabledOption>& options)
+{
+    const IPv6Packet* ip = static_cast<const IPv6Packet*>(packet->getNext());
+    bool res = dropIP(ip->_realDestination.c_str(), false);
+    if(res)
+    {
+        struct enabledOption e = {"Drop from ", ip->_realDestination.c_str(), IPv6Packet::undrop_IP};
+        e.name.append(ip->_realDestination.c_str());
+        options.push_back(std::move(e));
+    }
+    return res;
+}
+
+bool IPv6Packet::undrop_IP(const void* data)
+{
+    return removeDropIP(static_cast<const char*>(data), false);
 }

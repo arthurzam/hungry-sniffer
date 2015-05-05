@@ -1,5 +1,6 @@
 #include "IPPacket.h"
 #include <arpa/inet.h>
+#include "iptc.h"
 
 using namespace std;
 
@@ -58,22 +59,33 @@ bool IPPacket::filter_follow(const Packet* packet, const std::vector<std::string
     return false;
 }
 
-#include "iptc.h"
 bool IPPacket::drop_srcIP(const Packet* packet, std::list<struct enabledOption>& options)
 {
     const IPPacket* ip = static_cast<const IPPacket*>(packet->getNext());
-    bool res = dropIP(ip->_realSource.c_str());
+    bool res = dropIP(ip->_realSource.c_str(), true);
     if(res)
     {
-        struct enabledOption e = {"Drop from ", ip, IPPacket::undrop_srcIP};
+        struct enabledOption e = {"Drop from ", ip->_realSource.c_str(), IPPacket::undrop_IP};
         e.name.append(ip->_realSource.c_str());
         options.push_back(std::move(e));
     }
     return res;
 }
 
-bool IPPacket::undrop_srcIP(const Packet* packet)
+bool IPPacket::drop_dstIP(const Packet* packet, std::list<struct enabledOption>& options)
 {
-    const IPPacket* ip = static_cast<const IPPacket*>(packet);
-    return removeDropIP(ip->_realSource.c_str());
+    const IPPacket* ip = static_cast<const IPPacket*>(packet->getNext());
+    bool res = dropIP(ip->_realDestination.c_str(), true);
+    if(res)
+    {
+        struct enabledOption e = {"Drop from ", ip->_realDestination.c_str(), IPPacket::undrop_IP};
+        e.name.append(ip->_realDestination.c_str());
+        options.push_back(std::move(e));
+    }
+    return res;
+}
+
+bool IPPacket::undrop_IP(const void* data)
+{
+    return removeDropIP(static_cast<const char*>(data), true);
 }

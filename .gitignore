@@ -1,5 +1,7 @@
 *.qm
 *.o
+*.so
+*.user
 moc_*
 html/*
 latex/*

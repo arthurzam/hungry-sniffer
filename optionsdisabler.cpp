@@ -34,9 +34,8 @@ void OptionsDisabler::refreshOptions()
         connect(bt, &QPushButton::clicked, [this, row]() {
             auto iter = this->enabledOptions.begin();
             for(int j = 0; j < row; ++j, ++iter);
-            const hungry_sniffer::Packet* packet = iter->packet;
             hungry_sniffer::optionDisableFunction disable_func = iter->disable_func;
-            if(disable_func(packet))
+            if(disable_func(iter->data))
             {
                 this->enabledOptions.erase(iter);
                 this->refreshOptions();
