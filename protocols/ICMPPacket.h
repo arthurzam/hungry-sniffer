@@ -1,10 +1,3 @@
-/*
- * ICMPPacket.h
- *
- *  Created on: Sep 2, 2014
- *      Author: arthur
- */
-
 #ifndef ICMPPACKET_H_
 #define ICMPPACKET_H_
 
@@ -14,6 +7,8 @@
 using namespace hungry_sniffer;
 
 class ICMPPacket: public PacketStructed<struct icmphdr> {
+    private:
+        void setByTypes(int type, int code);
     public:
         ICMPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~ICMPPacket() {}
