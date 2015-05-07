@@ -40,5 +40,3 @@ FORMS    += \
 
 RESOURCES += \
     icons/icons.qrc
-
-TRANSLATIONS += translations/hungry-sniffer_he.ts

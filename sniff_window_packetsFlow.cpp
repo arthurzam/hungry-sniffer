@@ -135,6 +135,18 @@ void SniffWindow::updateTableShown()
     this->isCalculatingFilter = false;
 }
 
+void SniffWindow::reloadAllPackets(const hungry_sniffer::Protocol* protocol)
+{
+    for(auto& i : this->local)
+    {
+        hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(protocol));
+        if(ptr)
+        {
+            ptr->updateNameAssociation();
+        }
+    }
+}
+
 void SniffWindow::setCurrentPacket(const struct localPacket& pack)
 {
     ui->tree_packet->clear();

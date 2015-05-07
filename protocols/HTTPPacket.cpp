@@ -1,13 +1,8 @@
-/*
- * HTTPPacket.cpp
- *
- *  Created on: Dec 21, 2014
- *      Author: arthur
- */
-
 #include "HTTPPacket.h"
 #include <iostream>
 using namespace std;
+
+extern Protocol dataProtocol;
 
 static std::string trimSpaces(const std::string& str)
 {
@@ -17,6 +12,11 @@ static std::string trimSpaces(const std::string& str)
     while(*(end - 1) == ' ' && start != end)
         --end;
     return std::string(start, end);
+}
+
+static bool cmpEncoding(const HTTPPacket::headers_category_t::value_type& i)
+{
+    return i.first == "Content-Encoding";
 }
 
 HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
@@ -61,12 +61,16 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
 
     if(!isRequest)
     {
-        auto encoding = std::find_if(this->headers.cbegin(), this->headers.cend(),
-                [] (const headers_category_t::value_type& i) { return i.first == "Content-Encoding"; });
+        auto encoding = std::find_if(this->headers.cbegin(), this->headers.cend(), cmpEncoding);
         if(encoding != this->headers.cend())
         {
             std::hash<std::string> hasher;
             this->setNext(hasher(trimSpaces(encoding->second)), (const char*)data + startOfData, len - startOfData);
+        }
+        if(this->next == nullptr)
+        {
+            this->next = dataProtocol.getFunction()((const char*)data + startOfData, len - startOfData, &dataProtocol, this);
+            this->next->updateNameAssociation();
         }
     }
 }

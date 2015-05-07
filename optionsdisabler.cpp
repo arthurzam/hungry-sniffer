@@ -14,6 +14,10 @@ OptionsDisabler::OptionsDisabler(QWidget *parent) :
 OptionsDisabler::~OptionsDisabler()
 {
     delete ui;
+//    for(auto& i : this->enabledOptions)
+//    {
+//        free(const_cast<void*>(i.data));
+//    }
 }
 
 void OptionsDisabler::refreshOptions()
@@ -33,9 +37,11 @@ void OptionsDisabler::refreshOptions()
 
         connect(bt, &QPushButton::clicked, [this, row]() {
             auto iter = this->enabledOptions.begin();
-            for(int j = 0; j < row; ++j, ++iter);
-            hungry_sniffer::optionDisableFunction disable_func = iter->disable_func;
-            if(disable_func(iter->data))
+            for(int j = 0; j < row; ++j) ++iter;
+            hungry_sniffer::Option::optionDisableFunction disable_func = iter->disable_func;
+            if(!disable_func)
+                qDebug("disable function NULL for %s", iter->name.c_str());
+            else if(disable_func(iter->data))
             {
                 this->enabledOptions.erase(iter);
                 this->refreshOptions();

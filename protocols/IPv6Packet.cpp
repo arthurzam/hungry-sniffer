@@ -63,30 +63,28 @@ bool IPv6Packet::filter_follow(const Packet* packet, const std::vector<std::stri
     return false;
 }
 
-bool IPv6Packet::drop_srcIP(const Packet* packet, std::list<struct enabledOption>& options)
+int IPv6Packet::drop_srcIP(const Packet* packet, Option::disabled_options_t& options)
 {
     const IPv6Packet* ip = static_cast<const IPv6Packet*>(packet->getNext());
     bool res = dropIP(ip->_realSource.c_str(), false);
-    if(res)
-    {
-        struct enabledOption e = {"Drop from ", ip->_realSource.c_str(), IPv6Packet::undrop_IP};
-        e.name.append(ip->_realSource.c_str());
-        options.push_back(std::move(e));
-    }
-    return res;
+    if(!res)
+        return 0;
+    Option::enabledOption e = {"Drop from ", ip->_realSource.c_str(), IPv6Packet::undrop_IP};
+    e.name.append(ip->_realSource.c_str());
+    options.push_back(std::move(e));
+    return Option::ENABLE_OPTION_RETURN_ADDED_DISABLE;
 }
 
-bool IPv6Packet::drop_dstIP(const Packet* packet, std::list<struct enabledOption>& options)
+int IPv6Packet::drop_dstIP(const Packet* packet, Option::disabled_options_t& options)
 {
     const IPv6Packet* ip = static_cast<const IPv6Packet*>(packet->getNext());
     bool res = dropIP(ip->_realDestination.c_str(), false);
-    if(res)
-    {
-        struct enabledOption e = {"Drop from ", ip->_realDestination.c_str(), IPv6Packet::undrop_IP};
-        e.name.append(ip->_realDestination.c_str());
-        options.push_back(std::move(e));
-    }
-    return res;
+    if(!res)
+        return 0;
+    Option::enabledOption e = {"Drop from ", ip->_realDestination.c_str(), IPv6Packet::undrop_IP};
+    e.name.append(ip->_realDestination.c_str());
+    options.push_back(std::move(e));
+    return Option::ENABLE_OPTION_RETURN_ADDED_DISABLE;
 }
 
 bool IPv6Packet::undrop_IP(const void* data)

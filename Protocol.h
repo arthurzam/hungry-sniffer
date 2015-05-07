@@ -11,13 +11,28 @@ namespace hungry_sniffer {
 
     class Packet;
 
-    typedef bool (*optionDisableFunction)(const void* data);
-    struct enabledOption {
-        std::string name;
-        const void* data;
-        optionDisableFunction disable_func;
-    };
-    typedef bool (*optionEnableFunction)(const Packet* packet, std::list<struct enabledOption>& options);
+    namespace Option {
+        typedef bool (*optionDisableFunction)(const void* data);
+
+        struct enabledOption {
+            std::string name;
+            const void* data;
+            optionDisableFunction disable_func;
+        };
+
+        /**
+         * @brief the return flags that are returned from optionEnableFunction
+         */
+        enum ENABLE_OPTION_RETURN {
+            ENABLE_OPTION_RETURN_ADDED_DISABLE = 0x1, /*!<Disable Rule was added*/
+            ENABLE_OPTION_RETURN_RELOAD_TABLE = 0x2, /*!<Reload all the packets on table*/
+            ENABLE_OPTION_RETURN_MALLOCED_DATA = 0x4, /*!<The data in disableOption is allocated*/
+        };
+
+        typedef std::list<struct enabledOption> disabled_options_t;
+
+        typedef int (*optionEnableFunction)(const Packet* packet, disabled_options_t& options);
+    }
 
     /**
      * @brief class for holding data about protocol
@@ -28,7 +43,7 @@ namespace hungry_sniffer {
         private:
             struct option {
                 std::string name;
-                optionEnableFunction func;
+                Option::optionEnableFunction func;
                 bool isRootRequired;
             };
 
@@ -131,7 +146,8 @@ namespace hungry_sniffer {
                     const std::string& name = "unknown", bool isNameService = false,
                     bool isConversationEnabeled = false)
             {
-                return this->subProtocols->insert({type, Protocol(function, isStats, name, isNameService, isConversationEnabeled)}).first->second;
+                return this->subProtocols->insert({type, Protocol(function, isStats, name, isNameService,
+                                                   isConversationEnabeled)}).first->second;
             }
 
             /**
@@ -374,7 +390,7 @@ namespace hungry_sniffer {
                 return isConversationEnabeled;
             }
 
-            void addOption(const std::string& optionName, optionEnableFunction func, bool rootNeeded = false)
+            void addOption(const std::string& optionName, Option::optionEnableFunction func, bool rootNeeded = false)
             {
                 this->options.push_back({optionName, func, rootNeeded});
             }
@@ -466,9 +482,12 @@ namespace hungry_sniffer {
              *
              * @return the next Packet
              */
-            const Packet* getNext() const
+            const Packet* getNext(int count = 1) const
             {
-                return next;
+                const Packet* temp = this;
+                for(int i = 0; i < count && temp; ++i)
+                    temp = temp->next;
+                return temp;
             }
 
             /**
@@ -661,16 +680,23 @@ namespace hungry_sniffer {
 
             virtual void updateNameAssociation()
             {
-                this->info.clear();
                 auto start = data.cbegin(), end = data.cend();
                 while(*start == ' ' && start != end)
                     ++start;
                 while(*(end - 1) == ' ' && start != end)
                     --end;
+                this->info.clear();
                 this->info.append(start, end);
 
                 this->headers.clear();
                 this->headers.push_back({"Data", this->info});
+
+                auto newL = std::find(info.begin(), info.end(), '\n');
+                if(newL != info.end())
+                {
+                    this->info.erase(newL);
+                    this->info.append(" ...");
+                }
             }
     };
 

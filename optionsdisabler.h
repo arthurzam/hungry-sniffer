@@ -12,7 +12,7 @@ class OptionsDisabler : public QDialog
         Q_OBJECT
 
     public:
-        std::list<struct hungry_sniffer::enabledOption> enabledOptions;
+        hungry_sniffer::Option::disabled_options_t enabledOptions;
 
         explicit OptionsDisabler(QWidget *parent = 0);
         ~OptionsDisabler();

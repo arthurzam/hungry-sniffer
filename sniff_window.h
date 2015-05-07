@@ -92,6 +92,7 @@ class SniffWindow : public QMainWindow
         void setCurrentPacket(const struct localPacket& pack);
         void addPacketTable(const struct localPacket &local, int number);
         void updateTableShown();
+        void reloadAllPackets(const hungry_sniffer::Protocol* protocol);
 
         void setTableHeaders();
         void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);

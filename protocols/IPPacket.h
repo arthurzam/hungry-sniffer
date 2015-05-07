@@ -17,8 +17,8 @@ class IPPacket : public PacketStructed<struct ip> {
         static bool filter_srcIP(const Packet* packet, const std::vector<std::string>& res);
         static bool filter_follow(const Packet* packet, const std::vector<std::string>& res);
 
-        static bool drop_srcIP(const Packet* packet, std::list<struct enabledOption>& options);
-        static bool drop_dstIP(const Packet* packet, std::list<struct enabledOption>& options);
+        static int drop_srcIP(const Packet* packet, Option::disabled_options_t& options);
+        static int drop_dstIP(const Packet* packet, Option::disabled_options_t& options);
         static bool undrop_IP(const void* data);
 };
 

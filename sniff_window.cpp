@@ -228,14 +228,7 @@ void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const
             const_cast<hungry_sniffer::Protocol*>(localPacket->getProtocol())->removeNameAssociation(origText);
         else
             const_cast<hungry_sniffer::Protocol*>(localPacket->getProtocol())->associateName(origText, text.toStdString());
-        for(auto& i : this->local)
-        {
-            hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(localPacket->getProtocol()));
-            if(ptr)
-            {
-                ptr->updateNameAssociation();
-            }
-        }
+        this->reloadAllPackets(localPacket->getProtocol());
         this->updateTableShown();
     }
 }
@@ -294,9 +287,16 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                             continue;
                         QAction* action = new QAction(QString::fromStdString(i.name), &optionsMenu);
                         auto func = i.func;
-                        connect(action, &QAction::triggered, [this, packet, func]() {
-                            if(func(packet, this->optionsDisablerWin.enabledOptions))
+                        auto protocol = localPacket->getProtocol();
+                        connect(action, &QAction::triggered, [this, packet, func, protocol]() {
+                            int res = func(packet, this->optionsDisablerWin.enabledOptions);
+                            if((res & Option::ENABLE_OPTION_RETURN_ADDED_DISABLE))
                                 this->optionsDisablerWin.refreshOptions();
+                            if((res & Option::ENABLE_OPTION_RETURN_RELOAD_TABLE))
+                            {
+                                this->reloadAllPackets(protocol);
+                                this->updateTableShown();
+                            }
                         });
                         subMenu->addAction(action);
                         list.append(action);
