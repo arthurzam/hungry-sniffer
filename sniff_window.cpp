@@ -37,6 +37,7 @@ SniffWindow::SniffWindow(QWidget *parent) :
     on_action_Python_toggled(false);
     ui->action_Python->setVisible(false);
 #endif
+    setAcceptDrops(true);
 }
 
 SniffWindow::~SniffWindow()
@@ -383,4 +384,27 @@ void SniffWindow::on_splitter_splitterMoved(int, int)
     sizes[2] &= -(ui->action_Hex->isChecked());
     sizes[3] &= -(ui->action_Python->isChecked());
     ui->splitter->setSizes(sizes);
+}
+
+void SniffWindow::dropEvent(QDropEvent *event)
+{
+    const QMimeData* mimeData = event->mimeData();
+    if (mimeData->hasUrls())
+    {
+        QStringList pathList;
+        QList<QUrl> urlList = mimeData->urls();
+        for(const auto& i : urlList)
+        {
+            QString f = i.toLocalFile();
+            if(f.endsWith(".pcap"))
+                this->runOfflinePcap(i.toLocalFile().toStdString());
+        }
+        event->accept();
+    }
+}
+
+void SniffWindow::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
 }

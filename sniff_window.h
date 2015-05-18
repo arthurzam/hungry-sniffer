@@ -69,6 +69,10 @@ class SniffWindow : public QMainWindow
 
         void on_splitter_splitterMoved(int, int);
 
+    protected:
+        void dragEnterEvent(QDragEnterEvent* event);
+        void dropEvent(QDropEvent* event);
+
     private:
         Ui::SniffWindow *ui;
 
