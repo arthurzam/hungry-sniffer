@@ -7,6 +7,8 @@
 #include "packetstats.h"
 #include "outputviewer.h"
 
+SniffWindow* SniffWindow::window = nullptr;
+
 SniffWindow::SniffWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::SniffWindow),
@@ -16,6 +18,7 @@ SniffWindow::SniffWindow(QWidget *parent) :
     filterTree(nullptr),
     isCalculatingFilter(false)
 {
+    SniffWindow::window = this;
     ui->setupUi(this);
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
@@ -28,6 +31,13 @@ SniffWindow::SniffWindow(QWidget *parent) :
         ui->tree_packet->setColumnCount(list.size());
     }
     this->setOutputFunctions();
+#ifdef PYTHON_CMD
+    initPython();
+#else
+    ui->lb_cmd->setVisible(false);
+    ui->tb_command->setVisible(false);
+    ui->img_python->setVisible(false);
+#endif
 }
 
 SniffWindow::~SniffWindow()
@@ -35,6 +45,9 @@ SniffWindow::~SniffWindow()
     this->on_actionStop_triggered();
     this->isNotExiting = false;
     this->manageThread.join();
+#ifdef PYTHON_CMD
+    stopPython();
+#endif
     delete ui;
 }
 

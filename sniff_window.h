@@ -25,6 +25,7 @@ class SniffWindow : public QMainWindow
         ~SniffWindow();
 
         static HungrySniffer_Core* core;
+        static SniffWindow* window;
 
         static bool isRoot();
 
@@ -53,10 +54,15 @@ class SniffWindow : public QMainWindow
 
         void on_actionDisableOptions_triggered();
 
+#ifdef PYTHON_CMD
+        void on_tb_command_returnPressed();
+#else
+        void on_tb_command_returnPressed() {}
+#endif
     private:
         Ui::SniffWindow *ui;
 
-    private:
+    public:
         std::shared_ptr<pcappp::Pcap> firstPcap = nullptr;
         struct localPacket {
             pcappp::Packet rawPacket;
@@ -64,9 +70,10 @@ class SniffWindow : public QMainWindow
             time_t _time;
             bool isShown;
         };
+        QVector<struct localPacket> local;
+    private:
 
         ThreadSafeQueue<pcappp::Packet> toAdd;
-        QList<struct localPacket> local;
 
         QList<std::thread*> threads;
         bool toNotStop;
@@ -100,6 +107,29 @@ class SniffWindow : public QMainWindow
         void setOutputFunctions();
 
         void closeEvent(QCloseEvent *bar);
+
+#ifdef PYTHON_CMD
+    private:
+        void initPython();
+        void stopPython();
+
+        void addPyCommand(const char* pyCommand);
+        void execPyCommand();
+        bool checkPyCommand(const char* pyCommand);
+
+    private:
+        void* pyGlobals;
+        void* pyCatcher;
+
+        std::string pyCommand;
+        struct {
+            int bracketsC = 0; // '(' ')'
+            int bracketsS = 0; // '[' ']'
+            int bracketsM = 0; // '{' '}'
+
+            bool block = false;// :
+        } py_checkCommand;
+#endif
 };
 
 

@@ -5,3 +5,4 @@
 moc_*
 html/*
 latex/*
+__pycache__

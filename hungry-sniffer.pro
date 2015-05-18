@@ -18,7 +18,8 @@ SOURCES += main.cpp\
     filter_tree_parse.cpp \
     sniff_window_packetsFlow.cpp \
     outputviewer.cpp \
-    optionsdisabler.cpp
+    optionsdisabler.cpp \
+    sniff_window_python.cpp
 
 HEADERS  += \
     devicechoose.h \
@@ -40,3 +41,11 @@ FORMS    += \
 
 RESOURCES += \
     icons/icons.qrc
+
+!CONFIG(no-pycmd) {
+    QMAKE_CXXFLAGS += `pkg-config --cflags python3`
+    LIBS += `pkg-config --libs python3`
+    DEFINES += PYTHON_CMD
+
+    OTHER_FILES += hs.py
+}
