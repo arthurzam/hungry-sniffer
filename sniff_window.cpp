@@ -34,9 +34,8 @@ SniffWindow::SniffWindow(QWidget *parent) :
 #ifdef PYTHON_CMD
     initPython();
 #else
-    ui->lb_cmd->setVisible(false);
-    ui->tb_command->setVisible(false);
-    ui->img_python->setVisible(false);
+    on_action_Python_toggled(false);
+    ui->action_Python->setVisible(false);
 #endif
 }
 
@@ -346,4 +345,42 @@ void SniffWindow::on_actionDisableOptions_triggered()
     {
         this->optionsDisablerWin.show();
     }
+}
+
+void SniffWindow::on_action_Table_toggled(bool arg1)
+{
+    QList<int> sizes = ui->splitter->sizes();
+    sizes[0] = (arg1 ? 1 : 0);
+    ui->splitter->setSizes(sizes);
+}
+
+void SniffWindow::on_action_Tree_toggled(bool arg1)
+{
+    QList<int> sizes = ui->splitter->sizes();
+    sizes[1] = (arg1 ? 1 : 0);
+    ui->splitter->setSizes(sizes);
+}
+
+void SniffWindow::on_action_Hex_toggled(bool arg1)
+{
+    QList<int> sizes = ui->splitter->sizes();
+    sizes[2] = (arg1 ? 1 : 0);
+    ui->splitter->setSizes(sizes);
+}
+
+void SniffWindow::on_action_Python_toggled(bool arg1)
+{
+    QList<int> sizes = ui->splitter->sizes();
+    sizes[3] = (arg1 ? 1 : 0);
+    ui->splitter->setSizes(sizes);
+}
+
+void SniffWindow::on_splitter_splitterMoved(int, int)
+{
+    QList<int> sizes = ui->splitter->sizes();
+    sizes[0] &= -(ui->action_Table->isChecked());
+    sizes[1] &= -(ui->action_Tree->isChecked());
+    sizes[2] &= -(ui->action_Hex->isChecked());
+    sizes[3] &= -(ui->action_Python->isChecked());
+    ui->splitter->setSizes(sizes);
 }

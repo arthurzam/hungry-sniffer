@@ -186,10 +186,20 @@
     </property>
     <addaction name="actionTable"/>
    </widget>
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
+     <string>&amp;View</string>
+    </property>
+    <addaction name="action_Table"/>
+    <addaction name="action_Tree"/>
+    <addaction name="action_Hex"/>
+    <addaction name="action_Python"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Sniff"/>
    <addaction name="menuAbout"/>
    <addaction name="menuStats"/>
+   <addaction name="menu_View"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -291,6 +301,50 @@
   <action name="actionDisableOptions">
    <property name="text">
     <string>Disable Background Tasks</string>
+   </property>
+  </action>
+  <action name="action_Table">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Table</string>
+   </property>
+  </action>
+  <action name="action_Tree">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>T&amp;ree</string>
+   </property>
+  </action>
+  <action name="action_Hex">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Hex</string>
+   </property>
+  </action>
+  <action name="action_Python">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Python</string>
    </property>
   </action>
  </widget>

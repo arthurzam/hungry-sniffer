@@ -59,6 +59,16 @@ class SniffWindow : public QMainWindow
 #else
         void on_tb_command_returnPressed() {}
 #endif
+        void on_action_Table_toggled(bool arg1);
+
+        void on_action_Tree_toggled(bool arg1);
+
+        void on_action_Hex_toggled(bool arg1);
+
+        void on_action_Python_toggled(bool arg1);
+
+        void on_splitter_splitterMoved(int, int);
+
     private:
         Ui::SniffWindow *ui;
 
