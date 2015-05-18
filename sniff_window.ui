@@ -28,7 +28,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="tb_filter">
+       <widget class="History_Line_Edit" name="tb_filter">
         <property name="text">
          <string/>
         </property>
@@ -135,7 +135,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="tb_command"/>
+           <widget class="History_Line_Edit" name="tb_command"/>
           </item>
          </layout>
         </item>
@@ -353,6 +353,11 @@
    <class>QHexEdit</class>
    <extends>QScrollArea</extends>
    <header>QHexEdit/qhexedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>History_Line_Edit</class>
+   <extends>QLineEdit</extends>
+   <header>history_line_edit.h</header>
   </customwidget>
  </customwidgets>
  <resources>

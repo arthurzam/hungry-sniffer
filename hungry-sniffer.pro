@@ -3,7 +3,7 @@ QT     += core gui widgets printsupport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 LIBS   += -lpcap++ -lpcap -ldl -lqhexedit
-QMAKE_LFLAGS_RELEASE += -s -flto
+QMAKE_LFLAGS_RELEASE += -flto
 QMAKE_CXXFLAGS_RELEASE += -flto
 
 TARGET = hungry-sniffer
@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     sniff_window_packetsFlow.cpp \
     outputviewer.cpp \
     optionsdisabler.cpp \
-    sniff_window_python.cpp
+    sniff_window_python.cpp \
+    history_line_edit.cpp
 
 HEADERS  += \
     devicechoose.h \
@@ -30,7 +31,8 @@ HEADERS  += \
     packetstats.h \
     filter_tree.h \
     outputviewer.h \
-    optionsdisabler.h
+    optionsdisabler.h \
+    history_line_edit.h
 
 FORMS    += \
     devicechoose.ui \
