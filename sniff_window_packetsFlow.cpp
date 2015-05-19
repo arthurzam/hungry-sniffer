@@ -29,9 +29,9 @@ void SniffWindow::managePacketsList()
         {
             while(this->isCalculatingFilter)
             {
-                QThread::msleep(500);
+                QThread::msleep(1500);
             }
-            if(this->toAdd.try_pop(packet))
+            if(this->toAdd.timeout_pop(packet, 5000))
             {
                 this->local.append({packet, std::make_shared<EthernetPacket>(packet.get_data(), packet.get_length(), &SniffWindow::core->base), std::time(NULL), false});
                 struct localPacket& localPacket = this->local.last();
@@ -40,7 +40,7 @@ void SniffWindow::managePacketsList()
             }
             else if(this->threads.empty() && this->toNotStop)
             {
-                QThread::msleep(500);
+                QThread::msleep(5000);
             }
         }
     } catch (...) {
