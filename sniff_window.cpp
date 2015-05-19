@@ -6,6 +6,7 @@
 #include "devicechoose.h"
 #include "packetstats.h"
 #include "outputviewer.h"
+#include "additionalheaderspacket.h"
 
 SniffWindow* SniffWindow::window = nullptr;
 
@@ -334,6 +335,61 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
         menu.exec(ui->table_packets->mapToGlobal(pos));
         qDeleteAll(list);
     }
+}
+
+void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
+{
+    static Protocol infoProtocol(nullptr, false, "Own Headers", false, false);
+    QTreeWidgetItem* item = ui->tree_packet->itemAt(pos);
+    if(!item)
+        return;
+    QTreeWidgetItem* firstLevel = item->parent();
+    if(!firstLevel)
+        firstLevel = item;
+    QMenu menu;
+    QAction action_add(tr("Add Info Header"), nullptr);
+    connect(&action_add, &QAction::triggered, [this]() {
+        Packet& last = const_cast<Packet&>(this->selected->decodedPacket->getLast());
+        AdditionalHeadersPacket* pack = static_cast<AdditionalHeadersPacket*>(&last);
+        QTreeWidgetItem* info = nullptr;
+        if(last.getProtocol() != &infoProtocol)
+        {
+            last.setNext(pack = new AdditionalHeadersPacket(&infoProtocol));
+            info = new QTreeWidgetItem(QStringList("Own Headers"));
+        }
+        else
+        {
+            info = this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
+        }
+        bool ok;
+        QString key = QInputDialog::getText(this, "Header Name", "Enter the header name", QLineEdit::Normal, "", &ok);
+        if(!ok)
+            return;
+        QString value = QInputDialog::getText(this, "Header Value", "Enter the header value", QLineEdit::Normal, "", &ok);
+        if(!ok)
+            return;
+        pack->addHeader(key.toStdString(), value.toStdString());
+
+        info->addChild(new QTreeWidgetItem(QStringList({key, value})));
+        if(pack != &last)
+            ui->tree_packet->addTopLevelItem(info);
+    });
+    menu.addAction(&action_add);
+
+    QAction action_remove(tr("Remove"), nullptr);
+    if(item != firstLevel && firstLevel->text(0) == "Own Headers")
+    {
+        connect(&action_remove, &QAction::triggered, [this, item, firstLevel]() {
+            AdditionalHeadersPacket& pack = (AdditionalHeadersPacket&)this->selected->decodedPacket->getLast();
+            pack.removeHeader(item->text(0).toStdString());
+
+            delete item;
+            if(firstLevel->childCount() == 0)
+                delete firstLevel;
+        });
+        menu.addAction(&action_remove);
+    }
+    menu.exec(ui->tree_packet->mapToGlobal(pos));
 }
 
 void SniffWindow::on_actionDisableOptions_triggered()

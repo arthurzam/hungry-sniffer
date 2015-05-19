@@ -56,5 +56,5 @@ void ICMPPacket::setByTypes(int type, int code)
             }
             break;
     }
-    this->headers.push_front({"ICMP Type", this->info});
+    this->headers.push_back({"ICMP Type", this->info});
 }

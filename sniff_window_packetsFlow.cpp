@@ -149,6 +149,7 @@ void SniffWindow::reloadAllPackets(const hungry_sniffer::Protocol* protocol)
 
 void SniffWindow::setCurrentPacket(const struct localPacket& pack)
 {
+    this->selected = const_cast<struct localPacket*>(&pack);
     ui->tree_packet->clear();
     for(const hungry_sniffer::Packet* packet = pack.decodedPacket.get(); packet; packet = packet->getNext())
     {

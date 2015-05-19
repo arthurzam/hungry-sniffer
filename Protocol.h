@@ -408,8 +408,8 @@ namespace hungry_sniffer {
      */
     class Packet {
         public:
-            typedef std::list<std::pair<std::string, std::string>> headers_category_t;
-            typedef std::list<std::pair<std::string, headers_category_t>>  headers_t;
+            typedef std::vector<std::pair<std::string, std::string>> headers_category_t;
+            typedef std::vector<std::pair<std::string, headers_category_t>>  headers_t;
         protected:
             const Protocol* protocol; /*!<The protocol by which this Packet was created*/
             Packet* next; /*!<The next packet*/
@@ -447,6 +447,12 @@ namespace hungry_sniffer {
                 }
                 return (p != nullptr);
             }
+
+            Packet(const Packet&) = delete;
+            Packet(Packet&&) = delete;
+
+            Packet& operator=(const Packet&) = delete;
+            Packet& operator=(Packet&&) = delete;
         public:
             /**
              * @brief basic constructor
@@ -462,12 +468,6 @@ namespace hungry_sniffer {
                 this->prev = prev;
                 this->name = &protocol->getName();
             }
-
-            Packet(const Packet&) = delete;
-            Packet(Packet&&) = delete;
-
-            Packet& operator=(const Packet&) = delete;
-            Packet& operator=(Packet&&) = delete;
 
             /**
              * @brief delete current packet and next
@@ -488,6 +488,16 @@ namespace hungry_sniffer {
                 for(int i = 0; i < count && temp; ++i)
                     temp = temp->next;
                 return temp;
+            }
+
+            /**
+             * @brief setNext set the next packet
+             *
+             * @param next the next in chain
+             */
+            void setNext(Packet* next)
+            {
+                this->next = next;
             }
 
             /**

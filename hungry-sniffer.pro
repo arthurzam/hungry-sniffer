@@ -32,7 +32,8 @@ HEADERS  += \
     filter_tree.h \
     outputviewer.h \
     optionsdisabler.h \
-    history_line_edit.h
+    history_line_edit.h \
+    additionalheaderspacket.h
 
 FORMS    += \
     devicechoose.ui \

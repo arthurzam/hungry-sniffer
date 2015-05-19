@@ -52,6 +52,8 @@ class SniffWindow : public QMainWindow
 
         void on_table_packets_customContextMenuRequested(const QPoint &pos);
 
+        void on_tree_packet_customContextMenuRequested(const QPoint &pos);
+
         void on_actionDisableOptions_triggered();
 
 #ifdef PYTHON_CMD
@@ -85,6 +87,7 @@ class SniffWindow : public QMainWindow
             bool isShown;
         };
         QVector<struct localPacket> local;
+        struct localPacket* selected = nullptr;
     private:
 
         ThreadSafeQueue<pcappp::Packet> toAdd;

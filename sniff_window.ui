@@ -79,6 +79,9 @@
        </attribute>
       </widget>
       <widget class="QTreeWidget" name="tree_packet">
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
+       </property>
        <property name="wordWrap">
         <bool>true</bool>
        </property>
