@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 
 using namespace std;
+using namespace hungry_sniffer;
 
 EthernetPacket::EthernetPacket(const void* data, size_t len,
         const Protocol* protocol, const Packet* prev) :

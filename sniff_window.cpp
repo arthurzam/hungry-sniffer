@@ -257,7 +257,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
         int row = ui->table_packets->item(item->row(), 0)->text().toInt() - 1;
         QMenu follow(tr("Follow")), nameSrc(tr("Associate Name For Source")),
                 nameDst(tr("Associate Name For Destination")), optionsMenu(tr("Special Options"));
-        const EthernetPacket* packet = this->local[row].decodedPacket.get();
+        const hungry_sniffer::EthernetPacket* packet = this->local[row].decodedPacket.get();
         {
             const hungry_sniffer::Packet* localPacket = packet;
             while(localPacket)
@@ -304,9 +304,9 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                         auto protocol = localPacket->getProtocol();
                         connect(action, &QAction::triggered, [this, packet, func, protocol]() {
                             int res = func(packet, this->optionsDisablerWin.enabledOptions);
-                            if((res & Option::ENABLE_OPTION_RETURN_ADDED_DISABLE))
+                            if((res & hungry_sniffer::Option::ENABLE_OPTION_RETURN_ADDED_DISABLE))
                                 this->optionsDisablerWin.refreshOptions();
-                            if((res & Option::ENABLE_OPTION_RETURN_RELOAD_TABLE))
+                            if((res & hungry_sniffer::Option::ENABLE_OPTION_RETURN_RELOAD_TABLE))
                             {
                                 this->reloadAllPackets(protocol);
                                 this->updateTableShown();
@@ -337,9 +337,10 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
     }
 }
 
+hungry_sniffer::Protocol SniffWindow::infoProtocol(nullptr, false, "Own Headers", false, false);
+
 void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
 {
-    static Protocol infoProtocol(nullptr, false, "Own Headers", false, false);
     QTreeWidgetItem* item = ui->tree_packet->itemAt(pos);
     if(!item)
         return;
@@ -349,7 +350,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     QMenu menu;
     QAction action_add(tr("Add Info Header"), nullptr);
     connect(&action_add, &QAction::triggered, [this]() {
-        Packet& last = const_cast<Packet&>(this->selected->decodedPacket->getLast());
+        hungry_sniffer::Packet& last = const_cast<hungry_sniffer::Packet&>(this->selected->decodedPacket->getLast());
         AdditionalHeadersPacket* pack = static_cast<AdditionalHeadersPacket*>(&last);
         QTreeWidgetItem* info = nullptr;
         if(last.getProtocol() != &infoProtocol)

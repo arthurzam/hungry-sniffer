@@ -26,6 +26,7 @@ class SniffWindow : public QMainWindow
 
         static HungrySniffer_Core* core;
         static SniffWindow* window;
+        static hungry_sniffer::Protocol infoProtocol;
 
         static bool isRoot();
 
@@ -82,7 +83,7 @@ class SniffWindow : public QMainWindow
         std::shared_ptr<pcappp::Pcap> firstPcap = nullptr;
         struct localPacket {
             pcappp::Packet rawPacket;
-            std::shared_ptr<EthernetPacket> decodedPacket;
+            std::shared_ptr<hungry_sniffer::EthernetPacket> decodedPacket;
             time_t _time;
             bool isShown;
         };

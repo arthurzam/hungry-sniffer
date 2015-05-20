@@ -1,5 +1,7 @@
 #include "filter_tree.h"
 
+using namespace hungry_sniffer;
+
 FilterTree::Node::Node(const Protocol *protocol)
     : matches()
 {
@@ -56,14 +58,4 @@ bool FilterTree::Node::get(const EthernetPacket *eth) const
             return !this->data.tree.left->get(eth);
     }
     return false;
-}
-
-FilterTree::~FilterTree()
-{
-    delete this->root;
-}
-
-bool FilterTree::get(const EthernetPacket *eth) const
-{
-    return !this->root || this->root->get(eth);
 }

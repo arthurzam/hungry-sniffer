@@ -76,7 +76,7 @@ class FilterTree
                  * @param eth the packet to check
                  * @return true if fits, otherwise false
                  */
-                bool get(const EthernetPacket* eth) const;
+                bool get(const hungry_sniffer::EthernetPacket* eth) const;
         };
     private:
         Node* root;
@@ -87,7 +87,10 @@ class FilterTree
          * @param filterString the filter text string
          */
         FilterTree(const std::string& filterString);
-        ~FilterTree();
+        ~FilterTree()
+        {
+            delete this->root;
+        }
 
         /**
          * @brief get check if packet fits the built filter
@@ -95,7 +98,10 @@ class FilterTree
          * @param eth the packet to check
          * @return true if fits, otherwise false
          */
-        bool get(const EthernetPacket* eth) const;
+        bool get(const hungry_sniffer::EthernetPacket* eth) const
+        {
+            return !this->root || this->root->get(eth);
+        }
 };
 
 #endif // FILTER_TREE_H

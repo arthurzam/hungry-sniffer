@@ -5,6 +5,8 @@
 #include <QPushButton>
 #include "Protocol.h"
 
+using namespace hungry_sniffer;
+
 PacketStats::PacketStats(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::PacketStats)

@@ -55,7 +55,18 @@ class Packet:
 
 class AllPackets:
     def __init__(self):
-        pass
+        class AllPackets_iter:
+            def __init__(self):
+                self.current = -1
+
+            def __next__(self):
+                self.current += 1
+                next = _hs_private.getPacketNum(self.current)
+                if next:
+                    return Packet(next)
+                else:
+                    raise StopIteration
+        self.iter_class = AllPackets_iter
 
     def __len__(self):
         return _hs_private.getCountAll()
@@ -68,25 +79,13 @@ class AllPackets:
         return None
 
     def __iter__(self):
-        class AllPackets_iter:
-            def __init__(self):
-                self.current = 0
-
-            def __next__(self):
-                self.current += 1
-                next = _hs_private.getPacketNum(self.current)
-                if next:
-                    return Packet(next)
-                else:
-                    raise StopIteration
-
-        return AllPackets_iter()
+        return self.iter_class()
 
 class ShownPackets:
     def __init__(self):
         class ShownPackets_iter:
             def __init__(self):
-                self.current = 0
+                self.current = -1
 
             def __next__(self):
                 next = _hs_private.getNextShown(self.current + 1)
@@ -97,7 +96,7 @@ class ShownPackets:
                 else:
                     raise StopIteration
 
-        self.ShownPackets_iter = ShownPackets_iter
+        self.iter_class = ShownPackets_iter
 
     def __len__(self):
         return _hs_private.getCountShown()
@@ -108,7 +107,7 @@ class ShownPackets:
         return None
 
     def __iter__(self):
-        return self.ShownPackets_iter()
+        return self.iter_class()
 
 all = AllPackets()
 shown = ShownPackets()

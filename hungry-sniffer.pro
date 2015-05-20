@@ -9,6 +9,11 @@ QMAKE_CXXFLAGS_RELEASE += -flto
 TARGET = hungry-sniffer
 TEMPLATE = app
 
+CONFIG(test) {
+    DEFINES += PLUGINS_DIR=\\\"$$OUT_PWD/plugins\\\"
+    DEFINES += PYTHON_DIR=\\\"$$PWD/\\\"
+}
+
 SOURCES += main.cpp\
     devicechoose.cpp \
     sniff_window.cpp \
@@ -52,3 +57,15 @@ RESOURCES += \
 
     OTHER_FILES += hs.py
 }
+
+isEmpty(PREFIX) {
+    PREFIX = /usr
+}
+
+target.path = $$PREFIX/bin/
+
+other.path = $$PREFIX/share/hungry-sniffer/
+other.files = $$OTHER_FILES
+
+INSTALLS += target other
+

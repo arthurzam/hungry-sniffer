@@ -8,6 +8,10 @@
 #define HS_PYDICT_ADD_STRING(dict, k, v) HS_PYDICT_ADD_OBJECT(dict, k, PyUnicode_FromString(v.c_str()))
 #define HS_PYDICT_ADD_STRINGS(dict, k, v) HS_PYDICT_ADD_STRING(dict, k.c_str(), v)
 
+#ifndef PYTHON_DIR
+#define PYTHON_DIR "/usr/share/hungry-sniffer/"
+#endif
+
 extern "C" {
 
 static PyObject* getLayer(const hungry_sniffer::Packet* layer)
@@ -138,7 +142,7 @@ void SniffWindow::initPython()
     PyImport_AppendInittab("_hs_private",&PyInit_hs);
     Py_Initialize();
 
-    addDirToPath("/home/arthur/QT/hungry-sniffer");
+    addDirToPath(PYTHON_DIR);
 
     PyObject* mainModule = PyImport_AddModule("__main__");
     PyObject* hsModule = PyImport_ImportModule("hs");

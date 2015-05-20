@@ -11,6 +11,7 @@ SOURCES=call.cpp iptc.cpp \
 
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=libprotocols.so
+PLUGINNAME=01_base.so
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -26,3 +27,9 @@ $(EXECUTABLE): $(OBJECTS)
 
 clean:
 	rm -f *.o $(EXECUTABLE)
+
+install:
+	install -Dm 755 $(EXECUTABLE) "$(DESTDIR)/usr/share/hungry-sniffer/plugins/$(PLUGINNAME)"
+
+uninstall:
+	rm "$(DESTDIR)/usr/share/hungry-sniffer/plugins/$(PLUGINNAME)"

@@ -7,15 +7,17 @@
 #include <sys/resource.h>
 #include <unistd.h>
 
-#ifndef PLUGINS_DIRECTORY
-#define PLUGINS_DIRECTORY "/home/arthur/QT/build-hungry-sniffer-Desktop-Debug/plugins/"
+#ifndef PLUGINS_DIR
+#define PLUGINS_DIR "/usr/share/hungry-sniffer/plugins/"
 #endif
+
+using namespace hungry_sniffer;
 
 static void loadLibs()
 {
     typedef void (*function_t)(HungrySniffer_Core&);
 
-    QDir dir(PLUGINS_DIRECTORY);
+    QDir dir(PLUGINS_DIR);
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
     allFiles.sort(Qt::CaseInsensitive);
     for(auto& iter : allFiles)
@@ -61,7 +63,7 @@ int main(int argc, char *argv[])
     }
     setMaxRam();
 
-    hungry_sniffer::Protocol base(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true, true);
+    Protocol base(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true, true);
     base.addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     base.addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
     SniffWindow::core = new HungrySniffer_Core(base);
