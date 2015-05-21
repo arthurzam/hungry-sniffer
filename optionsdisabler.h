@@ -4,7 +4,7 @@
 #include <QDialog>
 #include "Protocol.h"
 namespace Ui {
-class OptionsDisabler;
+    class OptionsDisabler;
 }
 
 class OptionsDisabler : public QDialog

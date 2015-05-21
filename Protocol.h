@@ -55,8 +55,8 @@ namespace hungry_sniffer {
             typedef std::map<size_t, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;
             typedef std::vector<struct option> options_t;
-            typedef std::list<std::pair<std::regex, filterFunction>> filterFunctions_t;
-            typedef std::list<std::pair<std::string, const int*>> stats_table_t;
+            typedef std::vector<std::pair<std::regex, filterFunction>> filterFunctions_t;
+            typedef std::vector<std::pair<std::string, const int*>> stats_table_t;
         private:
             std::shared_ptr<protocols_t> subProtocols;
             initFunction function;
@@ -374,6 +374,11 @@ namespace hungry_sniffer {
             void removeNameAssociation(const std::string& key)
             {
                 this->names.erase(key);
+            }
+
+            const names_t getNameService() const
+            {
+                return this->names;
             }
 
             /**
@@ -775,8 +780,7 @@ namespace hungry_sniffer {
     }
 }
 
-class HungrySniffer_Core {
-    public:
+struct HungrySniffer_Core {
         typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
         std::map<std::string, outputFunction_t> outputFunctions;
         hungry_sniffer::Protocol& base;

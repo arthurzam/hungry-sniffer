@@ -75,7 +75,10 @@ class AllPackets:
         if isinstance(index, slice):
             return [self[ii] for ii in range(*index.indices(len(self)))]
         if isinstance(index, int):
-            return Packet(_hs_private.getPacketNum(index))
+            if index >= 0:
+                return Packet(_hs_private.getPacketNum(index))
+            else:
+                return Packet(_hs_private.getPacketNum(len(self) + index))
         return None
 
     def __iter__(self):
@@ -103,7 +106,8 @@ class ShownPackets:
 
     def __getitem__(self, index):
         if isinstance(index, int):
-            return Packet(_hs_private.getNextShown(index))
+            if index >= 0:
+                return Packet(_hs_private.getNextShown(index))
         return None
 
     def __iter__(self):

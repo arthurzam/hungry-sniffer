@@ -5,37 +5,37 @@
 
 class History_Line_Edit : public QLineEdit
 {
-    Q_OBJECT
+        Q_OBJECT
 
-    int         current_line;
-    QStringList lines;
-    QString     unfinished;
+        int         current_line;
+        QStringList lines;
+        QString     unfinished;
 
-public:
-    explicit History_Line_Edit(QWidget *parent = 0);
+    public:
+        explicit History_Line_Edit(QWidget *parent = 0);
 
-    /**
-     * @brief Number of lines
-     * @return Number of lines entered
-     */
-    int lineCount() const { return lines.size(); }
-    
-private slots:
-    void enter_pressed();
+        /**
+         * @brief Number of lines
+         * @return Number of lines entered
+         */
+        int lineCount() const { return lines.size(); }
 
-signals:
-    /**
-     * @brief Emitted when some text is executed
-     */
-    void lineExecuted(QString);
+    private slots:
+        void enter_pressed();
 
-protected:
-    void keyPressEvent(QKeyEvent *);
-    void wheelEvent(QWheelEvent *);
+    signals:
+        /**
+         * @brief Emitted when some text is executed
+         */
+        void lineExecuted(QString);
 
-    void previous_line();
-    void next_line();
-    
+    protected:
+        void keyPressEvent(QKeyEvent *);
+        void wheelEvent(QWheelEvent *);
+
+        void previous_line();
+        void next_line();
+
 };
 
 #endif // HISTORY_LINE_EDIT_HPP

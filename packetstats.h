@@ -5,11 +5,11 @@
 #include <QTreeWidgetItem>
 
 namespace Ui {
-class PacketStats;
+    class PacketStats;
 }
 
 namespace hungry_sniffer {
-class Protocol;
+    class Protocol;
 }
 
 /**

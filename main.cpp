@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     SniffWindow w;
     for(const auto& i : files)
-        w.runOfflinePcap(i);
+        w.runOfflineFile(i);
     w.show();
     return a.exec();
 }

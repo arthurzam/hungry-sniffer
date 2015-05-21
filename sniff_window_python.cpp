@@ -37,7 +37,7 @@ static PyObject* getPacket(int pos)
     PyObject* d = PyDict_New();
     HS_PYDICT_ADD_NUM(d, "num", pos);
     HS_PYDICT_ADD_OBJECT(d, "isShown", PyBool_FromLong(pack.isShown));
-    HS_PYDICT_ADD_OBJECT(d, "data", PyByteArray_FromStringAndSize((const char*)pack.rawPacket.get_data(), pack.rawPacket.get_length()));
+    HS_PYDICT_ADD_OBJECT(d, "data", PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len));
 
     PyObject* layers = PyList_New(0);
     for(const hungry_sniffer::Packet* packet = pack.decodedPacket.get(); packet != nullptr; packet = packet->getNext())

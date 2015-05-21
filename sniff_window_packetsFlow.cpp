@@ -15,32 +15,32 @@ void SniffWindow::runLivePcap(const std::string &name)
     this->threads.append(new std::thread(&SniffWindow::runLivePcap_p, this, name));
 }
 
-void SniffWindow::runOfflinePcap(const std::string &filename)
+void SniffWindow::runOfflineFile(const std::string &filename)
 {
     this->toNotStop = true;
-    this->threads.append(new std::thread(&SniffWindow::runOfflinePcap_p, this, filename));
+    this->threads.append(new std::thread(&SniffWindow::runOfflineOpen_p, this, filename));
 }
 
 void SniffWindow::managePacketsList()
 {
-    pcappp::Packet packet;
+    RawPacketData packet;
     try {
         while(this->isNotExiting)
         {
             while(this->isCalculatingFilter)
             {
-                QThread::msleep(1500);
+                QThread::msleep(1000);
             }
-            if(this->toAdd.timeout_pop(packet, 5000))
+            if(this->toAdd.timeout_move_pop(packet, 4000))
             {
-                this->local.append({packet, std::make_shared<hungry_sniffer::EthernetPacket>(packet.get_data(), packet.get_length(), &SniffWindow::core->base), std::time(NULL), false});
+                this->local.append({packet, std::make_shared<hungry_sniffer::EthernetPacket>(packet.data, packet.len, &SniffWindow::core->base), std::time(NULL), false});
                 struct localPacket& localPacket = this->local.last();
                 if((localPacket.isShown = !filterTree || (*filterTree).get(localPacket.decodedPacket.get())))
                     this->addPacketTable(localPacket, this->local.size());
             }
-            else if(this->threads.empty() && this->toNotStop)
+            else if(this->toNotStop & this->threads.empty())
             {
-                QThread::msleep(5000);
+                QThread::msleep(1500);
             }
         }
     } catch (...) {
@@ -51,32 +51,16 @@ void SniffWindow::managePacketsList()
 void SniffWindow::runLivePcap_p(const std::string &name)
 {
     try {
-        std::shared_ptr<pcappp::PcapLive> live = std::make_shared<pcappp::PcapLive>(name);
-        if(!this->firstPcap)
-            this->firstPcap = live;
+        pcappp::PcapLive live(name);
         pcappp::Packet p;
-        while(this->toNotStop && live->next(p))
+        while(this->toNotStop && live.next(p))
         {
-            p.manage();
-            this->toAdd.push(p);
+            this->toAdd.push(RawPacketData(p));
         }
     }
     catch(const pcappp::PcapError& e)
     {
         QMessageBox::warning(this, tr("Sniff Error"), QString::fromLatin1(e.what()));
-    }
-}
-
-void SniffWindow::runOfflinePcap_p(const std::string &filename)
-{
-    std::shared_ptr<pcappp::PcapOffline> off = std::make_shared<pcappp::PcapOffline>(filename);
-    if(!this->firstPcap)
-        this->firstPcap = off;
-    pcappp::Packet p;
-    while(this->toNotStop && off->next(p))
-    {
-        p.manage();
-        this->toAdd.push(p);
     }
 }
 
@@ -104,7 +88,7 @@ void SniffWindow::addPacketTable(const struct localPacket &local, int number)
 
 #define SET_ITEM(n, variant) ui->table_packets->setItem(row, n, createItem(variant, isGood))
     SET_ITEM(0, number);
-    SET_ITEM(1, (int)(local.rawPacket.get_seconds() - this->local[0].rawPacket.get_seconds()));
+    SET_ITEM(1, (int)(local.rawPacket.time.tv_sec - this->local[0].rawPacket.time.tv_usec));
     SET_ITEM(2, packet.getName());
     SET_ITEM(3, packet.getSource());
     SET_ITEM(4, packet.getDestination());
@@ -171,5 +155,5 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
     ui->tree_packet->resizeColumnToContents(0);
     ui->tree_packet->collapseAll();
 
-    ui->hexEdit->setData(QByteArray((char*)pack.rawPacket.get_data(), (int)pack.rawPacket.get_length()));
+    ui->hexEdit->setData(QByteArray((char*)pack.rawPacket.data, (int)pack.rawPacket.len));
 }

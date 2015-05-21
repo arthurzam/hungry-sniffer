@@ -4,7 +4,7 @@
 #include <QDialog>
 
 namespace Ui {
-class DeviceChoose;
+    class DeviceChoose;
 }
 
 /**
@@ -12,36 +12,35 @@ class DeviceChoose;
  */
 class DeviceChoose : public QDialog
 {
-    Q_OBJECT
-private:
-    QStringList results;
-public:
-    explicit DeviceChoose(QWidget *parent = 0);
-    ~DeviceChoose();
+        Q_OBJECT
+    private:
+        Ui::DeviceChoose *ui;
+        QStringList results;
+    public:
+        explicit DeviceChoose(QWidget *parent = 0);
+        ~DeviceChoose();
 
-    QStringList::const_iterator end() const
-    {
-        return results.cend();
-    }
+        QStringList::const_iterator end() const
+        {
+            return results.cend();
+        }
 
-    QStringList::const_iterator begin() const
-    {
-        return results.cbegin();
-    }
+        QStringList::const_iterator begin() const
+        {
+            return results.cbegin();
+        }
 
-private slots:
+    private slots:
 
-    /**
-     * @brief on_buttonBox_accepted in case OK was clicked, save the chosen in results
-     */
-    void on_buttonBox_accepted();
+        /**
+         * @brief on_buttonBox_accepted in case OK was clicked, save the chosen in results
+         */
+        void on_buttonBox_accepted();
 
-    /**
-     * @brief refreshDevices update the devices in the table
-     */
-    void refreshDevices();
-private:
-    Ui::DeviceChoose *ui;
+        /**
+         * @brief refreshDevices update the devices in the table
+         */
+        void refreshDevices();
 };
 
 #endif // DEVICECHOOSE_H

@@ -103,15 +103,6 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
     bar->accept();
 }
 
-void SniffWindow::on_actionOpen_triggered()
-{
-    QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), "", tr("Pcap (*.pcap)"));
-    for(auto& filename : filenames)
-    {
-        this->runOfflinePcap(filename.toStdString());
-    }
-}
-
 void SniffWindow::on_tb_filter_textEdited(const QString &arg1)
 {
     bool isEnables = !arg1.isEmpty() || (arg1.isEmpty() && (bool)this->filterTree);
@@ -137,23 +128,6 @@ void SniffWindow::on_table_packets_currentItemChanged(QTableWidgetItem *current,
     QTableWidgetItem* item = ui->table_packets->item(current->row(), 0);
     if(item)
         this->setCurrentPacket(this->local.at(item->text().toInt() - 1));
-}
-
-void SniffWindow::on_actionSave_triggered()
-{
-    if(ui->table_packets->rowCount() == 0)
-    {
-        QMessageBox::warning(nullptr, tr("Empty Table"), tr("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
-        return;
-    }
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Pcap (*.pcap)"));
-    pcappp::Dumper& d = this->firstPcap->get_dumper();
-    d.open(filename.toStdString());
-    for(auto i = this->local.cbegin(); i != this->local.cend(); ++i)
-    {
-        d.dump(i->rawPacket);
-    }
-    d.close();
 }
 
 void SniffWindow::on_actionStop_triggered()
@@ -454,7 +428,7 @@ void SniffWindow::dropEvent(QDropEvent *event)
         {
             QString f = i.toLocalFile();
             if(f.endsWith(".pcap"))
-                this->runOfflinePcap(i.toLocalFile().toStdString());
+                this->runOfflineFile(i.toLocalFile().toStdString());
         }
         event->accept();
     }

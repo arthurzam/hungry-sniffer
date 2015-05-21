@@ -17,14 +17,15 @@ CONFIG(test) {
 SOURCES += main.cpp\
     devicechoose.cpp \
     sniff_window.cpp \
+    sniff_window_packetsFlow.cpp \
+    sniff_window_files.cpp \
+    sniff_window_python.cpp \
     EthernetPacket.cpp \
     packetstats.cpp \
     filter_tree.cpp \
     filter_tree_parse.cpp \
-    sniff_window_packetsFlow.cpp \
     outputviewer.cpp \
     optionsdisabler.cpp \
-    sniff_window_python.cpp \
     history_line_edit.cpp
 
 HEADERS  += \
