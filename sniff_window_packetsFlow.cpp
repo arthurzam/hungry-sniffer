@@ -132,7 +132,10 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
         {
             QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(packet->getProtocol()->getName())));
             if(!packet->isLocalGood())
+            {
                 head->setBackgroundColor(0, Qt::yellow);
+                head->setBackgroundColor(1, Qt::yellow);
+            }
             for(const auto& j : headers)
             {
                 head->addChild(new QTreeWidgetItem(QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));

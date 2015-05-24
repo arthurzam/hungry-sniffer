@@ -219,19 +219,15 @@ void SniffWindow::on_actionSave_triggered()
 
 SniffWindow::RawPacketData::RawPacketData(const pcappp::Packet& packet)
 {
-    this->len = packet.get_length();
     this->time.tv_sec = packet.get_seconds();
     this->time.tv_usec = packet.get_miliseconds();
-    this->data = (char*)malloc(this->len);
-    memcpy(this->data, packet.get_data(), this->len);
+    setData((const char*)packet.get_data(), packet.get_length());
 }
 
 SniffWindow::RawPacketData::RawPacketData(const SniffWindow::RawPacketData& other) :
-    len(other.len),
     time(other.time)
 {
-    this->data = (char*)malloc(this->len);
-    memcpy(this->data, other.data, this->len);
+    setData(other.data, other.len);
 }
 
 SniffWindow::RawPacketData::RawPacketData(SniffWindow::RawPacketData&& other) :
@@ -246,10 +242,8 @@ SniffWindow::RawPacketData& SniffWindow::RawPacketData::operator =(const RawPack
 {
     if(this != &other)
     {
-        this->len = other.len;
         this->time = other.time;
-        this->data = (char*)malloc(this->len);
-        memcpy(this->data, other.data, this->len);
+        setData(other.data, other.len);
     }
     return *this;
 }
@@ -270,4 +264,11 @@ SniffWindow::RawPacketData::~RawPacketData()
 {
     if(this->data)
         free(this->data);
+}
+
+void SniffWindow::RawPacketData::setData(const char* data, uint32_t len)
+{
+    this->len = len;
+    this->data = (char*)malloc(len);
+    memcpy(this->data, data, len);
 }

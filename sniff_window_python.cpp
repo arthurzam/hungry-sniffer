@@ -3,6 +3,8 @@
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
 
+#include <ctime>
+
 #define HS_PYDICT_ADD_OBJECT(dict, k, v) PyDict_SetItem(dict, PyUnicode_FromString(k), v)
 #define HS_PYDICT_ADD_NUM(dict, k, num) HS_PYDICT_ADD_OBJECT(dict, k, PyLong_FromLong(num))
 #define HS_PYDICT_ADD_STRING(dict, k, v) HS_PYDICT_ADD_OBJECT(dict, k, PyUnicode_FromString(v.c_str()))
@@ -65,7 +67,7 @@ PyObject* hs_getNextShown(PyObject*, PyObject* args)
         return NULL;
     }
 
-    auto list = SniffWindow::window->local;
+    auto& list = SniffWindow::window->local;
     for(unsigned i = pos; i < list.size(); ++i)
     {
         if(list[i].isShown)
@@ -88,6 +90,51 @@ PyObject* hs_getCountShown(PyObject*)
     return PyLong_FromLong(count);
 }
 
+PyObject* hs_savePacket(PyObject*, PyObject* args)
+{
+    int pos;
+    PyObject* data;
+    if (!PyArg_ParseTuple(args, "iY", &pos, &data)) {
+        return NULL;
+    }
+
+    unsigned size = PyByteArray_Size(data);
+    const char* b = PyByteArray_AsString(data);
+    if(pos == -1)
+    {
+        SniffWindow::RawPacketData raw;
+        gettimeofday(&raw.time, nullptr);
+        raw.setData(b, size);
+        SniffWindow::window->toAdd.push(raw);
+    }
+    else if(pos < (int)SniffWindow::window->local.size())
+    {
+        struct SniffWindow::localPacket& pack = SniffWindow::window->local[pos];
+        SniffWindow::RawPacketData& raw = pack.rawPacket;
+        free(raw.data);
+        raw.setData(b, size);
+
+        pack.decodedPacket = std::make_shared<hungry_sniffer::EthernetPacket>(raw.data, raw.len, &SniffWindow::core->base);
+
+        SniffWindow::window->updateTableShown();
+    }
+    return Py_None;
+}
+
+PyObject* hs_removePacket(PyObject*, PyObject* args)
+{
+    int pos;
+    if (!PyArg_ParseTuple(args, "i", &pos)) {
+        return NULL;
+    }
+    if(pos < (int)SniffWindow::window->local.size())
+    {
+        SniffWindow::window->local.erase(SniffWindow::window->local.begin() + pos);
+        SniffWindow::window->updateTableShown();
+    }
+    return Py_None;
+}
+
 }
 
 static PyMethodDef hs_methods[] = {
@@ -95,6 +142,8 @@ static PyMethodDef hs_methods[] = {
     { "getNextShown", (PyCFunction)hs_getNextShown, METH_VARARGS, NULL },
     { "getCountAll", (PyCFunction)hs_getCountAll, METH_NOARGS, NULL },
     { "getCountShown", (PyCFunction)hs_getCountShown, METH_NOARGS, NULL },
+    { "savePacket", (PyCFunction)hs_savePacket, METH_VARARGS, NULL },
+    { "removePacket", (PyCFunction)hs_removePacket, METH_VARARGS, NULL },
     { NULL, NULL, 0, NULL }
 };
 

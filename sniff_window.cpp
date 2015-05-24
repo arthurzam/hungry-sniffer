@@ -236,7 +236,6 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
 
         QAction removeRowAction(QLatin1String("Remove Packet"), nullptr);
         connect(&removeRowAction, &QAction::triggered, [this, item, row] () {
-            this->ui->table_packets->removeRow(item->row());
             this->local.erase(this->local.begin() + row);
             this->updateTableShown();
         });

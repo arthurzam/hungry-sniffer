@@ -75,6 +75,8 @@ class SniffWindow : public QMainWindow
             RawPacketData& operator=(const RawPacketData& other);
             RawPacketData& operator=(RawPacketData&& other);
             ~RawPacketData();
+
+            void setData(const char* data, uint32_t len);
         };
 
         struct localPacket {
@@ -85,8 +87,8 @@ class SniffWindow : public QMainWindow
         };
         std::vector<struct localPacket> local;
         struct localPacket* selected = nullptr;
-    private:
         ThreadSafeQueue<RawPacketData> toAdd;
+    private:
 
         std::vector<std::thread*> threads;
         bool toNotStop;
@@ -107,7 +109,7 @@ class SniffWindow : public QMainWindow
         void runOfflineOpen_p(const std::string& filename);
         void managePacketsList();
 
-    private:
+    public:
         void setCurrentPacket(const struct localPacket& pack);
         void addPacketTable(const struct localPacket &local, int number);
         void updateTableShown();

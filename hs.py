@@ -29,6 +29,14 @@ class Packet:
         for layer in dict['layers']:
             self.layers.append(Layer(layer))
 
+    def save(self, data = None):
+        if data != None:
+            self.data = data
+        _hs_private.savePacket(self.num, self.data)
+
+    def remove(self):
+        _hs_private.removePacket(self.num)
+
     def __getitem__(self, index):
         if isinstance(index, int):
             return self.layers[index]
@@ -115,3 +123,6 @@ class ShownPackets:
 
 all = AllPackets()
 shown = ShownPackets()
+
+def addPacket(data):
+    _hs_private.savePacket(-1, data)
