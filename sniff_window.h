@@ -68,7 +68,7 @@ class SniffWindow : public QMainWindow
             timeval time;
             char* data;
 
-            RawPacketData() : len(0), time({0,0}), data(nullptr) {}
+            constexpr RawPacketData() : len(0), time({0,0}), data(nullptr) {}
             RawPacketData(const pcappp::Packet& packet);
             RawPacketData(const RawPacketData& other);
             RawPacketData(RawPacketData&& other);
@@ -138,6 +138,14 @@ class SniffWindow : public QMainWindow
             int bracketsM = 0; // '{' '}'
 
             bool block = false;// :
+
+            void reset()
+            {
+                block = false;
+                bracketsC = 0;
+                bracketsS = 0;
+                bracketsM = 0;
+            }
         } py_checkCommand;
 #endif
 };

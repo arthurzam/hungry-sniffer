@@ -30,15 +30,6 @@ class PacketStats : public QDialog
         void setStats();
 
     private:
-        /**
-         * @brief setStatsPerProtocol refrash the stats shown in the tree of protocol under current item
-         *
-         * @param protocol the protocol to add and take from his children protocols
-         * @param currentItem item to where add the sub item of tree
-         */
-        void setStatsPerProtocol(const hungry_sniffer::Protocol* protocol, QTreeWidgetItem* currentItem);
-
-    private:
         Ui::PacketStats *ui;
 };
 

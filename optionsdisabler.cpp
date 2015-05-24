@@ -33,7 +33,7 @@ void OptionsDisabler::refreshOptions()
     for(const auto& i : this->enabledOptions)
     {
         ui->grid->addWidget(new QLabel(QString::fromStdString(i.name), this), row, 0);
-        QPushButton* bt = new QPushButton(tr("Disable"), this);
+        QPushButton* bt = new QPushButton(QLatin1String("Disable"), this);
 
         connect(bt, &QPushButton::clicked, [this, row]() {
             auto iter = this->enabledOptions.begin();

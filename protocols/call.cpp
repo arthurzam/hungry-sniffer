@@ -20,8 +20,9 @@ bool printData(std::ostream& stream, const hungry_sniffer::Packet* packet)
     {
         stream << "<font color=\"red\">" << packet->getSource() << " -> " << packet->getDestination() << "</font>";
         stream << std::endl << last.getInfo() << std::endl;
+        return true;
     }
-    return stream;
+    return false;
 }
 
 extern "C" void add(HungrySniffer_Core& core)

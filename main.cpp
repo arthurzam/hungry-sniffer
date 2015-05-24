@@ -17,7 +17,7 @@ inline void loadLibs()
 {
     typedef void (*function_t)(HungrySniffer_Core&);
 
-    QDir dir(PLUGINS_DIR);
+    QDir dir(QLatin1String(PLUGINS_DIR));
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
     allFiles.sort(Qt::CaseInsensitive);
     for(auto& iter : allFiles)

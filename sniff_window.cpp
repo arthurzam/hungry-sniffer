@@ -24,19 +24,15 @@ SniffWindow::SniffWindow(QWidget *parent) :
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     this->setTableHeaders();
-    {
-        static QStringList list;
-        if(list.empty())
-            list << tr("Key") << tr("Value");
-        ui->tree_packet->setHeaderLabels(list);
-        ui->tree_packet->setColumnCount(list.size());
-    }
+    ui->tree_packet->setHeaderLabels(QStringList({QLatin1String("Key"), QLatin1String("Value")}));
+    ui->tree_packet->setColumnCount(2);
     this->setOutputFunctions();
 #ifdef PYTHON_CMD
     initPython();
 #else
-    on_action_Python_toggled(false);
     ui->action_Python->setVisible(false);
+    ui->action_Python->setChecked(false);
+    on_splitter_splitterMoved(0, 0);
 #endif
     setAcceptDrops(true);
 }
@@ -62,7 +58,7 @@ void SniffWindow::setOutputFunctions()
     if(core->outputFunctions.size() == 0)
         return;
 
-    QMenu* output = new QMenu(tr("Output"), this);
+    QMenu* output = new QMenu(QLatin1String("Output"), this);
     for(const auto& i : core->outputFunctions)
     {
         if(i.second == nullptr)
@@ -89,8 +85,8 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
     while(this->optionsDisablerWin.enabledOptions.size() != 0)
     {
         if(QMessageBox::StandardButton::Yes == QMessageBox::question(nullptr,
-                                                                     tr("Background Options"),
-                                                                     tr("There are still background options.\n""Do you want to disable them?"),
+                                                                     QLatin1String("Background Options"),
+                                                                     QLatin1String("There are still background options.\n""Do you want to disable them?"),
                                                                      QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No))
         {
             this->optionsDisablerWin.exec();
@@ -145,7 +141,7 @@ void SniffWindow::on_actionSniff_triggered()
 {
     if(!isRoot())
     {
-        QMessageBox::warning(nullptr, tr("Not Root"), tr("You should be Root"), QMessageBox::StandardButton::Ok);
+        QMessageBox::warning(nullptr, QLatin1String("Not Root"), QLatin1String("You should be Root"), QMessageBox::StandardButton::Ok);
         return;
     }
 
@@ -193,9 +189,8 @@ void SniffWindow::on_actionClear_triggered()
 
 void SniffWindow::setTableHeaders()
 {
-    static QStringList list;
-    if(list.empty())
-        list << tr("No.") << tr("Arrival Time") << tr("Protocol") << tr("Source") << tr("Destination") << tr("Info");
+    static QStringList list({QLatin1String("No."), QLatin1String("Arrival Time"), QLatin1String("Protocol"),
+                            QLatin1String("Source"), QLatin1String("Destination"), QLatin1String("Info")});
 
     ui->table_packets->setColumnCount(list.size());
     ui->table_packets->setHorizontalHeaderLabels(list);
@@ -206,7 +201,8 @@ void SniffWindow::setTableHeaders()
 void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText)
 {
     bool ok;
-    QString text = QInputDialog::getText(this, tr("Name Assication"), tr("Associated Name for\n""(%1)").arg(QString::fromStdString(origText)),
+    QString text = QInputDialog::getText(this, QLatin1String("Name Assication"),
+                                         QStringLiteral("Associated Name for\n""(%1)").arg(QString::fromStdString(origText)),
                                          QLineEdit::Normal,
                                          QString::fromStdString(localPacket->getProtocol()->getNameAssociated(origText)),
                                          &ok);
@@ -229,8 +225,25 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
         QList<QAction*> list;
         QMenu menu;
         int row = ui->table_packets->item(item->row(), 0)->text().toInt() - 1;
-        QMenu follow(tr("Follow")), nameSrc(tr("Associate Name For Source")),
-                nameDst(tr("Associate Name For Destination")), optionsMenu(tr("Special Options"));
+        QMenu follow(QLatin1String("Follow")), nameSrc(QLatin1String("Associate Name For Source")),
+                nameDst(QLatin1String("Associate Name For Destination")), optionsMenu(QLatin1String("Special Options"));
+
+        QAction copyValAction(QLatin1String("Copy Value"), nullptr);
+        connect(&copyValAction, &QAction::triggered, [item] () {
+            QApplication::clipboard()->setText(item->text());
+        });
+        menu.addAction(&copyValAction);
+
+        QAction removeRowAction(QLatin1String("Remove Packet"), nullptr);
+        connect(&removeRowAction, &QAction::triggered, [this, item, row] () {
+            this->ui->table_packets->removeRow(item->row());
+            this->local.erase(this->local.begin() + row);
+            this->updateTableShown();
+        });
+        menu.addAction(&removeRowAction);
+
+        menu.addSeparator();
+
         const hungry_sniffer::EthernetPacket* packet = this->local[row].decodedPacket.get();
         {
             const hungry_sniffer::Packet* localPacket = packet;
@@ -268,12 +281,12 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                 bool _isNotRoot = !isRoot();
                 if(options.size() > 0)
                 {
-                    QMenu* subMenu = new QMenu(QString::fromStdString(localPacket->getProtocol()->getName()));
+                    QMenu* subMenu = new QMenu(QString::fromStdString(localPacket->getProtocol()->getName()), &optionsMenu);
                     for(const auto& i : options)
                     {
                         if(i.isRootRequired & _isNotRoot)
                             continue;
-                        QAction* action = new QAction(QString::fromStdString(i.name), &optionsMenu);
+                        QAction* action = new QAction(QString::fromStdString(i.name), subMenu);
                         auto func = i.func;
                         auto protocol = localPacket->getProtocol();
                         connect(action, &QAction::triggered, [this, packet, func, protocol]() {
@@ -292,7 +305,9 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                     if(subMenu->actions().size() == 0)
                         delete subMenu;
                     else
+                    {
                         optionsMenu.addMenu(subMenu);
+                    }
                 }
                 localPacket = localPacket->getNext();
             }
@@ -322,7 +337,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     if(!firstLevel)
         firstLevel = item;
     QMenu menu;
-    QAction action_add(tr("Add Info Header"), nullptr);
+    QAction action_add(QLatin1String("Add Info Header"), nullptr);
     connect(&action_add, &QAction::triggered, [this]() {
         hungry_sniffer::Packet& last = const_cast<hungry_sniffer::Packet&>(this->selected->decodedPacket->getLast());
         AdditionalHeadersPacket* pack = static_cast<AdditionalHeadersPacket*>(&last);
@@ -351,7 +366,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     });
     menu.addAction(&action_add);
 
-    QAction action_remove(tr("Remove"), nullptr);
+    QAction action_remove(QLatin1String("Remove"), nullptr);
     if(item != firstLevel && firstLevel->text(0) == "Own Headers")
     {
         connect(&action_remove, &QAction::triggered, [this, item, firstLevel]() {
@@ -371,7 +386,8 @@ void SniffWindow::on_actionDisableOptions_triggered()
 {
     if(this->optionsDisablerWin.enabledOptions.size() == 0)
     {
-        QMessageBox::warning(nullptr, tr("Empty"), tr("No Background Options running"), QMessageBox::StandardButton::Ok);
+        QMessageBox::warning(nullptr, QLatin1String("Empty"), QLatin1String("No Background Options running"),
+                             QMessageBox::StandardButton::Ok);
     }
     else
     {
@@ -422,7 +438,6 @@ void SniffWindow::dropEvent(QDropEvent *event)
     const QMimeData* mimeData = event->mimeData();
     if (mimeData->hasUrls())
     {
-        QStringList pathList;
         QList<QUrl> urlList = mimeData->urls();
         for(const auto& i : urlList)
         {

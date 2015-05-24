@@ -13,14 +13,12 @@ PacketStats::PacketStats(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QPushButton* btRefresh = new QPushButton(tr("&Refresh"), ui->buttonBox);
+    QPushButton* btRefresh = new QPushButton(QLatin1Literal("&Refresh"), ui->buttonBox);
     connect(btRefresh, SIGNAL(clicked()), this, SLOT(setStats()));
     ui->buttonBox->addButton(btRefresh, QDialogButtonBox::ActionRole);
 
     {
-        static QStringList l;
-        if(l.empty())
-            l << tr("Protocol") << tr("Number");
+        static QStringList l({QLatin1Literal("Protocol"), QLatin1Literal("Number")});
         ui->treeWidget->setHeaderLabels(l);
     }
 
@@ -32,15 +30,34 @@ PacketStats::~PacketStats()
     delete ui;
 }
 
+/**
+ * @brief setStatsPerProtocol refrash the stats shown in the tree of protocol under current item
+ *
+ * @param protocol the protocol to add and take from his children protocols
+ * @param currentItem item to where add the sub item of tree
+ */
+void setStatsPerProtocol(const Protocol *protocol, QTreeWidgetItem* currentItem)
+{
+    QStringList str;
+    str << QString::fromStdString(protocol->getName()) << QString::number(protocol->getPacketsCount());
+    QTreeWidgetItem* item = new QTreeWidgetItem(str);
+    currentItem->addChild(item);
+
+    for(const auto& i : protocol->getProtocolsDB())
+    {
+        setStatsPerProtocol(&i.second, item);
+    }
+}
+
 void PacketStats::setStats()
 {
     QStringList str;
     str << QString::fromStdString(SniffWindow::core->base.getName()) << QString::number(SniffWindow::core->base.getPacketsCount());
     QTreeWidgetItem* root = new QTreeWidgetItem(str);
 
-    for(auto i = SniffWindow::core->base.getProtocolsDB().cbegin(); i != SniffWindow::core->base.getProtocolsDB().cend(); ++i)
+    for(const auto& i : SniffWindow::core->base.getProtocolsDB())
     {
-        this->setStatsPerProtocol(&i->second, root);
+        setStatsPerProtocol(&i.second, root);
     }
 
     ui->treeWidget->clear();
@@ -48,17 +65,4 @@ void PacketStats::setStats()
     ui->treeWidget->expandAll();
     ui->treeWidget->resizeColumnToContents(0);
     ui->treeWidget->resizeColumnToContents(1);
-}
-
-void PacketStats::setStatsPerProtocol(const Protocol *protocol, QTreeWidgetItem* currentItem)
-{
-    QStringList str;
-    str << QString::fromStdString(protocol->getName()) << QString::number(protocol->getPacketsCount());
-    QTreeWidgetItem* item = new QTreeWidgetItem(str);
-    currentItem->addChild(item);
-
-    for(auto i = protocol->getProtocolsDB().cbegin(); i != protocol->getProtocolsDB().cend(); ++i)
-    {
-        this->setStatsPerProtocol(&i->second, item);
-    }
 }

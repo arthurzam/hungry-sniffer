@@ -17,7 +17,7 @@ DeviceChoose::DeviceChoose(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QPushButton* btRefresh = new QPushButton(tr("&Refresh"), ui->buttonBox);
+    QPushButton* btRefresh = new QPushButton(QLatin1String("&Refresh"), ui->buttonBox);
     connect(btRefresh, SIGNAL(clicked()), this, SLOT(refreshDevices()));
     ui->buttonBox->addButton(btRefresh, QDialogButtonBox::ActionRole);
 
@@ -36,16 +36,16 @@ void DeviceChoose::refreshDevices()
         delete widget;
     }
 
-    QDir dir("/sys/class/net/");
+    QDir dir(QLatin1String("/sys/class/net/"));
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
     QListIterator<QString> iter(allFiles);
     for(int row = 0; iter.hasNext(); ++row)
     {
         QString name = iter.next();
-        QFile file(QString("/sys/class/net/%1/address").arg(name));
+        QFile file(QStringLiteral("/sys/class/net/%1/address").arg(name));
         if(!file.open(QIODevice::ReadOnly))
         {
-            QMessageBox::warning(this, tr("Error"), tr("Error getting the interfaces\n""Are you root?"));
+            QMessageBox::warning(this, QLatin1String("Error"), QLatin1String("Error getting the interfaces\n""Are you root?"));
             this->close();
             return;
         }

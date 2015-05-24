@@ -162,7 +162,8 @@ static bool readHspcap(const char* filename, std::function<void (const SniffWind
 
 void SniffWindow::on_actionOpen_triggered()
 {
-    QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open File"), "", "All Captures (*.pcap *.hspcap);;hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)");
+    QStringList filenames = QFileDialog::getOpenFileNames(this, QLatin1String("Open File"), QLatin1String(""),
+                                 QLatin1String("All Captures (*.pcap *.hspcap);;hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
     for(auto& filename : filenames)
     {
         this->runOfflineFile(filename.toStdString());
@@ -200,18 +201,19 @@ void SniffWindow::on_actionSave_triggered()
 {
     if(ui->table_packets->rowCount() == 0)
     {
-        QMessageBox::warning(nullptr, tr("Empty Table"), tr("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
+        QMessageBox::warning(nullptr, QLatin1String("Empty Table"), QLatin1String("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
         return;
     }
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save File"), "", "hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)");
+    QString filename = QFileDialog::getSaveFileName(this, QLatin1String("Save File"), QLatin1String(""),
+                                                    QLatin1String("hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
 
-    if(filename.endsWith(".pcap"))
+    if(filename.endsWith(QLatin1String(".pcap")))
     {
-        savePcap(filename.toStdString().c_str(), this->local);
+        savePcap(filename.toUtf8().constData(), this->local);
     }
-    else if(filename.endsWith(".hspcap"))
+    else if(filename.endsWith(QLatin1String(".hspcap")))
     {
-        saveHspcap(filename.toStdString().c_str(), this->local);
+        saveHspcap(filename.toUtf8().constData(), this->local);
     }
 }
 

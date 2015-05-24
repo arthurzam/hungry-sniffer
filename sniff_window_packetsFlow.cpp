@@ -2,12 +2,6 @@
 #include "ui_sniff_window.h"
 
 #include <QMessageBox>
-#include <QThread>
-#include "devicechoose.h"
-#include <unistd.h>
-#include <regex>
-#include "packetstats.h"
-
 
 void SniffWindow::runLivePcap(const std::string &name)
 {
@@ -24,29 +18,23 @@ void SniffWindow::runOfflineFile(const std::string &filename)
 void SniffWindow::managePacketsList()
 {
     RawPacketData packet;
-    try {
-        while(this->isNotExiting)
+    while(this->isNotExiting)
+    {
+        while(this->isCalculatingFilter & this->isNotExiting)
         {
-            while(this->isCalculatingFilter)
-            {
-                QThread::msleep(1000);
-            }
-            if(this->toAdd.timeout_move_pop(packet, 4000))
-            {
-                this->local.push_back({packet, std::make_shared<hungry_sniffer::EthernetPacket>(packet.data, packet.len, &SniffWindow::core->base), std::time(NULL), false});
-                struct localPacket& localPacket = this->local.back();
-                if((localPacket.isShown = !filterTree || (*filterTree).get(localPacket.decodedPacket.get())))
-                    this->addPacketTable(localPacket, this->local.size());
-            }
-            else if(this->toNotStop & this->threads.empty())
-            {
-                QThread::msleep(1500);
-            }
+            QThread::msleep(1000);
         }
-    } catch (const std::string& ex) {
-        qDebug() << ex.c_str();
-    } catch (const std::exception& ex) {
-        qDebug() << ex.what();
+        if(this->toAdd.timeout_move_pop(packet, 4000))
+        {
+            this->local.push_back({packet, std::make_shared<hungry_sniffer::EthernetPacket>(packet.data, packet.len, &SniffWindow::core->base), std::time(NULL), false});
+            struct localPacket& localPacket = this->local.back();
+            if((localPacket.isShown = !filterTree || filterTree->get(localPacket.decodedPacket.get())))
+                this->addPacketTable(localPacket, this->local.size());
+        }
+        else if(this->toNotStop & this->threads.empty())
+        {
+            QThread::msleep(1500);
+        }
     }
 }
 
@@ -62,7 +50,7 @@ void SniffWindow::runLivePcap_p(const std::string &name)
     }
     catch(const pcappp::PcapError& e)
     {
-        QMessageBox::warning(this, tr("Sniff Error"), QString::fromLatin1(e.what()));
+        QMessageBox::warning(this, QLatin1String("Sniff Error"), QString::fromLatin1(e.what()));
     }
 }
 
@@ -90,7 +78,7 @@ void SniffWindow::addPacketTable(const struct localPacket &local, int number)
 
 #define SET_ITEM(n, variant) ui->table_packets->setItem(row, n, createItem(variant, isGood))
     SET_ITEM(0, number);
-    SET_ITEM(1, (int)(local.rawPacket.time.tv_sec - this->local[0].rawPacket.time.tv_usec));
+    SET_ITEM(1, (int)(local.rawPacket.time.tv_sec - this->local[0].rawPacket.time.tv_sec));
     SET_ITEM(2, packet.getName());
     SET_ITEM(3, packet.getSource());
     SET_ITEM(4, packet.getDestination());

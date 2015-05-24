@@ -181,25 +181,21 @@ void SniffWindow::addPyCommand(const char* command)
 void SniffWindow::execPyCommand()
 {
     PyRun_String(this->pyCommand.c_str(), Py_single_input, (PyObject*)pyGlobals, (PyObject*)pyGlobals);
-    QString color = "blue";
-    if (PyErr_Occurred())
+    bool error = PyErr_Occurred();
+    if (error)
     {
         PyErr_Print();
         PyErr_Clear();
-        color = "red";
     }
     PyObject *output = PyObject_GetAttrString((PyObject*)pyCatcher,"value");
     QString res(PyUnicode_AsUTF8(output));
     if(res.length() > 0)
     {
-        ui->lb_cmd->appendHtml(res.arg(color));
+        ui->lb_cmd->appendHtml(res.arg(QLatin1String(error ? "red" : "blue")));
         PyRun_SimpleString("catchOutErr.value = ''");
     }
 
-    this->py_checkCommand.block = false;
-    this->py_checkCommand.bracketsC = 0;
-    this->py_checkCommand.bracketsS = 0;
-    this->py_checkCommand.bracketsM = 0;
+    this->py_checkCommand.reset();
     this->pyCommand.clear();
 }
 
@@ -267,7 +263,7 @@ bool SniffWindow::checkPyCommand(const char* command)
 
 void SniffWindow::on_tb_command_returnPressed()
 {
-    this->addPyCommand(ui->tb_command->text().toStdString().c_str());
+    this->addPyCommand(ui->tb_command->text().toUtf8().constData());
 }
 
 #endif

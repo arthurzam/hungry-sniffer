@@ -3,8 +3,8 @@ QT     += core gui widgets printsupport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 LIBS   += -lpcap++ -lpcap -ldl -lqhexedit
-QMAKE_LFLAGS_RELEASE += -flto
-QMAKE_CXXFLAGS_RELEASE += -flto
+QMAKE_LFLAGS_RELEASE += -flto -fno-rtti
+QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
 
 TARGET = hungry-sniffer
 TEMPLATE = app
@@ -69,4 +69,3 @@ other.path = $$PREFIX/share/hungry-sniffer/
 other.files = $$OTHER_FILES
 
 INSTALLS += target other
-
