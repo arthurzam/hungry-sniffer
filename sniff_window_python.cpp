@@ -28,7 +28,7 @@ static PyObject* getLayer(const hungry_sniffer::Packet* layer)
     return d;
 }
 
-static PyObject* getPacket(int pos)
+static PyObject* getPacket(unsigned pos)
 {
     if(pos >= SniffWindow::window->local.size())
         return Py_None;
@@ -66,7 +66,7 @@ PyObject* hs_getNextShown(PyObject*, PyObject* args)
     }
 
     auto list = SniffWindow::window->local;
-    for(int i = pos; i < list.size(); ++i)
+    for(unsigned i = pos; i < list.size(); ++i)
     {
         if(list[i].isShown)
             return getPacket(i);

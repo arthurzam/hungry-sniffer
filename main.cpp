@@ -13,7 +13,7 @@
 
 using namespace hungry_sniffer;
 
-static void loadLibs()
+inline void loadLibs()
 {
     typedef void (*function_t)(HungrySniffer_Core&);
 
@@ -34,7 +34,7 @@ static void loadLibs()
 
 HungrySniffer_Core* SniffWindow::core = nullptr;
 
-static void setMaxRam()
+inline void setMaxRam()
 {
     struct rlimit limit;
     limit.rlim_cur = RLIM_INFINITY;
@@ -46,11 +46,14 @@ int main(int argc, char *argv[])
 {
     std::vector<std::string> files;
     files.reserve(argc - 1);
+    bool notEndCmdOption = true;
     for(int i = 1; i < argc; i++)
     {
-        if(argv[i][0] == '-')
+        if((argv[i][0] == '-') & notEndCmdOption)
         {
-            if(strcmp(argv[i], "-quiet") == 0)
+            if(strcmp(argv[i], "--") == 0)
+                notEndCmdOption = false;
+            else if(strcmp(argv[i], "-quiet") == 0)
             {
                 ::close(STDOUT_FILENO);
                 ::close(STDERR_FILENO);
@@ -66,7 +69,8 @@ int main(int argc, char *argv[])
     Protocol base(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true, true);
     base.addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     base.addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
-    SniffWindow::core = new HungrySniffer_Core(base);
+    HungrySniffer_Core core(base);
+    SniffWindow::core = &core;
 
     loadLibs();
 

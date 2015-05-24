@@ -9,7 +9,7 @@ enum ObjectType {
     PROTOCOL
 };
 
-static bool savePcap(const char* filename, const QVector<SniffWindow::localPacket>& packets)
+static bool savePcap(const char* filename, const std::vector<SniffWindow::localPacket>& packets)
 {
     pcap_t* pd = pcap_open_dead(DLT_EN10MB, 65535);
     pcap_dumper_t* pdumper = pcap_dump_open(pd, filename);
@@ -94,7 +94,7 @@ static void saveHspcapProtocol(FILE* file, const hungry_sniffer::Protocol& proto
     }
 }
 
-static bool saveHspcap(const char* filename, const QVector<SniffWindow::localPacket>& packets)
+static bool saveHspcap(const char* filename, const std::vector<SniffWindow::localPacket>& packets)
 {
     FILE* file = fopen(filename, "wb");
     uint32_t packetsCount = htonl(packets.size());

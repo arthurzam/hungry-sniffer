@@ -12,13 +12,13 @@
 void SniffWindow::runLivePcap(const std::string &name)
 {
     this->toNotStop = true;
-    this->threads.append(new std::thread(&SniffWindow::runLivePcap_p, this, name));
+    this->threads.push_back(new std::thread(&SniffWindow::runLivePcap_p, this, name));
 }
 
 void SniffWindow::runOfflineFile(const std::string &filename)
 {
     this->toNotStop = true;
-    this->threads.append(new std::thread(&SniffWindow::runOfflineOpen_p, this, filename));
+    this->threads.push_back(new std::thread(&SniffWindow::runOfflineOpen_p, this, filename));
 }
 
 void SniffWindow::managePacketsList()
@@ -33,8 +33,8 @@ void SniffWindow::managePacketsList()
             }
             if(this->toAdd.timeout_move_pop(packet, 4000))
             {
-                this->local.append({packet, std::make_shared<hungry_sniffer::EthernetPacket>(packet.data, packet.len, &SniffWindow::core->base), std::time(NULL), false});
-                struct localPacket& localPacket = this->local.last();
+                this->local.push_back({packet, std::make_shared<hungry_sniffer::EthernetPacket>(packet.data, packet.len, &SniffWindow::core->base), std::time(NULL), false});
+                struct localPacket& localPacket = this->local.back();
                 if((localPacket.isShown = !filterTree || (*filterTree).get(localPacket.decodedPacket.get())))
                     this->addPacketTable(localPacket, this->local.size());
             }
@@ -43,8 +43,10 @@ void SniffWindow::managePacketsList()
                 QThread::msleep(1500);
             }
         }
-    } catch (...) {
-        qDebug() << "error";
+    } catch (const std::string& ex) {
+        qDebug() << ex.c_str();
+    } catch (const std::exception& ex) {
+        qDebug() << ex.what();
     }
 }
 

@@ -43,7 +43,6 @@ void PacketStats::setStats()
         this->setStatsPerProtocol(&i->second, root);
     }
 
-
     ui->treeWidget->clear();
     ui->treeWidget->addTopLevelItem(root);
     ui->treeWidget->expandAll();

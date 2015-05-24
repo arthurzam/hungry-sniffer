@@ -684,23 +684,26 @@ namespace hungry_sniffer {
 
     class PacketText : public Packet {
         protected:
-            std::string data;
+            std::vector<char> data;
         public:
 
             PacketText(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
                 Packet(protocol, prev),
-                data((const char*)data, len)
+                data((const char*)data, (const char*)data + len)
             {
             }
 
             virtual void updateNameAssociation()
             {
+                static constexpr unsigned MAX_INFO_LEN = 1024;
                 auto start = data.cbegin(), end = data.cend();
                 while(*start == ' ' && start != end)
                     ++start;
                 while(*(end - 1) == ' ' && start != end)
                     --end;
                 this->info.clear();
+                if(end - start > MAX_INFO_LEN)
+                    end = start + MAX_INFO_LEN;
                 this->info.append(start, end);
 
                 this->headers.clear();
@@ -726,31 +729,34 @@ namespace hungry_sniffer {
              * @param start the start index
              * @param end the end index
              */
-            void extractTextHeaders(int start, int end)
+            void extractTextHeaders(std::vector<char>::iterator start, std::vector<char>::iterator end)
             {
-                int colon, endLine = -1, part;
+                auto colon = start,
+                     endLine = start,
+                     part = start;
                 while(start < end)
                 {
-                    colon = this->data.find_first_of(":\n", start);
-                    if(colon == (int)std::string::npos || colon >= end)
+                    static const char search1[] = ":\n";
+                    colon = std::find_first_of(start, end, search1, search1 + 2);
+                    if(colon == end)
                         return;
-                    switch(this->data[colon])
+                    switch(colon[0])
                     {
                         case ':':
-                            endLine = this->data.find_first_of('\n', colon);
+                            endLine = std::find(colon, end, '\n');
                             part = colon + 1;
-                            while(this->data[part] == ' ')
+                            while(part[0] == ' ')
                                 part++;
-                            if(this->data[endLine - 1] == '\r')
-                                this->data[endLine - 1] = ' ';
+                            if(endLine[-1] == '\r')
+                                *(endLine - 1) = ' ';
                             break;
                         case '\n':
-                            endLine = -1;
+                            endLine = part = colon;
                             break;
                     }
-                    this->headers.push_back({this->data.substr(start, colon - start),
-                        (endLine == -1 ? "" : this->data.substr(part, endLine - part))});
-                    start = (endLine == -1 ? colon + 1 : endLine + 1);
+                    this->headers.push_back({std::string(start, colon),
+                        std::string(part, endLine)});
+                    start = endLine + 1;
                 }
             }
     };

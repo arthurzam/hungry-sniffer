@@ -83,12 +83,12 @@ class SniffWindow : public QMainWindow
             time_t _time;
             bool isShown;
         };
-        QVector<struct localPacket> local;
+        std::vector<struct localPacket> local;
         struct localPacket* selected = nullptr;
     private:
         ThreadSafeQueue<RawPacketData> toAdd;
 
-        QVector<std::thread*> threads;
+        std::vector<std::thread*> threads;
         bool toNotStop;
         bool isNotExiting;
         std::thread manageThread;
@@ -141,6 +141,5 @@ class SniffWindow : public QMainWindow
         } py_checkCommand;
 #endif
 };
-
 
 #endif // SNIFF_WINDOW_H
