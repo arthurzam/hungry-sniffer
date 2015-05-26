@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "Protocol.h"
+
 namespace Ui {
     class OptionsDisabler;
 }

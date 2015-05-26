@@ -1,7 +1,9 @@
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
+#include "filter_tree.h"
 
 #include <QMessageBox>
+#include <pcap++.h>
 
 void SniffWindow::runLivePcap(const std::string &name)
 {
@@ -26,9 +28,9 @@ void SniffWindow::managePacketsList()
         }
         if(this->toAdd.timeout_move_pop(packet, 4000))
         {
-            this->local.push_back({packet, std::make_shared<hungry_sniffer::EthernetPacket>(packet.data, packet.len, &SniffWindow::core->base), std::time(NULL), false});
+            this->local.push_back(localPacket(std::move(packet)));
             struct localPacket& localPacket = this->local.back();
-            if((localPacket.isShown = !filterTree || filterTree->get(localPacket.decodedPacket.get())))
+            if((localPacket.isShown = !filterTree || filterTree->get(localPacket.decodedPacket)))
                 this->addPacketTable(localPacket, this->local.size());
         }
         else if(this->toNotStop & this->threads.empty())
@@ -125,7 +127,7 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
 {
     this->selected = const_cast<struct localPacket*>(&pack);
     ui->tree_packet->clear();
-    for(const hungry_sniffer::Packet* packet = pack.decodedPacket.get(); packet; packet = packet->getNext())
+    for(const hungry_sniffer::Packet* packet = pack.decodedPacket; packet; packet = packet->getNext())
     {
         const hungry_sniffer::Packet::headers_category_t& headers = packet->getHeaders();
         if(!headers.empty())

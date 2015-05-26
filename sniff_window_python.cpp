@@ -2,8 +2,7 @@
 #include "Python.h"
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
-
-#include <ctime>
+#include "EthernetPacket.h"
 
 #define HS_PYDICT_ADD_OBJECT(dict, k, v) PyDict_SetItem(dict, PyUnicode_FromString(k), v)
 #define HS_PYDICT_ADD_NUM(dict, k, num) HS_PYDICT_ADD_OBJECT(dict, k, PyLong_FromLong(num))
@@ -42,7 +41,7 @@ static PyObject* getPacket(unsigned pos)
     HS_PYDICT_ADD_OBJECT(d, "data", PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len));
 
     PyObject* layers = PyList_New(0);
-    for(const hungry_sniffer::Packet* packet = pack.decodedPacket.get(); packet != nullptr; packet = packet->getNext())
+    for(const hungry_sniffer::Packet* packet = pack.decodedPacket; packet != nullptr; packet = packet->getNext())
     {
         PyList_Append(layers, getLayer(packet));
     }
@@ -114,7 +113,8 @@ PyObject* hs_savePacket(PyObject*, PyObject* args)
         free(raw.data);
         raw.setData(b, size);
 
-        pack.decodedPacket = std::make_shared<hungry_sniffer::EthernetPacket>(raw.data, raw.len, &SniffWindow::core->base);
+        delete pack.decodedPacket;
+        pack.decodedPacket = new hungry_sniffer::EthernetPacket(raw.data, raw.len, &SniffWindow::core->base);
 
         SniffWindow::window->updateTableShown();
     }

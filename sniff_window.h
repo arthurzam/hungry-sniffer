@@ -2,18 +2,21 @@
 #define SNIFF_WINDOW_H
 
 #include <atomic>
-#include <pcap++.h>
 #include <QMainWindow>
-#include <QTableWidgetItem>
-#include <thread>
 
-#include "filter_tree.h"
 #include "optionsdisabler.h"
 #include "ThreadQueue.h"
 
 namespace Ui {
     class SniffWindow;
 }
+
+namespace pcappp {
+    class Packet;
+}
+
+class FilterTree;
+class QTableWidgetItem;
 
 class SniffWindow : public QMainWindow
 {
@@ -81,9 +84,26 @@ class SniffWindow : public QMainWindow
 
         struct localPacket {
             RawPacketData rawPacket;
-            std::shared_ptr<hungry_sniffer::EthernetPacket> decodedPacket;
+            hungry_sniffer::Packet* decodedPacket = nullptr;
             time_t _time;
             bool isShown;
+
+            localPacket(localPacket&& other) : rawPacket(std::move(other.rawPacket)),
+                decodedPacket(other.decodedPacket), _time(other._time), isShown(other.isShown)
+            {
+                other.decodedPacket = nullptr;
+            }
+
+            localPacket(const localPacket& other) = delete;
+            localPacket(RawPacketData&& raw);
+            localPacket& operator=(const localPacket& other) = delete;
+            localPacket& operator=(localPacket&& other);
+
+            ~localPacket()
+            {
+                if(decodedPacket)
+                    delete decodedPacket;
+            }
         };
         std::vector<struct localPacket> local;
         struct localPacket* selected = nullptr;
@@ -95,7 +115,7 @@ class SniffWindow : public QMainWindow
         bool isNotExiting;
         std::thread manageThread;
 
-        std::unique_ptr<FilterTree> filterTree;
+        FilterTree* filterTree;
         std::atomic<bool> isCalculatingFilter;
 
         OptionsDisabler optionsDisablerWin;

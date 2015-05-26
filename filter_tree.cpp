@@ -40,7 +40,7 @@ FilterTree::Node::~Node()
     }
 }
 
-bool FilterTree::Node::get(const EthernetPacket* eth) const
+bool FilterTree::Node::get(const Packet* eth) const
 {
     switch (this->type) {
         case Type::Value:

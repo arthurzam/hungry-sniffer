@@ -1,7 +1,9 @@
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
+#include "EthernetPacket.h"
 
 #include <pcap.h>
+#include <pcap++.h>
 #include <netinet/in.h>
 
 enum ObjectType {
@@ -112,7 +114,7 @@ static bool saveHspcap(const char* filename, const std::vector<SniffWindow::loca
     return true;
 }
 
-static bool readHspcap(const char* filename, std::function<void (const SniffWindow::RawPacketData&)> onPacket)
+static bool readHspcap(const char* filename, std::function<void (SniffWindow::RawPacketData&& packet)> onPacket)
 {
     FILE* file = fopen(filename, "rb");
     uint32_t packetsCount = 0;
@@ -130,7 +132,7 @@ static bool readHspcap(const char* filename, std::function<void (const SniffWind
                 raw.data = readBuffer(file, raw.len);
                 if(packetsCount > 0)
                 {
-                    onPacket(raw);
+                    onPacket(std::move(raw));
                     packetsCount--;
                 }
                 break;
@@ -184,13 +186,13 @@ void SniffWindow::runOfflineOpen_p(const std::string &filename)
         pcappp::Packet p;
         while(this->toNotStop && off.next(p))
         {
-            this->toAdd.push(RawPacketData(p));
+            this->toAdd.push(std::move(RawPacketData(p)));
         }
     }
     else if(ends_with(filename, ".hspcap"))
     {
-        readHspcap(filename.c_str(), [this](const RawPacketData& packet) {
-            this->toAdd.push(packet);
+        readHspcap(filename.c_str(), [this](RawPacketData&& packet) {
+            this->toAdd.push(std::move(packet));
         });
         this->reloadAllPackets(&SniffWindow::core->base);
         this->updateTableShown();
@@ -271,4 +273,23 @@ void SniffWindow::RawPacketData::setData(const char* data, uint32_t len)
     this->len = len;
     this->data = (char*)malloc(len);
     memcpy(this->data, data, len);
+}
+
+SniffWindow::localPacket::localPacket(SniffWindow::RawPacketData&& raw) :
+    rawPacket(std::move(raw)), _time(std::time(NULL)), isShown(false)
+{
+    this->decodedPacket = new hungry_sniffer::EthernetPacket(rawPacket.data, rawPacket.len, &SniffWindow::core->base);
+}
+
+SniffWindow::localPacket& SniffWindow::localPacket::operator=(SniffWindow::localPacket&& other)
+{
+    if(this != &other)
+    {
+        this->rawPacket = std::move(other.rawPacket);
+        this->isShown = other.isShown;
+        this->_time = other._time;
+        this->decodedPacket = other.decodedPacket;
+        other.decodedPacket = nullptr;
+    }
+    return *this;
 }

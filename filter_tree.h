@@ -1,10 +1,7 @@
 #ifndef FILTER_TREE_H
 #define FILTER_TREE_H
 
-#include "EthernetPacket.h"
-#include <regex>
-#include <vector>
-#include <string>
+#include "Protocol.h"
 
 /**
  * @brief The FilterTree class
@@ -76,7 +73,7 @@ class FilterTree
                  * @param eth the packet to check
                  * @return true if fits, otherwise false
                  */
-                bool get(const hungry_sniffer::EthernetPacket* eth) const;
+                bool get(const hungry_sniffer::Packet* eth) const;
         };
     private:
         Node* root;
@@ -98,7 +95,7 @@ class FilterTree
          * @param eth the packet to check
          * @return true if fits, otherwise false
          */
-        bool get(const hungry_sniffer::EthernetPacket* eth) const
+        bool get(const hungry_sniffer::Packet* eth) const
         {
             return !this->root || this->root->get(eth);
         }

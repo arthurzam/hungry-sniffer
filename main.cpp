@@ -7,6 +7,8 @@
 #include <sys/resource.h>
 #include <unistd.h>
 
+#include "EthernetPacket.h"
+
 #ifndef PLUGINS_DIR
 #define PLUGINS_DIR "/usr/share/hungry-sniffer/plugins/"
 #endif

@@ -7,6 +7,7 @@
 #include "packetstats.h"
 #include "outputviewer.h"
 #include "additionalheaderspacket.h"
+#include "filter_tree.h"
 
 SniffWindow* SniffWindow::window = nullptr;
 
@@ -45,12 +46,13 @@ SniffWindow::~SniffWindow()
 #ifdef PYTHON_CMD
     stopPython();
 #endif
+    delete this->filterTree;
     delete ui;
 }
 
 bool SniffWindow::isRoot()
 {
-    return !(getuid() & geteuid());
+    return !(getuid() && geteuid());
 }
 
 void SniffWindow::setOutputFunctions()
@@ -70,7 +72,7 @@ void SniffWindow::setOutputFunctions()
             for(const auto& p : this->local)
             {
                 if(p.isShown)
-                    i.second(stream, p.decodedPacket.get());
+                    i.second(stream, p.decodedPacket);
             }
             OutputViewer* window = new OutputViewer(stream, i.first, this);
             window->show();
@@ -166,7 +168,8 @@ void SniffWindow::on_bt_filter_apply_clicked()
         return this->on_bt_filter_clear_clicked();
     }
 
-    this->filterTree.reset(new FilterTree(ui->tb_filter->text().toStdString()));
+    delete this->filterTree;
+    this->filterTree = new FilterTree(ui->tb_filter->text().toStdString());
 
     this->updateTableShown();
 
@@ -243,7 +246,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
 
         menu.addSeparator();
 
-        const hungry_sniffer::EthernetPacket* packet = this->local[row].decodedPacket.get();
+        const hungry_sniffer::Packet* packet = this->local[row].decodedPacket;
         {
             const hungry_sniffer::Packet* localPacket = packet;
             while(localPacket)

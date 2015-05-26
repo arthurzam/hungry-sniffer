@@ -72,14 +72,14 @@ class SafeQueue
          * @param item An item.
          * @return true if an item was pushed into the queue
          */
-        bool push (const value_type&& item)
+        bool push (value_type&& item)
         {
             std::lock_guard<std::mutex> lock (m_mutex);
 
             if (m_max_num_items > 0 && m_queue.size() > m_max_num_items)
                 return false;
 
-            m_queue.push (item);
+            m_queue.push (std::move(item));
             m_condition.notify_one();
             return true;
         }
