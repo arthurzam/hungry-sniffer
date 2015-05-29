@@ -51,7 +51,7 @@ void SniffWindow::runLivePcap_p(const std::string &name)
     }
     catch(const pcappp::PcapError& e)
     {
-        QMessageBox::warning(this, QLatin1String("Sniff Error"), QString::fromLatin1(e.what()));
+        QMessageBox::warning(this, QStringLiteral("Sniff Error"), QString::fromLatin1(e.what()));
     }
 }
 

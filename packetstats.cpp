@@ -13,12 +13,12 @@ PacketStats::PacketStats(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QPushButton* btRefresh = new QPushButton(QLatin1Literal("&Refresh"), ui->buttonBox);
+    QPushButton* btRefresh = new QPushButton(QStringLiteral("&Refresh"), ui->buttonBox);
     connect(btRefresh, SIGNAL(clicked()), this, SLOT(setStats()));
     ui->buttonBox->addButton(btRefresh, QDialogButtonBox::ActionRole);
 
     {
-        static QStringList l({QLatin1Literal("Protocol"), QLatin1Literal("Number")});
+        static QStringList l({QStringLiteral("Protocol"), QStringLiteral("Number")});
         ui->treeWidget->setHeaderLabels(l);
     }
 

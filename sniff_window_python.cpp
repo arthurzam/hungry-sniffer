@@ -233,7 +233,7 @@ void SniffWindow::execPyCommand()
     QString res(PyUnicode_AsUTF8(output));
     if(res.length() > 0)
     {
-        ui->lb_cmd->appendHtml(res.arg(QLatin1String(error ? "red" : "blue")));
+        ui->lb_cmd->appendHtml(res.arg((error ? QStringLiteral("red") : QStringLiteral("blue"))));
         PyRun_SimpleString("catchOutErr.value = ''");
     }
 

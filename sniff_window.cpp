@@ -30,7 +30,7 @@ SniffWindow::SniffWindow(QWidget *parent) :
     connect(ui->table_packets->selectionModel(), SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
             this,SLOT(model_currentRowChanged(QModelIndex,QModelIndex)));
 
-    ui->tree_packet->setHeaderLabels(QStringList({QLatin1String("Key"), QLatin1String("Value")}));
+    ui->tree_packet->setHeaderLabels(QStringList({QStringLiteral("Key"), QStringLiteral("Value")}));
     ui->tree_packet->setColumnCount(2);
     this->setOutputFunctions();
 #ifdef PYTHON_CMD
@@ -65,7 +65,7 @@ void SniffWindow::setOutputFunctions()
     if(core->outputFunctions.size() == 0)
         return;
 
-    QMenu* output = new QMenu(QLatin1String("Output"), this);
+    QMenu* output = new QMenu(QStringLiteral("Output"), this);
     for(const auto& i : core->outputFunctions)
     {
         if(i.second == nullptr)
@@ -92,8 +92,8 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
     while(this->optionsDisablerWin.enabledOptions.size() != 0)
     {
         if(QMessageBox::StandardButton::Yes == QMessageBox::question(nullptr,
-                                                                     QLatin1String("Background Options"),
-                                                                     QLatin1String("There are still background options.\n""Do you want to disable them?"),
+                                                                     QStringLiteral("Background Options"),
+                                                                     QStringLiteral("There are still background options.\n""Do you want to disable them?"),
                                                                      QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No))
         {
             this->optionsDisablerWin.exec();
@@ -138,7 +138,7 @@ void SniffWindow::on_actionSniff_triggered()
 {
     if(!isRoot())
     {
-        QMessageBox::warning(nullptr, QLatin1String("Not Root"), QLatin1String("You should be Root"), QMessageBox::StandardButton::Ok);
+        QMessageBox::warning(nullptr, QStringLiteral("Not Root"), QStringLiteral("You should be Root"), QMessageBox::StandardButton::Ok);
         return;
     }
 
@@ -178,7 +178,7 @@ void SniffWindow::on_actionClear_triggered()
 void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText)
 {
     bool ok;
-    QString text = QInputDialog::getText(this, QLatin1String("Name Assication"),
+    QString text = QInputDialog::getText(this, QStringLiteral("Name Assication"),
                                          QStringLiteral("Associated Name for\n""(%1)").arg(QString::fromStdString(origText)),
                                          QLineEdit::Normal,
                                          QString::fromStdString(localPacket->getProtocol()->getNameAssociated(origText)),
@@ -205,16 +205,16 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
         QList<QAction*> list;
         QMenu menu;
         int row = model.shownPerRow[item.row()];
-        QMenu follow(QLatin1String("Follow")), nameSrc(QLatin1String("Associate Name For Source")),
-                nameDst(QLatin1String("Associate Name For Destination")), optionsMenu(QLatin1String("Special Options"));
+        QMenu follow(QStringLiteral("Follow")), nameSrc(QStringLiteral("Associate Name For Source")),
+                nameDst(QStringLiteral("Associate Name For Destination")), optionsMenu(QStringLiteral("Special Options"));
 
-        QAction copyValAction(QLatin1String("Copy Value"), nullptr);
+        QAction copyValAction(QStringLiteral("Copy Value"), nullptr);
         connect(&copyValAction, &QAction::triggered, [this, item] () {
             QApplication::clipboard()->setText(this->model.data(item).toString());
         });
         menu.addAction(&copyValAction);
 
-        QAction removeRowAction(QLatin1String("Remove Packet"), nullptr);
+        QAction removeRowAction(QStringLiteral("Remove Packet"), nullptr);
         connect(&removeRowAction, &QAction::triggered, [this, item] () {
             model.remove(item.row());
         });
@@ -315,7 +315,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     if(!firstLevel)
         firstLevel = item;
     QMenu menu;
-    QAction action_add(QLatin1String("Add Info Header"), nullptr);
+    QAction action_add(QStringLiteral("Add Info Header"), nullptr);
     connect(&action_add, &QAction::triggered, [this]() {
         hungry_sniffer::Packet& last = const_cast<hungry_sniffer::Packet&>(this->selected->decodedPacket->getLast());
         AdditionalHeadersPacket* pack = static_cast<AdditionalHeadersPacket*>(&last);
@@ -344,7 +344,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     });
     menu.addAction(&action_add);
 
-    QAction action_remove(QLatin1String("Remove"), nullptr);
+    QAction action_remove(QStringLiteral("Remove"), nullptr);
     if(item != firstLevel && firstLevel->text(0) == "Own Headers")
     {
         connect(&action_remove, &QAction::triggered, [this, item, firstLevel]() {
@@ -364,7 +364,7 @@ void SniffWindow::on_actionDisableOptions_triggered()
 {
     if(this->optionsDisablerWin.enabledOptions.size() == 0)
     {
-        QMessageBox::warning(nullptr, QLatin1String("Empty"), QLatin1String("No Background Options running"),
+        QMessageBox::warning(nullptr, QStringLiteral("Empty"), QStringLiteral("No Background Options running"),
                              QMessageBox::StandardButton::Ok);
     }
     else
