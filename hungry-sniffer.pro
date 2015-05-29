@@ -26,7 +26,9 @@ SOURCES += main.cpp\
     filter_tree_parse.cpp \
     outputviewer.cpp \
     optionsdisabler.cpp \
-    history_line_edit.cpp
+    history_line_edit.cpp \
+    packetstable_model.cpp \
+    data_structure.cpp
 
 HEADERS  += \
     devicechoose.h \
@@ -39,7 +41,8 @@ HEADERS  += \
     outputviewer.h \
     optionsdisabler.h \
     history_line_edit.h \
-    additionalheaderspacket.h
+    additionalheaderspacket.h \
+    packetstable_model.h
 
 FORMS    += \
     devicechoose.ui \

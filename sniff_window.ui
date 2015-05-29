@@ -61,7 +61,7 @@
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <widget class="QTableWidget" name="table_packets">
+      <widget class="QTableView" name="table_packets">
        <property name="contextMenuPolicy">
         <enum>Qt::CustomContextMenu</enum>
        </property>
@@ -71,12 +71,6 @@
        <property name="sortingEnabled">
         <bool>true</bool>
        </property>
-       <property name="wordWrap">
-        <bool>false</bool>
-       </property>
-       <attribute name="verticalHeaderVisible">
-        <bool>false</bool>
-       </attribute>
       </widget>
       <widget class="QTreeWidget" name="tree_packet">
        <property name="contextMenuPolicy">

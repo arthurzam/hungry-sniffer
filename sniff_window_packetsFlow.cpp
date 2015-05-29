@@ -1,9 +1,12 @@
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
 #include "filter_tree.h"
+#include "packetstable_model.h"
 
 #include <QMessageBox>
 #include <pcap++.h>
+
+using namespace DataStructure;
 
 void SniffWindow::runLivePcap(const std::string &name)
 {
@@ -22,16 +25,12 @@ void SniffWindow::managePacketsList()
     RawPacketData packet;
     while(this->isNotExiting)
     {
-        while(this->isCalculatingFilter & this->isNotExiting)
-        {
-            QThread::msleep(1000);
-        }
         if(this->toAdd.timeout_move_pop(packet, 4000))
         {
-            this->local.push_back(localPacket(std::move(packet)));
-            struct localPacket& localPacket = this->local.back();
-            if((localPacket.isShown = !filterTree || filterTree->get(localPacket.decodedPacket)))
-                this->addPacketTable(localPacket, this->local.size());
+            localPacket p(std::move(packet));
+            FilterTree* filter = this->filterTree;
+            p.isShown = !filter || filter->get(p.decodedPacket);
+            this->model.append(std::move(p));
         }
         else if(this->toNotStop & this->threads.empty())
         {
@@ -53,73 +52,6 @@ void SniffWindow::runLivePcap_p(const std::string &name)
     catch(const pcappp::PcapError& e)
     {
         QMessageBox::warning(this, QLatin1String("Sniff Error"), QString::fromLatin1(e.what()));
-    }
-}
-
-static QTableWidgetItem* createItem(QVariant data, bool isGood)
-{
-    QTableWidgetItem* item = new QTableWidgetItem();
-    item->setData(Qt::DisplayRole, data);
-    if(!isGood)
-        item->setBackground(Qt::yellow);
-    return item;
-}
-
-inline static QTableWidgetItem* createItem(const std::string& data, bool isGood)
-{
-    return createItem(QString::fromStdString(data), isGood);
-}
-
-void SniffWindow::addPacketTable(const struct localPacket &local, int number)
-{
-    const hungry_sniffer::Packet &packet = *local.decodedPacket;
-    int row = ui->table_packets->rowCount();
-    bool isGood = packet.isGoodPacket();
-
-    ui->table_packets->setRowCount(row + 1);
-
-#define SET_ITEM(n, variant) ui->table_packets->setItem(row, n, createItem(variant, isGood))
-    SET_ITEM(0, number);
-    SET_ITEM(1, (int)(local.rawPacket.time.tv_sec - this->local[0].rawPacket.time.tv_sec));
-    SET_ITEM(2, packet.getName());
-    SET_ITEM(3, packet.getSource());
-    SET_ITEM(4, packet.getDestination());
-    SET_ITEM(5, (isGood ? packet.getInfo() : "Bad Packet"));
-#undef SET_ITEM
-
-    ui->table_packets->resizeRowToContents(row);
-}
-
-void SniffWindow::updateTableShown()
-{
-    this->isCalculatingFilter = true;
-
-    ui->table_packets->clear();
-    ui->table_packets->setRowCount(0);
-    this->setTableHeaders();
-
-    int i = 1;
-    for(auto& p : this->local)
-    {
-        if((p.isShown = !(bool)this->filterTree || this->filterTree->get(&*p.decodedPacket)))
-        {
-            this->addPacketTable(p, i);
-        }
-        ++i;
-    }
-
-    this->isCalculatingFilter = false;
-}
-
-void SniffWindow::reloadAllPackets(const hungry_sniffer::Protocol* protocol)
-{
-    for(auto& i : this->local)
-    {
-        hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(protocol));
-        if(ptr)
-        {
-            ptr->updateNameAssociation();
-        }
     }
 }
 

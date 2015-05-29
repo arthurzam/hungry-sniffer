@@ -1,26 +1,29 @@
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
 #include "EthernetPacket.h"
+#include "packetstable_model.h"
 
 #include <pcap.h>
 #include <pcap++.h>
 #include <netinet/in.h>
+
+using namespace DataStructure;
 
 enum ObjectType {
     PACKET = 0,
     PROTOCOL
 };
 
-static bool savePcap(const char* filename, const std::vector<SniffWindow::localPacket>& packets)
+static bool savePcap(const char* filename, const std::vector<DataStructure::localPacket>& packets)
 {
     pcap_t* pd = pcap_open_dead(DLT_EN10MB, 65535);
     pcap_dumper_t* pdumper = pcap_dump_open(pd, filename);
-    for(auto i = packets.cbegin(); i != packets.cend(); ++i)
+    for(const auto& i : packets)
     {
         struct pcap_pkthdr pkhdr;
-        pkhdr.caplen = pkhdr.len = i->rawPacket.len;
-        pkhdr.ts = i->rawPacket.time;
-        pcap_dump((u_char*)pdumper, &pkhdr, (const u_char*)i->rawPacket.data);
+        pkhdr.caplen = pkhdr.len = i.rawPacket.len;
+        pkhdr.ts = i.rawPacket.time;
+        pcap_dump((u_char*)pdumper, &pkhdr, (const u_char*)i.rawPacket.data);
     }
     pcap_dump_close(pdumper);
     pcap_close(pd);
@@ -96,14 +99,14 @@ static void saveHspcapProtocol(FILE* file, const hungry_sniffer::Protocol& proto
     }
 }
 
-static bool saveHspcap(const char* filename, const std::vector<SniffWindow::localPacket>& packets)
+static bool saveHspcap(const char* filename, const std::vector<DataStructure::localPacket>& packets)
 {
     FILE* file = fopen(filename, "wb");
     uint32_t packetsCount = htonl(packets.size());
     ::fwrite(&packetsCount, sizeof(packetsCount), 1, file);
     saveHspcapProtocol(file, SniffWindow::core->base);
     uint8_t type = ObjectType::PACKET;
-    for(auto& i : packets)
+    for(const auto& i : packets)
     {
         ::fwrite(&type, 1, 1, file);
         ::fwrite(&i.rawPacket.time, sizeof(i.rawPacket.time), 1, file);
@@ -114,7 +117,7 @@ static bool saveHspcap(const char* filename, const std::vector<SniffWindow::loca
     return true;
 }
 
-static bool readHspcap(const char* filename, std::function<void (SniffWindow::RawPacketData&& packet)> onPacket)
+static bool readHspcap(const char* filename, std::function<void (DataStructure::RawPacketData&& packet)> onPacket)
 {
     FILE* file = fopen(filename, "rb");
     uint32_t packetsCount = 0;
@@ -127,7 +130,7 @@ static bool readHspcap(const char* filename, std::function<void (SniffWindow::Ra
         {
             case ObjectType::PACKET:
             {
-                SniffWindow::RawPacketData raw;
+                DataStructure::RawPacketData raw;
                 ::fread(&raw.time, sizeof(raw.time), 1, file);
                 raw.data = readBuffer(file, raw.len);
                 if(packetsCount > 0)
@@ -186,22 +189,22 @@ void SniffWindow::runOfflineOpen_p(const std::string &filename)
         pcappp::Packet p;
         while(this->toNotStop && off.next(p))
         {
-            this->toAdd.push(std::move(RawPacketData(p)));
+            this->toAdd.push(std::move(DataStructure::RawPacketData(p)));
         }
     }
     else if(ends_with(filename, ".hspcap"))
     {
-        readHspcap(filename.c_str(), [this](RawPacketData&& packet) {
+        readHspcap(filename.c_str(), [this](DataStructure::RawPacketData&& packet) {
             this->toAdd.push(std::move(packet));
         });
-        this->reloadAllPackets(&SniffWindow::core->base);
-        this->updateTableShown();
+        model.reloadText(&SniffWindow::core->base);
+        model.rerunFilter(this->filterTree);
     }
 }
 
 void SniffWindow::on_actionSave_triggered()
 {
-    if(ui->table_packets->rowCount() == 0)
+    if(model.size() == 0)
     {
         QMessageBox::warning(nullptr, QLatin1String("Empty Table"), QLatin1String("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
         return;
@@ -211,85 +214,10 @@ void SniffWindow::on_actionSave_triggered()
 
     if(filename.endsWith(QLatin1String(".pcap")))
     {
-        savePcap(filename.toUtf8().constData(), this->local);
+        savePcap(filename.toUtf8().constData(), this->model.local);
     }
     else if(filename.endsWith(QLatin1String(".hspcap")))
     {
-        saveHspcap(filename.toUtf8().constData(), this->local);
+        saveHspcap(filename.toUtf8().constData(), this->model.local);
     }
-}
-
-SniffWindow::RawPacketData::RawPacketData(const pcappp::Packet& packet)
-{
-    this->time.tv_sec = packet.get_seconds();
-    this->time.tv_usec = packet.get_miliseconds();
-    setData((const char*)packet.get_data(), packet.get_length());
-}
-
-SniffWindow::RawPacketData::RawPacketData(const SniffWindow::RawPacketData& other) :
-    time(other.time)
-{
-    setData(other.data, other.len);
-}
-
-SniffWindow::RawPacketData::RawPacketData(SniffWindow::RawPacketData&& other) :
-    len(other.len),
-    time(other.time),
-    data(other.data)
-{
-    other.data = nullptr;
-}
-
-SniffWindow::RawPacketData& SniffWindow::RawPacketData::operator =(const RawPacketData& other)
-{
-    if(this != &other)
-    {
-        this->time = other.time;
-        setData(other.data, other.len);
-    }
-    return *this;
-}
-
-SniffWindow::RawPacketData& SniffWindow::RawPacketData::operator =(RawPacketData&& other)
-{
-    if(this != &other)
-    {
-        this->len = other.len;
-        this->time = other.time;
-        this->data = other.data;
-        other.data = nullptr;
-    }
-    return *this;
-}
-
-SniffWindow::RawPacketData::~RawPacketData()
-{
-    if(this->data)
-        free(this->data);
-}
-
-void SniffWindow::RawPacketData::setData(const char* data, uint32_t len)
-{
-    this->len = len;
-    this->data = (char*)malloc(len);
-    memcpy(this->data, data, len);
-}
-
-SniffWindow::localPacket::localPacket(SniffWindow::RawPacketData&& raw) :
-    rawPacket(std::move(raw)), _time(std::time(NULL)), isShown(false)
-{
-    this->decodedPacket = new hungry_sniffer::EthernetPacket(rawPacket.data, rawPacket.len, &SniffWindow::core->base);
-}
-
-SniffWindow::localPacket& SniffWindow::localPacket::operator=(SniffWindow::localPacket&& other)
-{
-    if(this != &other)
-    {
-        this->rawPacket = std::move(other.rawPacket);
-        this->isShown = other.isShown;
-        this->_time = other._time;
-        this->decodedPacket = other.decodedPacket;
-        other.decodedPacket = nullptr;
-    }
-    return *this;
 }

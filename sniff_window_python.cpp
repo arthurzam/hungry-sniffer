@@ -31,9 +31,9 @@ static PyObject* getLayer(const hungry_sniffer::Packet* layer)
 
 static PyObject* getPacket(unsigned pos)
 {
-    if(pos >= SniffWindow::window->local.size())
+    if(pos >= SniffWindow::window->model.local.size())
         return Py_None;
-    struct SniffWindow::localPacket& pack = SniffWindow::window->local[pos];
+    struct DataStructure::localPacket& pack = SniffWindow::window->model.local[pos];
 
     PyObject* d = PyDict_New();
     HS_PYDICT_ADD_NUM(d, "num", pos);
@@ -66,7 +66,7 @@ PyObject* hs_getNextShown(PyObject*, PyObject* args)
         return NULL;
     }
 
-    auto& list = SniffWindow::window->local;
+    auto& list = SniffWindow::window->model.local;
     for(unsigned i = pos; i < list.size(); ++i)
     {
         if(list[i].isShown)
@@ -77,15 +77,12 @@ PyObject* hs_getNextShown(PyObject*, PyObject* args)
 
 PyObject* hs_getCountAll(PyObject*)
 {
-    return PyLong_FromLong(SniffWindow::window->local.size());
+    return PyLong_FromLong(SniffWindow::window->model.local.size());
 }
 
 PyObject* hs_getCountShown(PyObject*)
 {
-    int count = 0;
-    for(const auto& i : SniffWindow::window->local)
-        if(i.isShown)
-            count++;
+    int count = SniffWindow::window->model.size();
     return PyLong_FromLong(count);
 }
 
@@ -101,15 +98,15 @@ PyObject* hs_savePacket(PyObject*, PyObject* args)
     const char* b = PyByteArray_AsString(data);
     if(pos == -1)
     {
-        SniffWindow::RawPacketData raw;
+        DataStructure::RawPacketData raw;
         gettimeofday(&raw.time, nullptr);
         raw.setData(b, size);
         SniffWindow::window->toAdd.push(raw);
     }
-    else if(pos < (int)SniffWindow::window->local.size())
+    else if(pos < (int)SniffWindow::window->model.local.size())
     {
-        struct SniffWindow::localPacket& pack = SniffWindow::window->local[pos];
-        SniffWindow::RawPacketData& raw = pack.rawPacket;
+        struct DataStructure::localPacket& pack = SniffWindow::window->model.local[pos];
+        DataStructure::RawPacketData& raw = pack.rawPacket;
         free(raw.data);
         raw.setData(b, size);
 
@@ -127,11 +124,7 @@ PyObject* hs_removePacket(PyObject*, PyObject* args)
     if (!PyArg_ParseTuple(args, "i", &pos)) {
         return NULL;
     }
-    if(pos < (int)SniffWindow::window->local.size())
-    {
-        SniffWindow::window->local.erase(SniffWindow::window->local.begin() + pos);
-        SniffWindow::window->updateTableShown();
-    }
+    SniffWindow::window->model.remove(pos);
     return Py_None;
 }
 

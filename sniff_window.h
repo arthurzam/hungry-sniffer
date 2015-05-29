@@ -6,17 +6,7 @@
 
 #include "optionsdisabler.h"
 #include "ThreadQueue.h"
-
-namespace Ui {
-    class SniffWindow;
-}
-
-namespace pcappp {
-    class Packet;
-}
-
-class FilterTree;
-class QTableWidgetItem;
+#include "packetstable_model.h"
 
 class SniffWindow : public QMainWindow
 {
@@ -36,7 +26,6 @@ class SniffWindow : public QMainWindow
         void on_actionOpen_triggered();
         void on_tb_filter_textEdited(const QString &arg1);
         void on_bt_filter_clear_clicked();
-        void on_table_packets_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous);
         void on_actionSave_triggered();
         void on_actionStop_triggered();
         void on_actionSniff_triggered();
@@ -57,57 +46,19 @@ class SniffWindow : public QMainWindow
         void on_action_Python_toggled(bool arg1);
         void on_splitter_splitterMoved(int, int);
 
+        void model_currentRowChanged(QModelIndex newSelection,QModelIndex oldSelection);
+
     protected:
         void dragEnterEvent(QDragEnterEvent* event);
         void dropEvent(QDropEvent* event);
         void closeEvent(QCloseEvent *bar);
 
-    private:
-        Ui::SniffWindow *ui;
-
     public:
-        struct RawPacketData {
-            uint32_t len;
-            timeval time;
-            char* data;
+        Ui::SniffWindow *ui;
+        PacketsTableModel model;
 
-            constexpr RawPacketData() : len(0), time({0,0}), data(nullptr) {}
-            RawPacketData(const pcappp::Packet& packet);
-            RawPacketData(const RawPacketData& other);
-            RawPacketData(RawPacketData&& other);
-            RawPacketData& operator=(const RawPacketData& other);
-            RawPacketData& operator=(RawPacketData&& other);
-            ~RawPacketData();
-
-            void setData(const char* data, uint32_t len);
-        };
-
-        struct localPacket {
-            RawPacketData rawPacket;
-            hungry_sniffer::Packet* decodedPacket = nullptr;
-            time_t _time;
-            bool isShown;
-
-            localPacket(localPacket&& other) : rawPacket(std::move(other.rawPacket)),
-                decodedPacket(other.decodedPacket), _time(other._time), isShown(other.isShown)
-            {
-                other.decodedPacket = nullptr;
-            }
-
-            localPacket(const localPacket& other) = delete;
-            localPacket(RawPacketData&& raw);
-            localPacket& operator=(const localPacket& other) = delete;
-            localPacket& operator=(localPacket&& other);
-
-            ~localPacket()
-            {
-                if(decodedPacket)
-                    delete decodedPacket;
-            }
-        };
-        std::vector<struct localPacket> local;
-        struct localPacket* selected = nullptr;
-        ThreadSafeQueue<RawPacketData> toAdd;
+        DataStructure::localPacket* selected = nullptr;
+        ThreadSafeQueue<DataStructure::RawPacketData> toAdd;
     private:
 
         std::vector<std::thread*> threads;
@@ -115,8 +66,7 @@ class SniffWindow : public QMainWindow
         bool isNotExiting;
         std::thread manageThread;
 
-        FilterTree* filterTree;
-        std::atomic<bool> isCalculatingFilter;
+        std::atomic<FilterTree*> filterTree;
 
         OptionsDisabler optionsDisablerWin;
 
@@ -130,12 +80,13 @@ class SniffWindow : public QMainWindow
         void managePacketsList();
 
     public:
-        void setCurrentPacket(const struct localPacket& pack);
-        void addPacketTable(const struct localPacket &local, int number);
-        void updateTableShown();
-        void reloadAllPackets(const hungry_sniffer::Protocol* protocol);
+        void setCurrentPacket(const DataStructure::localPacket& pack);
+        void addPacketTable(const DataStructure::localPacket &local, int number);
+        void updateTableShown()
+        {
+            model.rerunFilter(this->filterTree);
+        }
 
-        void setTableHeaders();
         void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);
 
         void setOutputFunctions();
