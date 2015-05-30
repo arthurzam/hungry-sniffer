@@ -128,6 +128,42 @@ PyObject* hs_removePacket(PyObject*, PyObject* args)
     return Py_None;
 }
 
+PyObject* hs_setFilter(PyObject*, PyObject* args)
+{
+    char* str = NULL;
+    if (!PyArg_ParseTuple(args, "z", &str)) {
+        return NULL;
+    }
+    SniffWindow::window->ui->tb_filter->setText(str ? QString(str) : QStringLiteral(""));
+    SniffWindow::window->on_bt_filter_apply_clicked();
+    return Py_None;
+}
+
+PyObject* hs_getFilter(PyObject*)
+{
+    return PyUnicode_FromString(SniffWindow::window->ui->tb_filter->text().toUtf8().data());
+}
+
+PyObject* ui_reset(PyObject*)
+{
+    SniffWindow::window->ui->lb_cmd->clear();
+    return Py_None;
+}
+
+PyObject* ui_open(PyObject*, PyObject* args)
+{
+    char* str = NULL;
+    if (!PyArg_ParseTuple(args, "s", &str)) {
+        return NULL;
+    }
+    SniffWindow::window->runOfflineFile(str);
+    return Py_None;
+}
+
+PyObject* ui_stop(PyObject*)
+{
+    SniffWindow::window->on_actionStop_triggered();
+    return Py_None;
 }
 
 static PyMethodDef hs_methods[] = {
@@ -137,6 +173,8 @@ static PyMethodDef hs_methods[] = {
     { "getCountShown", (PyCFunction)hs_getCountShown, METH_NOARGS, NULL },
     { "savePacket", (PyCFunction)hs_savePacket, METH_VARARGS, NULL },
     { "removePacket", (PyCFunction)hs_removePacket, METH_VARARGS, NULL },
+    { "setFilter", (PyCFunction)hs_setFilter, METH_VARARGS, NULL },
+    { "getFilter", (PyCFunction)hs_getFilter, METH_NOARGS, NULL },
     { NULL, NULL, 0, NULL }
 };
 
@@ -147,6 +185,22 @@ static PyModuleDef hsModule = {
 static PyObject* PyInit_hs(void)
 {
     return PyModule_Create(&hsModule);
+}
+
+static PyMethodDef ui_methods[] = {
+    { "reset", (PyCFunction)ui_reset, METH_NOARGS, NULL },
+    { "open", (PyCFunction)ui_open, METH_VARARGS, NULL },
+    { "stop", (PyCFunction)ui_stop, METH_NOARGS, NULL },
+    { NULL, NULL, 0, NULL }
+};
+
+static PyModuleDef uiModule = {
+    PyModuleDef_HEAD_INIT, "_hs_ui", NULL, -1, ui_methods, NULL, NULL, NULL, NULL
+};
+
+static PyObject* PyInit_hs_ui(void)
+{
+    return PyModule_Create(&uiModule);
 }
 
 static void redirect(PyObject* globals)
@@ -174,6 +228,8 @@ static void addDirToPath(const char* path)
     PyList_Append(sys_path, folder_path);
 }
 
+}
+
 void SniffWindow::stopPython()
 {
     Py_Finalize();
@@ -182,6 +238,7 @@ void SniffWindow::stopPython()
 void SniffWindow::initPython()
 {
     PyImport_AppendInittab("_hs_private",&PyInit_hs);
+    PyImport_AppendInittab("_hs_ui",&PyInit_hs_ui);
     Py_Initialize();
 
     addDirToPath(PYTHON_DIR);
@@ -192,6 +249,7 @@ void SniffWindow::initPython()
 
     this->pyGlobals = PyModule_GetDict(mainModule);
     redirect((PyObject*)this->pyGlobals);
+    PyRun_String("from _hs_ui import *", Py_single_input, (PyObject*)pyGlobals, (PyObject*)pyGlobals);
     this->pyCatcher = PyObject_GetAttrString(mainModule,"catchOutErr");
 }
 

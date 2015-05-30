@@ -22,7 +22,7 @@ class SniffWindow : public QMainWindow
 
         static bool isRoot();
 
-    private slots:
+    public slots:
         void on_actionOpen_triggered();
         void on_tb_filter_textEdited(const QString &arg1);
         void on_bt_filter_clear_clicked();
