@@ -18,7 +18,7 @@ class FilterTree
          * represents a node in the filter tree
          * can hold a simple check or a boolean expresation (for example Or)
          */
-        class Node {
+        struct Node {
             public:
                 enum Type {
                     Value = 0,

@@ -1,5 +1,5 @@
 CONFIG += c++11
-QT     += core gui widgets printsupport
+QT     += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 LIBS   += -lpcap++ -lpcap -ldl -lqhexedit

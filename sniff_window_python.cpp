@@ -39,6 +39,7 @@ static PyObject* getPacket(unsigned pos)
     HS_PYDICT_ADD_NUM(d, "num", pos);
     HS_PYDICT_ADD_OBJECT(d, "isShown", PyBool_FromLong(pack.isShown));
     HS_PYDICT_ADD_OBJECT(d, "data", PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len));
+    HS_PYDICT_ADD_OBJECT(d, "time", PyFloat_FromDouble(pack.rawPacket.time.tv_sec + (double)pack.rawPacket.time.tv_usec * 0.000001));
 
     PyObject* layers = PyList_New(0);
     for(const hungry_sniffer::Packet* packet = pack.decodedPacket; packet != nullptr; packet = packet->getNext())
@@ -82,8 +83,7 @@ PyObject* hs_getCountAll(PyObject*)
 
 PyObject* hs_getCountShown(PyObject*)
 {
-    int count = SniffWindow::window->model.size();
-    return PyLong_FromLong(count);
+    return PyLong_FromLong(SniffWindow::window->model.size());
 }
 
 PyObject* hs_savePacket(PyObject*, PyObject* args)

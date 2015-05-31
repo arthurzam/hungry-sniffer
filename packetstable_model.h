@@ -40,11 +40,10 @@ namespace DataStructure {
     struct localPacket {
         RawPacketData rawPacket;
         hungry_sniffer::Packet* decodedPacket = nullptr;
-        time_t _time;
         bool isShown;
 
         localPacket(localPacket&& other) : rawPacket(std::move(other.rawPacket)),
-            decodedPacket(other.decodedPacket), _time(other._time), isShown(other.isShown)
+            decodedPacket(other.decodedPacket), isShown(other.isShown)
         {
             other.decodedPacket = nullptr;
         }
@@ -66,7 +65,7 @@ class PacketsTableModel : public QAbstractTableModel
         std::vector<int> shownPerRow;
         std::mutex mutex_shownPerRow;
 
-        static constexpr unsigned COLUMNS_COUNT = 6;
+        static constexpr unsigned COLUMNS_COUNT = 7;
     public:
         explicit PacketsTableModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
 

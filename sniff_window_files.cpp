@@ -117,13 +117,27 @@ static bool saveHspcap(const char* filename, const std::vector<DataStructure::lo
     return true;
 }
 
-static bool readHspcap(const char* filename, std::function<void (DataStructure::RawPacketData&& packet)> onPacket)
+inline timeval calcDiffTimeval(const timeval& curr, const timeval& start, const timeval& base)
+{
+    timeval res{0,0};
+    res.tv_usec = base.tv_usec + curr.tv_usec - start.tv_usec;
+    res.tv_sec = (base.tv_sec + curr.tv_sec) + ((res.tv_usec / 1000000) - start.tv_sec);
+    res.tv_usec = res.tv_usec % 1000000;
+    return res;
+}
+
+static bool readHspcap(const char* filename)
 {
     FILE* file = fopen(filename, "rb");
     uint32_t packetsCount = 0;
     ::fread(&packetsCount, sizeof(packetsCount), 1, file);
     packetsCount = ntohl(packetsCount);
     uint8_t type;
+
+    timeval start{0, 0};
+    timeval base{0, 0};
+    gettimeofday(&base, 0);
+
     while(::fread(&type, 1, 1, file) == 1)
     {
         switch(type)
@@ -133,9 +147,12 @@ static bool readHspcap(const char* filename, std::function<void (DataStructure::
                 DataStructure::RawPacketData raw;
                 ::fread(&raw.time, sizeof(raw.time), 1, file);
                 raw.data = readBuffer(file, raw.len);
+                if((start.tv_sec | start.tv_usec) == 0)
+                    start = raw.time;
+                raw.time = calcDiffTimeval(raw.time, start, base);
                 if(packetsCount > 0)
                 {
-                    onPacket(std::move(raw));
+                    SniffWindow::window->toAdd.push(std::move(raw));
                     packetsCount--;
                 }
                 break;
@@ -187,16 +204,21 @@ void SniffWindow::runOfflineOpen_p(const std::string &filename)
     {
         pcappp::PcapOffline off(filename);
         pcappp::Packet p;
+        timeval start{0, 0};
+        timeval base{0, 0};
+        gettimeofday(&base, 0);
         while(this->toNotStop && off.next(p))
         {
-            this->toAdd.push(std::move(DataStructure::RawPacketData(p)));
+            DataStructure::RawPacketData raw(p);
+            if((start.tv_sec | start.tv_usec) == 0)
+                start = raw.time;
+            raw.time = calcDiffTimeval(raw.time, start, base);
+            this->toAdd.push(std::move(raw));
         }
     }
     else if(ends_with(filename, ".hspcap"))
     {
-        readHspcap(filename.c_str(), [this](DataStructure::RawPacketData&& packet) {
-            this->toAdd.push(std::move(packet));
-        });
+        readHspcap(filename.c_str());
         model.reloadText(&SniffWindow::core->base);
         model.rerunFilter(this->filterTree);
     }

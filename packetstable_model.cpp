@@ -4,6 +4,12 @@
 
 #include <QBrush>
 
+inline double diffTimeval(const timeval& curr, const timeval& base)
+{
+    static constexpr double DIVIDE_MILI = 0.000001; // 1 microsec in seconds
+    return ((curr.tv_sec - base.tv_sec) + (curr.tv_usec - base.tv_usec) * DIVIDE_MILI);
+}
+
 QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
 {
     if(index.row() >= (int)shownPerRow.size())
@@ -20,14 +26,16 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
                 case 0:
                     return QVariant(number + 1);
                 case 1:
-                    return QVariant(0); // TODO: put time diff
+                    return QString::number(diffTimeval(packet.rawPacket.time, this->local[0].rawPacket.time), 'f', 6);
                 case 2:
                     return QString::fromStdString(packet.decodedPacket->getName());
                 case 3:
-                    return QString::fromStdString(packet.decodedPacket->getSource());
+                    return QVariant(packet.rawPacket.len);
                 case 4:
-                    return QString::fromStdString(packet.decodedPacket->getDestination());
+                    return QString::fromStdString(packet.decodedPacket->getSource());
                 case 5:
+                    return QString::fromStdString(packet.decodedPacket->getDestination());
+                case 6:
                     return (packet.decodedPacket->isGoodPacket() ? QString::fromStdString(packet.decodedPacket->getInfo()) : QStringLiteral("Bad Packet"));
             }
             break;
@@ -43,7 +51,7 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
 
 QVariant PacketsTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    static const QString headers[] = {QStringLiteral("No."), QStringLiteral("Arrival Time"), QStringLiteral("Protocol"),
+    static const QString headers[] = {QStringLiteral("No."), QStringLiteral("Arrival Time"), QStringLiteral("Protocol"), QStringLiteral("Length"),
                                       QStringLiteral("Source"), QStringLiteral("Destination"), QStringLiteral("Info")};
     static_assert(sizeof(headers) == COLUMNS_COUNT * sizeof(QString), "bad COLUMNS_COUNT");
     if ((role == Qt::DisplayRole) & (orientation == Qt::Horizontal)) {

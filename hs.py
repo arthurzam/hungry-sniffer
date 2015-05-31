@@ -24,6 +24,7 @@ class Packet:
         self.num = dict['num']
         self.isShown = dict['isShown']
         self.data = dict['data']
+        self.time = dict['time']
 
         self.layers = []
         for layer in dict['layers']:

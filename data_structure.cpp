@@ -60,7 +60,7 @@ void DataStructure::RawPacketData::setData(const char* data, uint32_t len)
 }
 
 DataStructure::localPacket::localPacket(DataStructure::RawPacketData&& raw) :
-    rawPacket(std::move(raw)), _time(std::time(NULL)), isShown(false)
+    rawPacket(std::move(raw)), isShown(false)
 {
     this->decodedPacket = new hungry_sniffer::EthernetPacket(rawPacket.data, rawPacket.len, &SniffWindow::core->base);
 }
@@ -71,7 +71,6 @@ DataStructure::localPacket& DataStructure::localPacket::operator=(DataStructure:
     {
         this->rawPacket = std::move(other.rawPacket);
         this->isShown = other.isShown;
-        this->_time = other._time;
         this->decodedPacket = other.decodedPacket;
         other.decodedPacket = nullptr;
     }
