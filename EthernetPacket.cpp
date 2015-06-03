@@ -37,14 +37,14 @@ void EthernetPacket::updateNameAssociation()
     this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value.ether_type))});
 }
 
-bool EthernetPacket::filter_dstMac(const Packet* packet, const std::vector<std::string>& res)
+bool EthernetPacket::filter_dstMac(const Packet* packet, const std::vector<std::string>* res)
 {
     const EthernetPacket* eth = static_cast<const EthernetPacket*>(packet);
-    return res[1] == eth->_realDestination || res[1] == eth->destination;
+    return res->at(1) == eth->_realDestination || res->at(1) == eth->destination;
 }
 
-bool EthernetPacket::filter_srcMac(const Packet* packet, const std::vector<string>& res)
+bool EthernetPacket::filter_srcMac(const Packet* packet, const std::vector<string>* res)
 {
     const EthernetPacket* eth = static_cast<const EthernetPacket*>(packet);
-    return res[1] == eth->_realSource || res[1] == eth->source;
+    return res->at(1) == eth->_realSource || res->at(1) == eth->source;
 }

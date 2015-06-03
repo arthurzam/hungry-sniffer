@@ -41,25 +41,25 @@ void IPv6Packet::updateNameAssociation()
         this->next->updateNameAssociation();
 }
 
-bool IPv6Packet::filter_dstIP(const Packet* packet, const std::vector<std::string>& res)
+bool IPv6Packet::filter_dstIP(const Packet* packet, const std::vector<std::string>* res)
 {
     const IPv6Packet* ipv6 = static_cast<const IPv6Packet*>(packet);
-    return res[1] == ipv6->_realDestination || res[1] == ipv6->destination;
+    return res->at(1) == ipv6->_realDestination || res->at(1) == ipv6->destination;
 }
 
-bool IPv6Packet::filter_srcIP(const Packet* packet, const std::vector<std::string>& res)
+bool IPv6Packet::filter_srcIP(const Packet* packet, const std::vector<std::string>* res)
 {
     const IPv6Packet* ipv6 = static_cast<const IPv6Packet*>(packet);
-    return res[1] == ipv6->_realSource || res[1] == ipv6->source;
+    return res->at(1) == ipv6->_realSource || res->at(1) == ipv6->source;
 }
 
-bool IPv6Packet::filter_follow(const Packet* packet, const std::vector<std::string>& res)
+bool IPv6Packet::filter_follow(const Packet* packet, const std::vector<std::string>* res)
 {
     const IPv6Packet* ipv6 = static_cast<const IPv6Packet*>(packet);
-    if(res[1] == ipv6->_realSource || res[1] == ipv6->source)
-        return res[2] == ipv6->_realDestination || res[2] == ipv6->destination;
-    if(res[1] == ipv6->_realDestination || res[1] == ipv6->destination)
-        return res[2] == ipv6->_realSource || res[2] == ipv6->source;
+    if(res->at(1) == ipv6->_realSource || res->at(1) == ipv6->source)
+        return res->at(2) == ipv6->_realDestination || res->at(2) == ipv6->destination;
+    if(res->at(1) == ipv6->_realDestination || res->at(1) == ipv6->destination)
+        return res->at(2) == ipv6->_realSource || res->at(2) == ipv6->source;
     return false;
 }
 

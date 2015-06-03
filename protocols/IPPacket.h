@@ -13,9 +13,9 @@ class IPPacket : public PacketStructed<struct ip> {
         virtual std::string getConversationFilterText() const;
         virtual void updateNameAssociation();
 
-        static bool filter_dstIP(const Packet* packet, const std::vector<std::string>& res);
-        static bool filter_srcIP(const Packet* packet, const std::vector<std::string>& res);
-        static bool filter_follow(const Packet* packet, const std::vector<std::string>& res);
+        static bool filter_dstIP(const Packet* packet, const std::vector<std::string>* res);
+        static bool filter_srcIP(const Packet* packet, const std::vector<std::string>* res);
+        static bool filter_follow(const Packet* packet, const std::vector<std::string>* res);
 
         static int drop_srcIP(const Packet* packet, Option::disabled_options_t& options);
         static int drop_dstIP(const Packet* packet, Option::disabled_options_t& options);

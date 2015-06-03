@@ -50,7 +50,7 @@ namespace hungry_sniffer {
         public:
             typedef Packet* (*initFunction)(const void* data, size_t len,
                     const Protocol* protocol, const Packet* prev);
-            typedef bool (*filterFunction)(const Packet*, const std::vector<std::string>&);
+            typedef bool (*filterFunction)(const Packet*, const std::vector<std::string>*);
 
             typedef std::map<size_t, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;

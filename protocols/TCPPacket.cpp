@@ -60,24 +60,24 @@ void TCPPacket::updateNameAssociation()
 #undef PUSH_FLAG_TEXT
 }
 
-bool TCPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>& res)
+bool TCPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>* res)
 {
     const TCPPacket* tcp = static_cast<const TCPPacket*>(packet);
-    return res[1] == tcp->_realDestination || res[1] == tcp->destination;
+    return res->at(1) == tcp->_realDestination || res->at(1) == tcp->destination;
 }
 
-bool TCPPacket::filter_srcPort(const Packet* packet, const std::vector<std::string>& res)
+bool TCPPacket::filter_srcPort(const Packet* packet, const std::vector<std::string>* res)
 {
     const TCPPacket* tcp = static_cast<const TCPPacket*>(packet);
-    return res[1] == tcp->_realSource || res[1] == tcp->source;
+    return res->at(1) == tcp->_realSource || res->at(1) == tcp->source;
 }
 
-bool TCPPacket::filter_follow(const Packet* packet, const std::vector<std::string>& res)
+bool TCPPacket::filter_follow(const Packet* packet, const std::vector<std::string>* res)
 {
     const TCPPacket* tcp = static_cast<const TCPPacket*>(packet);
-    if(res[1] == tcp->_realSource || res[1] == tcp->source)
-        return res[2] == tcp->_realDestination || res[2] == tcp->destination;
-    if(res[1] == tcp->_realDestination || res[1] == tcp->destination)
-        return res[2] == tcp->_realSource || res[2] == tcp->source;
+    if(res->at(1) == tcp->_realSource || res->at(1) == tcp->source)
+        return res->at(2) == tcp->_realDestination || res->at(2) == tcp->destination;
+    if(res->at(1) == tcp->_realDestination || res->at(1) == tcp->destination)
+        return res->at(2) == tcp->_realSource || res->at(2) == tcp->source;
     return false;
 }

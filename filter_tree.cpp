@@ -1,61 +1,303 @@
 #include "filter_tree.h"
+#include "sniff_window.h"
 
-using namespace hungry_sniffer;
+enum NodeTypes {
+    Value = 0,
+    Or,
+    And,
+    Not,
+    Nand,
+    Nor
+};
 
-FilterTree::Node::Node(const Protocol *protocol)
-    : matches()
+struct TempNode {
+    public:
+        union {
+            struct {
+                TempNode* left;
+                TempNode* right;
+            } tree;
+            struct {
+                const hungry_sniffer::Protocol* protocol;
+                hungry_sniffer::Protocol::filterFunction function;
+            } filter;
+        } data;
+        enum NodeTypes type;
+        std::vector<std::string> matches;
+    public:
+        TempNode(const hungry_sniffer::Protocol* protocol)
+        {
+            this->type = NodeTypes::Value;
+            this->data.filter.protocol = protocol;
+            this->data.filter.function = nullptr;
+        }
+        TempNode(const hungry_sniffer::Protocol* protocol, hungry_sniffer::Protocol::filterFunction function, const std::smatch& _matches)
+        {
+            this->type = NodeTypes::Value;
+            this->data.filter.protocol = protocol;
+            this->data.filter.function = function;
+
+            matches.reserve(_matches.size());
+            for(auto& i : _matches)
+            {
+                matches.push_back(i.str());
+            }
+        }
+        TempNode(TempNode* left, TempNode* right, enum NodeTypes type)
+        {
+            this->data.tree.left = left;
+            this->data.tree.right = right;
+            this->type = type;
+        }
+        ~TempNode()
+        {
+            if(this->type != NodeTypes::Value)
+            {
+                delete this->data.tree.left;
+                delete this->data.tree.right;
+            }
+        }
+};
+
+using std::string;
+using std::vector;
+
+namespace parseString {
+
+    static TempNode* parseExpr(string::const_iterator start, string::const_iterator end);
+    static TempNode* parseEndExpr(string::const_iterator start, string::const_iterator end);
+
+    static string::const_iterator findMatchingBracket(string::const_iterator start, string::const_iterator end)
+    {
+        int num = 1;
+        for(; start != end && num != 0; ++start)
+        {
+            switch(*start)
+            {
+                case ')': --num; break;
+                case '(': ++num; break;
+            }
+        }
+        return start;
+    }
+
+    static void findMatchingExprEnd(string::const_iterator& start, string::const_iterator end)
+    {
+        for(; start != end && *start != '&' && *start != '|'; ++start)
+            if(*start == '(')
+               start = findMatchingBracket(start, end) - 1;
+    }
+
+    static void stripSpaces(string::const_iterator& start, string::const_iterator& end)
+    {
+        while(*start == ' ' && start != end)
+            ++start;
+        while(*(end - 1) == ' ' && start != end)
+            --end;
+    }
+
+    static TempNode* parseNot(string::const_iterator start, string::const_iterator end)
+    {
+        stripSpaces(start, end);
+        switch(*start)
+        {
+            case '(':
+                return new TempNode(parseExpr(start + 1, end - 1), nullptr, NodeTypes::Not);
+            case '~':
+                return parseExpr(start + 1, end - 1);
+            default:
+                return new TempNode(parseEndExpr(start, end), nullptr, NodeTypes::Not);
+        }
+    }
+
+    static TempNode* parseExpr(string::const_iterator start, string::const_iterator end)
+    {
+        stripSpaces(start, end);
+        TempNode* temp = nullptr;
+
+        string::const_iterator i = start, exprStart;
+
+        while(i != end)
+        {
+            switch(*i)
+            {
+                case ' ':
+                    ++i;
+                    break;
+                case '(':
+                    exprStart = ++i;
+                    i = findMatchingBracket(i, end) - 1;
+                    temp = parseExpr(exprStart, i);
+                    if(i == end)
+                        return temp;
+                    ++i;
+                    break;
+                case '~':
+                    exprStart = ++i;
+                    findMatchingExprEnd(i, end);
+
+                    temp = parseNot(exprStart, i);
+                    if(i == end)
+                        return temp;
+                    ++i;
+                    break;
+                case '&':
+                case '|':
+                    exprStart = ++i;
+                    findMatchingExprEnd(i, end);
+
+                    temp = new TempNode(temp, parseExpr(exprStart, i),
+                            (*(exprStart - 1) == '&' ? NodeTypes::And : NodeTypes::Or));
+                    if(i == end)
+                        return temp;
+                    ++i;
+                    break;
+                default:
+                    findMatchingExprEnd(i, end);
+                    temp = parseEndExpr(start, i);
+                    break;
+            }
+        }
+        return temp;
+    }
+
+    static hungry_sniffer::Protocol::filterFunction extractRegex(const hungry_sniffer::Protocol* protocol, const string& regexParts, std::smatch& sm)
+    {
+        for(auto& i : protocol->getFilters())
+        {
+            if(std::regex_search(regexParts, sm, i.first))
+            {
+                return i.second;
+            }
+        }
+        return nullptr;
+    }
+
+    static TempNode* parseEndExpr(string::const_iterator start, string::const_iterator end)
 {
-    this->type = this->Type::Value;
-    this->data.filter.protocol = protocol;
-    this->data.filter.function = nullptr;
+    stripSpaces(start, end);
+    string::const_iterator dot = std::find(start, end, '.');
+    string name(start, dot);
+    const hungry_sniffer::Protocol* protocol = SniffWindow::core->base.findProtocol(name);
+
+    if(!protocol)
+    {
+        qDebug("protocol %s not found", name.c_str());
+        return nullptr;
+    }
+
+    if(end != dot)
+    {
+        std::smatch sm;
+        return new TempNode(protocol, extractRegex(protocol, string(dot + 1, end), sm), sm);
+    }
+    else // only name
+    {
+        return new TempNode(protocol);
+    }
+}
 }
 
-FilterTree::Node::Node(const Protocol *protocol, Protocol::filterFunction function, const std::smatch& _matches)
-{
-    this->type = this->Type::Value;
-    this->data.filter.protocol = protocol;
-    this->data.filter.function = function;
+namespace optimizeFilter {
+    struct res {
+        uint_fast16_t nodeCount;
+        uint_fast16_t valueCount;
 
-    matches.reserve(_matches.size());
-    for(auto& i : _matches)
+        res& operator+=(const res& other)
+        {
+            nodeCount += other.nodeCount;
+            valueCount += other.valueCount;
+            return *this;
+        }
+    };
+
+    struct res countNodes(const TempNode* root)
     {
-        matches.push_back(i.str());
+        struct res r = {1, 0};
+        switch(root->type)
+        {
+            case NodeTypes::Value:
+                r.valueCount = 1;
+                break;
+            case NodeTypes::Not:
+                r += countNodes(root->data.tree.left);
+                break;
+            case NodeTypes::And:
+            case NodeTypes::Or:
+                r += countNodes(root->data.tree.left);
+                r += countNodes(root->data.tree.right);
+                break;
+            case NodeTypes::Nor:
+            case NodeTypes::Nand:
+                break;
+        }
+        return r;
+    }
+
+    static FilterTree::Node* putNode(FilterTree::Node* nodeArr, int& nodeLoc, vector<std::string>* smatchesArr, int& smatchLoc, TempNode* temp)
+    {
+        FilterTree::Node* pos = nodeArr + nodeLoc;
+        nodeLoc++;
+        pos->type = temp->type; // TODO: here check by the way optimizations
+        if(temp->type == NodeTypes::Value)
+        {
+            if(temp->matches.size() > 0)
+            {
+                smatchesArr[smatchLoc] = std::move(temp->matches);
+                pos->data.value.smatches = smatchesArr + smatchLoc;
+                smatchLoc++;
+            }
+            else
+                pos->data.value.smatches = nullptr;
+            pos->data.value.func = temp->data.filter.function;
+            pos->data.value.protocol = temp->data.filter.protocol;
+        }
+        else
+        {
+            pos->data.ptr.left = putNode(nodeArr, nodeLoc, smatchesArr, smatchLoc, temp->data.tree.left);
+            pos->data.ptr.right = putNode(nodeArr, nodeLoc, smatchesArr, smatchLoc, temp->data.tree.right);
+        }
+
+        return pos;
+    }
+
+    static void optimize(FilterTree::Node* nodeArr, vector<std::string>* smatchesArr, TempNode* temp)
+    {
+        int nodeLoc = 0, smatchLoc = 0;
+        putNode(nodeArr, nodeLoc, smatchesArr, smatchLoc, temp);
     }
 }
 
-FilterTree::Node::Node(FilterTree::Node *left, FilterTree::Node *right, FilterTree::Node::Type type)
-    : matches()
+FilterTree::FilterTree(const std::string &filterString)
 {
-    this->data.tree.left = left;
-    this->data.tree.right = right;
-    this->type = type;
+    TempNode* temp = parseString::parseExpr(filterString.cbegin(), filterString.cend());
+    optimizeFilter::res r = optimizeFilter::countNodes(temp);
+    this->nodeArr = (FilterTree::Node*)malloc(r.nodeCount * sizeof(FilterTree::Node));
+    this->smatchesArr = new std::vector<std::string>[r.valueCount];
+    optimizeFilter::optimize(this->nodeArr, this->smatchesArr, temp);
+    delete temp;
 }
 
-FilterTree::Node::~Node()
-{
-    if(this->type != Type::Value)
-    {
-        delete this->data.tree.left;
-        delete this->data.tree.right;
-    }
-}
-
-bool FilterTree::Node::get(const Packet* eth) const
+bool FilterTree::Node::get(const hungry_sniffer::Packet *eth) const
 {
     switch (this->type) {
-        case Type::Value:
+        case NodeTypes::Value:
         {
-            const hungry_sniffer::Packet* p = eth->hasProtocol(this->data.filter.protocol);
+            const hungry_sniffer::Packet* p = eth->hasProtocol(this->data.value.protocol);
             if(!p)
                 return false;
-            return !this->data.filter.function || this->data.filter.function(p, this->matches);
+            return !this->data.value.func || this->data.value.func(p, this->data.value.smatches);
         }
-        case Type::Or:
-            return this->data.tree.left->get(eth) || this->data.tree.right->get(eth);
-        case Type::And:
-            return this->data.tree.left->get(eth) && this->data.tree.right->get(eth);
-        case Type::Not:
-            return !this->data.tree.left->get(eth);
+        case NodeTypes::Or:
+            return this->data.ptr.left->get(eth) || this->data.ptr.right->get(eth);
+        case NodeTypes::And:
+            return this->data.ptr.left->get(eth) && this->data.ptr.right->get(eth);
+        case NodeTypes::Not:
+            return !this->data.ptr.left->get(eth);
+        case NodeTypes::Nor:
+            return !(this->data.ptr.left->get(eth) || this->data.ptr.right->get(eth));
+        case NodeTypes::Nand:
+            return !(this->data.ptr.left->get(eth) && this->data.ptr.right->get(eth));
     }
     return false;
 }

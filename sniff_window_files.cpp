@@ -226,7 +226,7 @@ void SniffWindow::runOfflineOpen_p(const std::string &filename)
 
 void SniffWindow::on_actionSave_triggered()
 {
-    if(model.size() == 0)
+    if(model.local.size() == 0)
     {
         QMessageBox::warning(nullptr, QStringLiteral("Empty Table"), QStringLiteral("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
         return;
@@ -236,10 +236,10 @@ void SniffWindow::on_actionSave_triggered()
 
     if(filename.endsWith(QStringLiteral(".pcap")))
     {
-        savePcap(filename.toUtf8().constData(), this->model.local);
+        savePcap(filename.toUtf8().constData(), model.local);
     }
     else if(filename.endsWith(QStringLiteral(".hspcap")))
     {
-        saveHspcap(filename.toUtf8().constData(), this->model.local);
+        saveHspcap(filename.toUtf8().constData(), model.local);
     }
 }

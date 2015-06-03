@@ -59,7 +59,7 @@ class DNSPacket : public PacketStructed<struct dnshdr> {
         virtual ~DNSPacket() {}
         virtual std::string getConversationFilterText() const;
 
-        static bool filter_id(const Packet* packet, const std::vector<std::string>& res);
+        static bool filter_id(const Packet* packet, const std::vector<std::string>* res);
 };
 
 #endif /* DNSPACKET_H_ */

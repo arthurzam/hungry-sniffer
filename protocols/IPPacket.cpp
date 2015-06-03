@@ -37,25 +37,25 @@ void IPPacket::updateNameAssociation()
         this->next->updateNameAssociation();
 }
 
-bool IPPacket::filter_dstIP(const Packet* packet, const std::vector<std::string>& res)
+bool IPPacket::filter_dstIP(const Packet* packet, const std::vector<std::string>* res)
 {
     const IPPacket* ip = static_cast<const IPPacket*>(packet);
-    return res[1] == ip->_realDestination || res[1] == ip->destination;
+    return res->at(1) == ip->_realDestination || res->at(1) == ip->destination;
 }
 
-bool IPPacket::filter_srcIP(const Packet* packet, const std::vector<std::string>& res)
+bool IPPacket::filter_srcIP(const Packet* packet, const std::vector<std::string>* res)
 {
     const IPPacket* ip = static_cast<const IPPacket*>(packet);
-    return res[1] == ip->_realSource || res[1] == ip->source;
+    return res->at(1) == ip->_realSource || res->at(1) == ip->source;
 }
 
-bool IPPacket::filter_follow(const Packet* packet, const std::vector<std::string>& res)
+bool IPPacket::filter_follow(const Packet* packet, const std::vector<std::string>* res)
 {
     const IPPacket* ip = static_cast<const IPPacket*>(packet);
-    if(res[1] == ip->_realSource || res[1] == ip->source)
-        return res[2] == ip->_realDestination || res[2] == ip->destination;
-    if(res[1] == ip->_realDestination || res[1] == ip->destination)
-        return res[2] == ip->_realSource || res[2] == ip->source;
+    if(res->at(1) == ip->_realSource || res->at(1) == ip->source)
+        return res->at(2) == ip->_realDestination || res->at(2) == ip->destination;
+    if(res->at(1) == ip->_realDestination || res->at(1) == ip->destination)
+        return res->at(2) == ip->_realSource || res->at(2) == ip->source;
     return false;
 }
 

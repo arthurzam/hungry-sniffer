@@ -22,13 +22,13 @@ SOURCES += main.cpp\
     sniff_window_python.cpp \
     EthernetPacket.cpp \
     packetstats.cpp \
-    filter_tree.cpp \
-    filter_tree_parse.cpp \
     outputviewer.cpp \
     optionsdisabler.cpp \
     history_line_edit.cpp \
     packetstable_model.cpp \
-    data_structure.cpp
+    data_structure.cpp \
+    filter_tree_optimize.cpp \
+    filter_tree.cpp
 
 HEADERS  += \
     devicechoose.h \

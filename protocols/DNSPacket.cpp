@@ -32,8 +32,8 @@ std::string DNSPacket::getConversationFilterText() const
     return res;
 }
 
-bool DNSPacket::filter_id(const Packet* packet, const std::vector<std::string>& res)
+bool DNSPacket::filter_id(const Packet* packet, const std::vector<std::string>* res)
 {
     const DNSPacket* dns = static_cast<const DNSPacket*>(packet);
-    return res[1] == dns->id;
+    return res->at(1) == dns->id;
 }

@@ -47,24 +47,24 @@ void UDPPacket::updateNameAssociation()
     this->headers.push_back({"Length", std::to_string(this->value.uh_ulen)});
 }
 
-bool UDPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>& res)
+bool UDPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>* res)
 {
     const UDPPacket* udp = static_cast<const UDPPacket*>(packet);
-    return res[1] == udp->_realDestination || res[1] == udp->destination;
+    return res->at(1) == udp->_realDestination || res->at(1) == udp->destination;
 }
 
-bool UDPPacket::filter_srcPort(const Packet* packet, const std::vector<std::string>& res)
+bool UDPPacket::filter_srcPort(const Packet* packet, const std::vector<std::string>* res)
 {
     const UDPPacket* udp = static_cast<const UDPPacket*>(packet);
-    return res[1] == udp->_realSource || res[1] == udp->source;
+    return res->at(1) == udp->_realSource || res->at(1) == udp->source;
 }
 
-bool UDPPacket::filter_follow(const Packet* packet, const std::vector<std::string>& res)
+bool UDPPacket::filter_follow(const Packet* packet, const std::vector<std::string>* res)
 {
     const UDPPacket* udp = static_cast<const UDPPacket*>(packet);
-    if(res[1] == udp->_realSource || res[1] == udp->source)
-        return res[2] == udp->_realDestination || res[2] == udp->destination;
-    if(res[1] == udp->_realDestination || res[1] == udp->destination)
-        return res[2] == udp->_realSource || res[2] == udp->source;
+    if(res->at(1) == udp->_realSource || res->at(1) == udp->source)
+        return res->at(2) == udp->_realDestination || res->at(2) == udp->destination;
+    if(res->at(1) == udp->_realDestination || res->at(1) == udp->destination)
+        return res->at(2) == udp->_realSource || res->at(2) == udp->source;
     return false;
 }
