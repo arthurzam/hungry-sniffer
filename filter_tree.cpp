@@ -2,12 +2,14 @@
 #include "sniff_window.h"
 
 enum NodeTypes {
-    Value = 0,
-    Or,
-    And,
-    Not,
-    Nand,
-    Nor
+    // if first bit is ON, then this is one type of NOT
+
+    Value = 0, // 000
+    Not = 1,   // 001
+    Or = 2,    // 010
+    Nor = 3,   // 011
+    And = 4,   // 100
+    Nand = 5,  // 101
 };
 
 struct TempNode {
@@ -104,7 +106,7 @@ namespace parseString {
             case '(':
                 return new TempNode(parseExpr(start + 1, end - 1), nullptr, NodeTypes::Not);
             case '~':
-                return parseExpr(start + 1, end - 1);
+                return new TempNode(parseNot(start + 1, end), nullptr, NodeTypes::Not);
             default:
                 return new TempNode(parseEndExpr(start, end), nullptr, NodeTypes::Not);
         }
@@ -121,6 +123,7 @@ namespace parseString {
         {
             switch(*i)
             {
+                case ')':
                 case ' ':
                     ++i;
                     break;
@@ -137,9 +140,9 @@ namespace parseString {
                     findMatchingExprEnd(i, end);
 
                     temp = parseNot(exprStart, i);
-                    if(i == end)
-                        return temp;
-                    ++i;
+//                    if(i == end)
+//                        return temp;
+//                    ++i;
                     break;
                 case '&':
                 case '|':
@@ -182,7 +185,9 @@ namespace parseString {
 
     if(!protocol)
     {
+#ifndef QT_NO_DEBUG
         qDebug("protocol %s not found", name.c_str());
+#endif
         return nullptr;
     }
 
@@ -236,9 +241,12 @@ namespace optimizeFilter {
 
     static FilterTree::Node* putNode(FilterTree::Node* nodeArr, int& nodeLoc, vector<std::string>* smatchesArr, int& smatchLoc, TempNode* temp)
     {
+        if(!temp)
+            return nullptr;
         FilterTree::Node* pos = nodeArr + nodeLoc;
         nodeLoc++;
-        pos->type = temp->type; // TODO: here check by the way optimizations
+        pos->type = temp->type;
+
         if(temp->type == NodeTypes::Value)
         {
             if(temp->matches.size() > 0)
@@ -256,15 +264,56 @@ namespace optimizeFilter {
         {
             pos->data.ptr.left = putNode(nodeArr, nodeLoc, smatchesArr, smatchLoc, temp->data.tree.left);
             pos->data.ptr.right = putNode(nodeArr, nodeLoc, smatchesArr, smatchLoc, temp->data.tree.right);
+            switch(pos->type) // here it can be only And/Or/Not
+            {
+                case NodeTypes::Not:
+                {
+                    FilterTree::Node* child1 = pos->data.ptr.left;
+                    switch(child1->type)
+                    {
+                        case NodeTypes::Not:
+                            return child1->data.ptr.left;
+                        case NodeTypes::And:
+                        case NodeTypes::Nand:
+                        case NodeTypes::Or:
+                        case NodeTypes::Nor:
+                            pos->type = child1->type ^ 1;
+                            pos->data.ptr.left = child1->data.ptr.left;
+                            pos->data.ptr.right = child1->data.ptr.right;
+                            break;
+                    }
+                    break;
+                }
+                case NodeTypes::And:
+                case NodeTypes::Or:
+                {
+                    FilterTree::Node* child1 = pos->data.ptr.left;
+                    FilterTree::Node* child2 = pos->data.ptr.right;
+                    if(((child1->type & 1) & (child2->type & 1)) == 1) // NOR / NAND
+                    {
+                        child1->type = child1->type & ~1;
+                        child2->type = child2->type & ~1;
+                        if(child1->type == 0)
+                            pos->data.ptr.left = child1->data.ptr.left;
+                        if(child2->type == 0)
+                            pos->data.ptr.right = child2->data.ptr.left;
+                        pos->type = NodeTypes::Nor;
+                        static_assert(7 - NodeTypes::And == NodeTypes::Nor, "");
+                        static_assert(7 - NodeTypes::Or == NodeTypes::Nand, "");
+                        pos->type = 7 - pos->type;
+                    }
+                    break;
+                }
+            }
         }
 
         return pos;
     }
 
-    static void optimize(FilterTree::Node* nodeArr, vector<std::string>* smatchesArr, TempNode* temp)
+    static FilterTree::Node* optimize(FilterTree::Node* nodeArr, vector<std::string>* smatchesArr, TempNode* temp)
     {
         int nodeLoc = 0, smatchLoc = 0;
-        putNode(nodeArr, nodeLoc, smatchesArr, smatchLoc, temp);
+        return putNode(nodeArr, nodeLoc, smatchesArr, smatchLoc, temp);
     }
 }
 
@@ -272,9 +321,9 @@ FilterTree::FilterTree(const std::string &filterString)
 {
     TempNode* temp = parseString::parseExpr(filterString.cbegin(), filterString.cend());
     optimizeFilter::res r = optimizeFilter::countNodes(temp);
-    this->nodeArr = (FilterTree::Node*)malloc(r.nodeCount * sizeof(FilterTree::Node));
-    this->smatchesArr = new std::vector<std::string>[r.valueCount];
-    optimizeFilter::optimize(this->nodeArr, this->smatchesArr, temp);
+    nodeArr = (FilterTree::Node*)malloc(r.nodeCount * sizeof(FilterTree::Node));
+    smatchesArr = new std::vector<std::string>[r.valueCount];
+    root = optimizeFilter::optimize(this->nodeArr, this->smatchesArr, temp);
     delete temp;
 }
 

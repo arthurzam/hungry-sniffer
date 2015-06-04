@@ -31,6 +31,7 @@ class FilterTree
 
     private:
         Node* nodeArr;
+        Node* root;
         std::vector<std::string>* smatchesArr;
     public:
         /**
@@ -53,7 +54,7 @@ class FilterTree
          */
         bool get(const hungry_sniffer::Packet* eth) const
         {
-            return !this->nodeArr || this->nodeArr[0].get(eth);
+            return !root || root->get(eth);
         }
 };
 
