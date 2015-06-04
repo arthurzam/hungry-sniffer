@@ -219,6 +219,7 @@ void SniffWindow::runOfflineOpen_p(const std::string &filename)
     else if(ends_with(filename, ".hspcap"))
     {
         readHspcap(filename.c_str());
+        QThread::sleep(1);
         model.reloadText(&SniffWindow::core->base);
         model.rerunFilter(this->filterTree);
     }

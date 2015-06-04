@@ -289,7 +289,7 @@ namespace optimizeFilter {
                 {
                     FilterTree::Node* child1 = pos->data.ptr.left;
                     FilterTree::Node* child2 = pos->data.ptr.right;
-                    if(((child1->type & 1) & (child2->type & 1)) == 1) // NOR / NAND
+                    if(((child1->type & child2->type) & 1) == 1) // NOR / NAND / NOT
                     {
                         child1->type = child1->type & ~1;
                         child2->type = child2->type & ~1;
@@ -297,7 +297,6 @@ namespace optimizeFilter {
                             pos->data.ptr.left = child1->data.ptr.left;
                         if(child2->type == 0)
                             pos->data.ptr.right = child2->data.ptr.left;
-                        pos->type = NodeTypes::Nor;
                         static_assert(7 - NodeTypes::And == NodeTypes::Nor, "");
                         static_assert(7 - NodeTypes::Or == NodeTypes::Nand, "");
                         pos->type = 7 - pos->type;

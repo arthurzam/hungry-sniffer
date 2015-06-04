@@ -12,9 +12,11 @@ inline double diffTimeval(const timeval& curr, const timeval& base)
 
 QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
 {
+    mutex_shownPerRow.lock();
     if(index.row() >= (int)shownPerRow.size())
         return QVariant();
     int number = shownPerRow[index.row()];
+    mutex_shownPerRow.unlock();
     const DataStructure::localPacket& packet = local[number];
 
     switch(role)
@@ -117,14 +119,39 @@ void PacketsTableModel::rerunFilter(const FilterTree* filter)
 
 void PacketsTableModel::reloadText(const hungry_sniffer::Protocol* protocol)
 {
-    this->beginResetModel();
-    for(auto& i : this->local)
+    long i = 0; // index in local
+    long j = 0; // index in shownPerRow
+
+    long startChangeRow = -1;
+
+    mutex_shownPerRow.lock();
+    long shown = shownPerRow[0];
+    for(auto& pack : this->local)
     {
-        hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(i.decodedPacket->hasProtocol(protocol));
+        hungry_sniffer::Packet* ptr = const_cast<hungry_sniffer::Packet*>(pack.decodedPacket->hasProtocol(protocol));
         if(ptr)
         {
             ptr->updateNameAssociation();
         }
+        if(shown == i)
+        {
+            if(ptr && startChangeRow == -1)
+            {
+                startChangeRow = j;
+            }
+            else if(!ptr && startChangeRow != -1)
+            {
+                emit dataChanged(index(startChangeRow, 0), index(j, COLUMNS_COUNT - 1));
+                startChangeRow = -1;
+            }
+            shown = shownPerRow[++j];
+        }
+        i++;
     }
-    this->endResetModel();
+    if(startChangeRow != -1)
+    {
+        emit dataChanged(index(startChangeRow, 0), index(j, COLUMNS_COUNT - 1));
+        startChangeRow = -1;
+    }
+    mutex_shownPerRow.unlock();
 }
