@@ -3,6 +3,8 @@
 #include "sniff_window.h"
 
 #include <QPushButton>
+#include <QTimer>
+#include <QCloseEvent>
 #include "Protocol.h"
 
 using namespace hungry_sniffer;
@@ -12,22 +14,26 @@ PacketStats::PacketStats(QWidget *parent) :
     ui(new Ui::PacketStats)
 {
     ui->setupUi(this);
+    timerId = startTimer(1000);
 
     QPushButton* btRefresh = new QPushButton(QStringLiteral("&Refresh"), ui->buttonBox);
     connect(btRefresh, SIGNAL(clicked()), this, SLOT(setStats()));
     ui->buttonBox->addButton(btRefresh, QDialogButtonBox::ActionRole);
 
-    {
-        static QStringList l({QStringLiteral("Protocol"), QStringLiteral("Number")});
-        ui->treeWidget->setHeaderLabels(l);
-    }
+    ui->treeWidget->setHeaderLabels(QStringList({QStringLiteral("Protocol"), QStringLiteral("Number")}));
 
     setStats();
 }
 
 PacketStats::~PacketStats()
 {
+    killTimer(timerId);
     delete ui;
+}
+
+void PacketStats::timerEvent(QTimerEvent*)
+{
+    this->setStats();
 }
 
 /**

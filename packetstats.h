@@ -2,7 +2,6 @@
 #define PACKETSTATS_H
 
 #include <QDialog>
-#include <QTreeWidgetItem>
 
 namespace Ui {
     class PacketStats;
@@ -22,7 +21,8 @@ class PacketStats : public QDialog
     public:
         explicit PacketStats(QWidget *parent = 0);
         ~PacketStats();
-
+    protected:
+        void timerEvent(QTimerEvent *);
     private slots:
         /**
          * @brief setStats refrash the stats shown in the tree
@@ -31,6 +31,7 @@ class PacketStats : public QDialog
 
     private:
         Ui::PacketStats *ui;
+        int timerId;
 };
 
 #endif // PACKETSTATS_H

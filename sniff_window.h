@@ -8,6 +8,8 @@
 #include "ThreadQueue.h"
 #include "packetstable_model.h"
 
+class PacketStats;
+
 class SniffWindow : public QMainWindow
 {
         Q_OBJECT
@@ -56,6 +58,7 @@ class SniffWindow : public QMainWindow
     public:
         Ui::SniffWindow *ui;
         PacketsTableModel model;
+        PacketStats* statsTable;
 
         DataStructure::localPacket* selected = nullptr;
         ThreadSafeQueue<DataStructure::RawPacketData> toAdd;

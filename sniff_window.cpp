@@ -16,6 +16,7 @@ SniffWindow::SniffWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::SniffWindow),
     model(this),
+    statsTable(new PacketStats(this)),
     toNotStop(true),
     isNotExiting(true),
     manageThread(&SniffWindow::managePacketsList, this),
@@ -45,12 +46,13 @@ SniffWindow::SniffWindow(QWidget *parent) :
 
 SniffWindow::~SniffWindow()
 {
-    this->on_actionStop_triggered();
     this->isNotExiting = false;
-    this->manageThread.join();
+    delete this->statsTable;
 #ifdef PYTHON_CMD
     stopPython();
 #endif
+    this->on_actionStop_triggered();
+    this->manageThread.join();
     delete this->filterTree;
     delete ui;
 }
@@ -127,11 +129,12 @@ void SniffWindow::on_actionStop_triggered()
 {
     this->toNotStop = false;
 
-    for(auto iter = this->threads.begin(); iter != this->threads.end(); iter = this->threads.erase(iter))
+    for(const auto& iter : this->threads)
     {
-        (*iter)->join();
-        delete (*iter);
+        iter->join();
+        delete iter;
     }
+    this->threads.clear();
 }
 
 void SniffWindow::on_actionSniff_triggered()
@@ -153,7 +156,7 @@ void SniffWindow::on_actionSniff_triggered()
 
 void SniffWindow::on_actionTable_triggered()
 {
-    PacketStats().exec();
+    this->statsTable->show();
 }
 
 void SniffWindow::on_bt_filter_apply_clicked()
