@@ -11,6 +11,9 @@ namespace hungry_sniffer {
     class Protocol;
 }
 
+class QStandardItem;
+class QStandardItemModel;
+
 /**
  * @brief Packet Statistics Dialog
  */
@@ -32,6 +35,15 @@ class PacketStats : public QDialog
     private:
         Ui::PacketStats *ui;
         int timerId;
+        QStandardItemModel* model;
+
+        struct node {
+            int lastValue;
+            const hungry_sniffer::Protocol* protocol;
+            QStandardItem* itemValue;
+        };
+        std::vector<node> list;
+        void addProtocol(const hungry_sniffer::Protocol* protocol, QStandardItem* father);
 };
 
 #endif // PACKETSTATS_H
