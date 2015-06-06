@@ -55,6 +55,8 @@ FORMS    += \
 RESOURCES += \
     icons/icons.qrc
 
+OTHER_FILES += hungry-sniffer.desktop
+
 !CONFIG(no-pycmd) {
     QMAKE_CXXFLAGS += `pkg-config --cflags python3`
     LIBS += `pkg-config --libs python3`
@@ -67,9 +69,16 @@ isEmpty(PREFIX) {
     PREFIX = /usr
 }
 
-target.path = $$PREFIX/bin/
+unix {
+    target.path = $$PREFIX/bin/
 
-other.path = $$PREFIX/share/hungry-sniffer/
-other.files = $$OTHER_FILES
+    data.path = $$PREFIX/share/hungry-sniffer/
+    data.files = hs.py
 
-INSTALLS += target other
+    desktop.path = $$PREFIX/share/applications/
+    desktop.files = hungry-sniffer.desktop
+
+    INSTALLS += target data desktop
+    QMAKE_INSTALL_FILE    = install -m 644 -p
+    QMAKE_INSTALL_PROGRAM = install -m 755 -p
+}

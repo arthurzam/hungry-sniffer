@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Hungry Sniffer
+GenericName=Network Analyzer
+Comment=Network traffic analyzer
+TryExec=hungry-sniffer
+Exec=hungry-sniffer %f
+Terminal=false
+MimeType=application/vnd.tcpdump.pcap;
+Categories=System;Monitor;GTK;
