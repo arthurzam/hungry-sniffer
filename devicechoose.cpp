@@ -11,7 +11,7 @@
 
 #include <QDir>
 
-DeviceChoose::DeviceChoose(QWidget *parent) :
+DeviceChoose::DeviceChoose(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::DeviceChoose)
 {

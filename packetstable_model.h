@@ -89,7 +89,8 @@ class PacketsTableModel : public QAbstractTableModel
 
         void append(DataStructure::localPacket&& obj);
         void remove(int row);
-        void clear();
+        void removeAll();
+        void removeShown();
 
         void rerunFilter(const FilterTree* filter);
         void reloadText(const hungry_sniffer::Protocol* protocol);

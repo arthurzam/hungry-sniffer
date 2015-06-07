@@ -33,7 +33,8 @@ class SniffWindow : public QMainWindow
         void on_actionSniff_triggered();
         void on_actionTable_triggered();
         void on_bt_filter_apply_clicked();
-        void on_actionClear_triggered();
+        void on_action_remove_all_triggered();
+        void on_action_remove_shown_triggered();
         void on_table_packets_customContextMenuRequested(const QPoint &pos);
         void on_tree_packet_customContextMenuRequested(const QPoint &pos);
         void on_actionDisableOptions_triggered();

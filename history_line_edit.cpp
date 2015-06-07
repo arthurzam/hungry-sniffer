@@ -2,10 +2,10 @@
 #include <QKeyEvent>
 #include <QWheelEvent>
 
-History_Line_Edit::History_Line_Edit(QWidget *parent) :
+History_Line_Edit::History_Line_Edit(QWidget* parent) :
     QLineEdit(parent), current_line(0)
 {
-    connect(this,SIGNAL(returnPressed()),SLOT(enter_pressed()));
+    connect(this, SIGNAL(returnPressed()), SLOT(enter_pressed()));
 }
 
 void History_Line_Edit::enter_pressed()
@@ -16,7 +16,7 @@ void History_Line_Edit::enter_pressed()
     emit lineExecuted(lines.back());
 }
 
-void History_Line_Edit::keyPressEvent(QKeyEvent * ev)
+void History_Line_Edit::keyPressEvent(QKeyEvent* ev)
 {
     switch(ev->key())
     {
@@ -34,9 +34,9 @@ void History_Line_Edit::keyPressEvent(QKeyEvent * ev)
     }
 }
 
-void History_Line_Edit::wheelEvent(QWheelEvent *ev )
+void History_Line_Edit::wheelEvent(QWheelEvent* ev )
 {
-    if ( ev->delta() > 0 )
+    if (ev->delta() > 0)
         previous_line();
     else
         next_line();
@@ -48,7 +48,7 @@ void History_Line_Edit::previous_line()
         return;
 
     if ( !text().isEmpty() &&
-         ( current_line >= lines.size() || text() != lines[current_line] ) )
+            ( current_line >= lines.size() || text() != lines[current_line] ) )
         unfinished = text();
 
     if ( current_line > 0 )

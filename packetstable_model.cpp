@@ -15,9 +15,9 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
     mutex_shownPerRow.lock();
     if(index.row() >= (int)shownPerRow.size())
         return QVariant();
+    int row = index.row();
     int number = shownPerRow[index.row()];
     mutex_shownPerRow.unlock();
-    const DataStructure::localPacket& packet = local[number];
 
     switch(role)
     {
@@ -28,21 +28,21 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
                 case 0:
                     return QVariant(number);
                 case 1:
-                    return QString::number(diffTimeval(packet.rawPacket.time, this->local[0].rawPacket.time), 'f', 6);
+                    return QString::number(diffTimeval(local[number].rawPacket.time, this->local[0].rawPacket.time), 'f', 6);
                 case 2:
-                    return QString::fromStdString(packet.decodedPacket->getName());
+                    return QString::fromStdString(local[number].decodedPacket->getName());
                 case 3:
-                    return QVariant(packet.rawPacket.len);
+                    return QVariant(local[number].rawPacket.len);
                 case 4:
-                    return QString::fromStdString(packet.decodedPacket->getSource());
+                    return QString::fromStdString(local[number].decodedPacket->getSource());
                 case 5:
-                    return QString::fromStdString(packet.decodedPacket->getDestination());
+                    return QString::fromStdString(local[number].decodedPacket->getDestination());
                 case 6:
-                    return (packet.decodedPacket->isGoodPacket() ? QString::fromStdString(packet.decodedPacket->getInfo()) : QStringLiteral("Bad Packet"));
+                    return (local[number].decodedPacket->isGoodPacket() ? QString::fromStdString(local[number].decodedPacket->getInfo()) : QStringLiteral("Bad Packet"));
             }
             break;
         case Qt::ItemDataRole::BackgroundRole:
-            if(!packet.decodedPacket->isGoodPacket())
+            if(!local[number].decodedPacket->isGoodPacket())
             {
                 return QBrush(Qt::yellow);
             }
@@ -89,13 +89,25 @@ void PacketsTableModel::remove(int row)
     endRemoveRows();
 }
 
-void PacketsTableModel::clear()
+void PacketsTableModel::removeAll()
 {
     beginResetModel();
     mutex_shownPerRow.lock();
     this->shownPerRow.clear();
     mutex_shownPerRow.unlock();
     this->local.clear();
+    endResetModel();
+}
+
+void PacketsTableModel::removeShown()
+{
+    beginResetModel();
+    mutex_shownPerRow.lock();
+    int count = 0;
+    for(const int& row : shownPerRow)
+        local.erase(local.begin() + row - (count++));
+    this->shownPerRow.clear();
+    mutex_shownPerRow.unlock();
     endResetModel();
 }
 

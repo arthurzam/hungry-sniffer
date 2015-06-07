@@ -173,7 +173,9 @@
     </property>
     <addaction name="actionStop"/>
     <addaction name="actionSniff"/>
-    <addaction name="actionClear"/>
+    <addaction name="separator"/>
+    <addaction name="action_remove_all"/>
+    <addaction name="action_remove_shown"/>
     <addaction name="separator"/>
     <addaction name="actionDisableOptions"/>
    </widget>
@@ -291,14 +293,14 @@
     <string>&amp;Table</string>
    </property>
   </action>
-  <action name="actionClear">
+  <action name="action_remove_all">
    <property name="text">
-    <string>&amp;Clear</string>
+    <string>Remove &amp;All</string>
    </property>
   </action>
   <action name="actionDisableOptions">
    <property name="text">
-    <string>Disable Background Tasks</string>
+    <string>Disable &amp;Background Tasks</string>
    </property>
   </action>
   <action name="action_Table">
@@ -343,6 +345,11 @@
    </property>
    <property name="text">
     <string>&amp;Python</string>
+   </property>
+  </action>
+  <action name="action_remove_shown">
+   <property name="text">
+    <string>Remove &amp;Shown</string>
    </property>
   </action>
  </widget>

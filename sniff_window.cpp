@@ -176,10 +176,15 @@ void SniffWindow::on_bt_filter_apply_clicked()
     ui->statusBar->updateText();
 }
 
-void SniffWindow::on_actionClear_triggered()
+void SniffWindow::on_action_remove_all_triggered()
 {
-    model.clear();
+    model.removeAll();
     ui->statusBar->updateText();
+}
+
+void SniffWindow::on_action_remove_shown_triggered()
+{
+    model.removeShown();
 }
 
 void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText)

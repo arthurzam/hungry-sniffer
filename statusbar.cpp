@@ -3,18 +3,18 @@
 
 #include <QGridLayout>
 
-StatusBar::StatusBar(QWidget *parent) :
+StatusBar::StatusBar(QWidget* parent) :
     QStatusBar(parent),
     lb_info(this),
     lb_liveSniffing(this)
 {
     this->setStyleSheet("QStatusBar::item { border: none; } ");
 
-    QWidget * widget = new QWidget();
-    QGridLayout * layout = new QGridLayout(widget);
-    layout->addWidget(&lb_liveSniffing,0,0,1,1,Qt::AlignVCenter | Qt::AlignLeft);
-    layout->addWidget(&lb_info,0,1,1,1,Qt::AlignVCenter | Qt::AlignRight);
-    this->addWidget(widget,1);
+    QWidget* widget = new QWidget();
+    QGridLayout* layout = new QGridLayout(widget);
+    layout->addWidget(&lb_liveSniffing, 0, 0, 1, 1, Qt::AlignVCenter | Qt::AlignLeft);
+    layout->addWidget(&lb_info, 0, 1, 1, 1, Qt::AlignVCenter | Qt::AlignRight);
+    this->addWidget(widget, 1);
 
     updateText();
 }
