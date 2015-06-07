@@ -26,7 +26,7 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
             switch(index.column())
             {
                 case 0:
-                    return QVariant(number + 1);
+                    return QVariant(number);
                 case 1:
                     return QString::number(diffTimeval(packet.rawPacket.time, this->local[0].rawPacket.time), 'f', 6);
                 case 2:

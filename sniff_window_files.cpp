@@ -14,7 +14,7 @@ enum ObjectType {
     PROTOCOL
 };
 
-static bool savePcap(const char* filename, const std::vector<DataStructure::localPacket>& packets)
+static bool savePcap(const char* filename, const std::vector<localPacket>& packets)
 {
     pcap_t* pd = pcap_open_dead(DLT_EN10MB, 65535);
     pcap_dumper_t* pdumper = pcap_dump_open(pd, filename);
@@ -99,7 +99,7 @@ static void saveHspcapProtocol(FILE* file, const hungry_sniffer::Protocol& proto
     }
 }
 
-static bool saveHspcap(const char* filename, const std::vector<DataStructure::localPacket>& packets)
+static bool saveHspcap(const char* filename, const std::vector<localPacket>& packets)
 {
     FILE* file = fopen(filename, "wb");
     uint32_t packetsCount = htonl(packets.size());
@@ -144,7 +144,7 @@ static bool readHspcap(const char* filename)
         {
             case ObjectType::PACKET:
             {
-                DataStructure::RawPacketData raw;
+                RawPacketData raw;
                 ::fread(&raw.time, sizeof(raw.time), 1, file);
                 raw.data = readBuffer(file, raw.len);
                 if((start.tv_sec | start.tv_usec) == 0)
@@ -209,7 +209,7 @@ void SniffWindow::runOfflineOpen_p(const std::string &filename)
         gettimeofday(&base, 0);
         while(this->toNotStop && off.next(p))
         {
-            DataStructure::RawPacketData raw(p);
+            RawPacketData raw(p);
             if((start.tv_sec | start.tv_usec) == 0)
                 start = raw.time;
             raw.time = calcDiffTimeval(raw.time, start, base);

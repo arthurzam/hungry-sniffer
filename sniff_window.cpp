@@ -110,7 +110,7 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
 
 void SniffWindow::on_tb_filter_textEdited(const QString &arg1)
 {
-    bool isEnables = !arg1.isEmpty() || (arg1.isEmpty() && (bool)this->filterTree);
+    bool isEnables = !arg1.isEmpty() || (bool)this->filterTree;
     ui->bt_filter_clear->setEnabled(isEnables);
     ui->bt_filter_apply->setEnabled(isEnables);
 }
@@ -123,6 +123,7 @@ void SniffWindow::on_bt_filter_clear_clicked()
 
     this->filterTree = nullptr;
     model.rerunFilter(nullptr);
+    ui->statusBar->updateText();
 }
 
 void SniffWindow::on_actionStop_triggered()
@@ -135,6 +136,7 @@ void SniffWindow::on_actionStop_triggered()
         delete iter;
     }
     this->threads.clear();
+    ui->statusBar->setLiveSniffing(false);
 }
 
 void SniffWindow::on_actionSniff_triggered()
@@ -148,7 +150,7 @@ void SniffWindow::on_actionSniff_triggered()
     DeviceChoose d;
     d.exec();
 
-    for(auto& i : d)
+    for(const auto& i : d)
     {
         this->runLivePcap(i.toStdString());
     }
@@ -171,11 +173,13 @@ void SniffWindow::on_bt_filter_apply_clicked()
     model.rerunFilter(this->filterTree);
 
     ui->bt_filter_apply->setEnabled(false);
+    ui->statusBar->updateText();
 }
 
 void SniffWindow::on_actionClear_triggered()
 {
     model.clear();
+    ui->statusBar->updateText();
 }
 
 void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText)
@@ -195,6 +199,7 @@ void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const
             p->associateName(origText, text.toStdString());
         model.reloadText(localPacket->getProtocol());
         model.rerunFilter(this->filterTree);
+        ui->statusBar->updateText();
     }
 }
 
@@ -204,107 +209,106 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
     if(listSelected.size() == 0)
         return;
     QModelIndex& item = listSelected[0];
+    QList<QAction*> list;
+    QMenu menu;
+    int row = model.shownPerRow[item.row()];
+    QMenu follow(QStringLiteral("Follow")), nameSrc(QStringLiteral("Associate Name For Source")),
+            nameDst(QStringLiteral("Associate Name For Destination")), optionsMenu(QStringLiteral("Special Options"));
+
+    QAction copyValAction(QStringLiteral("Copy Value"), nullptr);
+    connect(&copyValAction, &QAction::triggered, [this, item] () {
+        QApplication::clipboard()->setText(model.data(item).toString());
+    });
+    menu.addAction(&copyValAction);
+
+    QAction removeRowAction(QStringLiteral("Remove Packet"), nullptr);
+    connect(&removeRowAction, &QAction::triggered, [this, row] () {
+        model.remove(row);
+    });
+    menu.addAction(&removeRowAction);
+
+    menu.addSeparator();
+
+    const hungry_sniffer::Packet* packet = this->model.local[row].decodedPacket;
     {
-        QList<QAction*> list;
-        QMenu menu;
-        int row = model.shownPerRow[item.row()];
-        QMenu follow(QStringLiteral("Follow")), nameSrc(QStringLiteral("Associate Name For Source")),
-                nameDst(QStringLiteral("Associate Name For Destination")), optionsMenu(QStringLiteral("Special Options"));
-
-        QAction copyValAction(QStringLiteral("Copy Value"), nullptr);
-        connect(&copyValAction, &QAction::triggered, [this, item] () {
-            QApplication::clipboard()->setText(this->model.data(item).toString());
-        });
-        menu.addAction(&copyValAction);
-
-        QAction removeRowAction(QStringLiteral("Remove Packet"), nullptr);
-        connect(&removeRowAction, &QAction::triggered, [this, item] () {
-            model.remove(item.row());
-        });
-        menu.addAction(&removeRowAction);
-
-        menu.addSeparator();
-
-        const hungry_sniffer::Packet* packet = this->model.local[row].decodedPacket;
+        const hungry_sniffer::Packet* localPacket = packet;
+        while(localPacket)
         {
-            const hungry_sniffer::Packet* localPacket = packet;
-            while(localPacket)
+            if(localPacket->getProtocol()->getIsConversationEnabeled())
             {
-                if(localPacket->getProtocol()->getIsConversationEnabeled())
-                {
-                    QAction* action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
-                    connect(action, &QAction::triggered, [this, localPacket]() {
-                        ui->tb_filter->setText(QString::fromStdString(localPacket->getConversationFilterText()));
-                        this->on_bt_filter_apply_clicked();
-                        ui->bt_filter_clear->setEnabled(true);
-                    });
-                    follow.addAction(action);
-                    list.append(action);
-                }
-                if(localPacket->getProtocol()->getIsNameService())
-                {
-                    QAction* action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
-                    connect(action, &QAction::triggered, [this, localPacket]() {
-                        this->associateName(localPacket, localPacket->realSource());
-                    });
-                    list.append(action);
-                    nameSrc.addAction(action);
-
-                    action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
-                    connect(action, &QAction::triggered, [this, localPacket]() {
-                        this->associateName(localPacket, localPacket->realDestination());
-                    });
-                    list.append(action);
-                    nameDst.addAction(action);
-                }
-
-                auto options = localPacket->getProtocol()->getOptions();
-                bool _isNotRoot = !isRoot();
-                if(options.size() > 0)
-                {
-                    QMenu* subMenu = new QMenu(QString::fromStdString(localPacket->getProtocol()->getName()), &optionsMenu);
-                    for(const auto& i : options)
-                    {
-                        if(i.isRootRequired & _isNotRoot)
-                            continue;
-                        QAction* action = new QAction(QString::fromStdString(i.name), subMenu);
-                        auto func = i.func;
-                        auto protocol = localPacket->getProtocol();
-                        connect(action, &QAction::triggered, [this, packet, func, protocol]() {
-                            int res = func(packet, this->optionsDisablerWin.enabledOptions);
-                            if((res & hungry_sniffer::Option::ENABLE_OPTION_RETURN_ADDED_DISABLE))
-                                this->optionsDisablerWin.refreshOptions();
-                            if((res & hungry_sniffer::Option::ENABLE_OPTION_RETURN_RELOAD_TABLE))
-                            {
-                                model.reloadText(protocol);
-                                model.rerunFilter(this->filterTree);
-                            }
-                        });
-                        subMenu->addAction(action);
-                        list.append(action);
-                    }
-                    if(subMenu->actions().size() == 0)
-                        delete subMenu;
-                    else
-                    {
-                        optionsMenu.addMenu(subMenu);
-                    }
-                }
-                localPacket = localPacket->getNext();
+                QAction* action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+                connect(action, &QAction::triggered, [this, localPacket]() {
+                    ui->tb_filter->setText(QString::fromStdString(localPacket->getConversationFilterText()));
+                    this->on_bt_filter_apply_clicked();
+                    ui->bt_filter_clear->setEnabled(true);
+                });
+                follow.addAction(action);
+                list.append(action);
             }
+            if(localPacket->getProtocol()->getIsNameService())
+            {
+                QAction* action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+                connect(action, &QAction::triggered, [this, localPacket]() {
+                    this->associateName(localPacket, localPacket->realSource());
+                });
+                list.append(action);
+                nameSrc.addAction(action);
+
+                action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+                connect(action, &QAction::triggered, [this, localPacket]() {
+                    this->associateName(localPacket, localPacket->realDestination());
+                });
+                list.append(action);
+                nameDst.addAction(action);
+            }
+
+            auto options = localPacket->getProtocol()->getOptions();
+            bool _isNotRoot = !isRoot();
+            if(options.size() > 0)
+            {
+                QMenu* subMenu = new QMenu(QString::fromStdString(localPacket->getProtocol()->getName()), &optionsMenu);
+                for(const auto& i : options)
+                {
+                    if(i.isRootRequired & _isNotRoot)
+                        continue;
+                    QAction* action = new QAction(QString::fromStdString(i.name), subMenu);
+                    auto func = i.func;
+                    auto protocol = localPacket->getProtocol();
+                    connect(action, &QAction::triggered, [this, packet, func, protocol]() {
+                        int res = func(packet, this->optionsDisablerWin.enabledOptions);
+                        if((res & hungry_sniffer::Option::ENABLE_OPTION_RETURN_ADDED_DISABLE))
+                            this->optionsDisablerWin.refreshOptions();
+                        if((res & hungry_sniffer::Option::ENABLE_OPTION_RETURN_RELOAD_TABLE))
+                        {
+                            model.reloadText(protocol);
+                            model.rerunFilter(this->filterTree);
+                            ui->statusBar->updateText();
+                        }
+                    });
+                    subMenu->addAction(action);
+                    list.append(action);
+                }
+                if(subMenu->actions().size() == 0)
+                    delete subMenu;
+                else
+                {
+                    optionsMenu.addMenu(subMenu);
+                }
+            }
+            localPacket = localPacket->getNext();
         }
-        if(follow.actions().size() > 0)
-            menu.addMenu(&follow);
-        if(nameDst.actions().size() > 0)
-        {
-            menu.addMenu(&nameSrc);
-            menu.addMenu(&nameDst);
-        }
-        if(optionsMenu.actions().size() > 0)
-            menu.addMenu(&optionsMenu);
-        menu.exec(ui->table_packets->mapToGlobal(pos));
-        qDeleteAll(list);
     }
+    if(follow.actions().size() > 0)
+        menu.addMenu(&follow);
+    if(nameDst.actions().size() > 0)
+    {
+        menu.addMenu(&nameSrc);
+        menu.addMenu(&nameDst);
+    }
+    if(optionsMenu.actions().size() > 0)
+        menu.addMenu(&optionsMenu);
+    menu.exec(ui->table_packets->mapToGlobal(pos));
+    qDeleteAll(list);
 }
 
 hungry_sniffer::Protocol SniffWindow::infoProtocol(nullptr, false, "Own Headers", false, false);
@@ -326,17 +330,17 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
         if(last.getProtocol() != &infoProtocol)
         {
             last.setNext(pack = new AdditionalHeadersPacket(&infoProtocol));
-            info = new QTreeWidgetItem(QStringList("Own Headers"));
+            info = new QTreeWidgetItem(QStringList(QStringLiteral("Own Headers")));
         }
         else
         {
             info = this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
         }
         bool ok;
-        QString key = QInputDialog::getText(this, "Header Name", "Enter the header name", QLineEdit::Normal, "", &ok);
+        QString key = QInputDialog::getText(this, QStringLiteral("Header Name"), QStringLiteral("Enter the header name"), QLineEdit::Normal, "", &ok);
         if(!ok)
             return;
-        QString value = QInputDialog::getText(this, "Header Value", "Enter the header value", QLineEdit::Normal, "", &ok);
+        QString value = QInputDialog::getText(this, QStringLiteral("Header Value"), QStringLiteral("Enter the header value"), QLineEdit::Normal, "", &ok);
         if(!ok)
             return;
         pack->addHeader(key.toStdString(), value.toStdString());
@@ -348,7 +352,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     menu.addAction(&action_add);
 
     QAction action_remove(QStringLiteral("Remove"), nullptr);
-    if(item != firstLevel && firstLevel->text(0) == "Own Headers")
+    if(item != firstLevel && firstLevel->text(0) == QStringLiteral("Own Headers"))
     {
         connect(&action_remove, &QAction::triggered, [this, item, firstLevel]() {
             AdditionalHeadersPacket& pack = (AdditionalHeadersPacket&)this->selected->decodedPacket->getLast();
@@ -420,8 +424,8 @@ void SniffWindow::model_currentRowChanged(QModelIndex newSelection, QModelIndex 
     if(row != oldSelection.row())
     {
         int loc = model.shownPerRow[row];
-        if(loc != -1)
-            this->setCurrentPacket(this->model.local[loc]);
+        this->setCurrentPacket(this->model.local[loc]);
+        ui->statusBar->updateText(loc);
     }
 }
 
@@ -434,7 +438,7 @@ void SniffWindow::dropEvent(QDropEvent *event)
         for(const auto& i : urlList)
         {
             QString f = i.toLocalFile();
-            if(f.endsWith(".pcap"))
+            if(f.endsWith(QStringLiteral(".pcap")) || f.endsWith(QStringLiteral(".hspcap")))
                 this->runOfflineFile(i.toLocalFile().toStdString());
         }
         event->accept();

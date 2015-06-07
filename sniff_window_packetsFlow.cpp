@@ -12,6 +12,7 @@ void SniffWindow::runLivePcap(const std::string &name)
 {
     this->toNotStop = true;
     this->threads.push_back(new std::thread(&SniffWindow::runLivePcap_p, this, name));
+    ui->statusBar->setLiveSniffing(true);
 }
 
 void SniffWindow::runOfflineFile(const std::string &filename)
@@ -31,6 +32,7 @@ void SniffWindow::managePacketsList()
             FilterTree* filter = this->filterTree;
             p.isShown = !filter || filter->get(p.decodedPacket);
             this->model.append(std::move(p));
+            ui->statusBar->updateText();
         }
         else if(this->toNotStop & this->threads.empty())
         {

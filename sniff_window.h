@@ -109,11 +109,11 @@ class SniffWindow : public QMainWindow
 
         std::string pyCommand;
         struct {
-            int bracketsC = 0; // '(' ')'
-            int bracketsS = 0; // '[' ']'
-            int bracketsM = 0; // '{' '}'
+            int_fast16_t bracketsC = 0; // '(' ')'
+            int_fast16_t bracketsS = 0; // '[' ']'
+            int_fast16_t bracketsM = 0; // '{' '}'
 
-            bool block = false;// :
+            bool block = false;         // :
 
             void reset()
             {

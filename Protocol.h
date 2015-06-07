@@ -235,6 +235,14 @@ namespace hungry_sniffer {
             }
 
             /**
+             * @brief decrement count of packets
+             */
+            void decPacketCount() const
+            {
+                --this->countPackets;
+            }
+
+            /**
              * @brief get the count of packet within protocol
              *
              * @return the count of packets if count statistics is true, otherwise 0
@@ -480,6 +488,7 @@ namespace hungry_sniffer {
             virtual ~Packet()
             {
                 delete this->next;
+                protocol->decPacketCount();
             }
 
             /**

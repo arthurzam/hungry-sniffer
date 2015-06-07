@@ -216,6 +216,7 @@
    <addaction name="actionSniff"/>
    <addaction name="actionStop"/>
   </widget>
+  <widget class="StatusBar" name="statusBar"/>
   <action name="actionOpen">
    <property name="icon">
     <iconset resource="icons/icons.qrc">
@@ -355,6 +356,11 @@
    <class>History_Line_Edit</class>
    <extends>QLineEdit</extends>
    <header>history_line_edit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>StatusBar</class>
+   <extends>QStatusBar</extends>
+   <header>statusbar.h</header>
   </customwidget>
  </customwidgets>
  <resources>
