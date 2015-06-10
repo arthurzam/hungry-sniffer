@@ -156,8 +156,8 @@
      <string>&amp;File</string>
     </property>
     <addaction name="actionOpen"/>
-    <addaction name="actionSave"/>
-    <addaction name="actionSave_As"/>
+    <addaction name="action_save_all"/>
+    <addaction name="action_save_shown"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -210,10 +210,8 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionSave_As"/>
-   <addaction name="actionSave"/>
-   <addaction name="actionOpen"/>
    <addaction name="actionQuit"/>
+   <addaction name="actionOpen"/>
    <addaction name="separator"/>
    <addaction name="actionSniff"/>
    <addaction name="actionStop"/>
@@ -240,25 +238,16 @@
     <string>&amp;Quit</string>
    </property>
   </action>
-  <action name="actionSave">
+  <action name="action_save_all">
    <property name="icon">
     <iconset resource="icons/icons.qrc">
      <normaloff>:/icons/save.png</normaloff>:/icons/save.png</iconset>
    </property>
    <property name="text">
-    <string>&amp;Save</string>
+    <string>&amp;Save All</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
-   </property>
-  </action>
-  <action name="actionSave_As">
-   <property name="icon">
-    <iconset resource="icons/icons.qrc">
-     <normaloff>:/icons/save-as.png</normaloff>:/icons/save-as.png</iconset>
-   </property>
-   <property name="text">
-    <string>&amp;Save As</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
@@ -350,6 +339,11 @@
   <action name="action_remove_shown">
    <property name="text">
     <string>Remove &amp;Shown</string>
+   </property>
+  </action>
+  <action name="action_save_shown">
+   <property name="text">
+    <string>Save &amp;Shown</string>
    </property>
   </action>
  </widget>

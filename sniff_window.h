@@ -28,7 +28,8 @@ class SniffWindow : public QMainWindow
         void on_actionOpen_triggered();
         void on_tb_filter_textEdited(const QString &arg1);
         void on_bt_filter_clear_clicked();
-        void on_actionSave_triggered();
+        void on_action_save_all_triggered();
+        void on_action_save_shown_triggered();
         void on_actionStop_triggered();
         void on_actionSniff_triggered();
         void on_actionTable_triggered();

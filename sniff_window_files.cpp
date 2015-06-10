@@ -299,7 +299,7 @@ void SniffWindow::runOfflineOpen_p(const std::string& filename)
     }
 }
 
-void SniffWindow::on_actionSave_triggered()
+void SniffWindow::on_action_save_all_triggered()
 {
     if(model.local.size() == 0)
     {
@@ -321,5 +321,30 @@ void SniffWindow::on_actionSave_triggered()
         file << core->base;
         for(const auto& i : model.local)
             file << i;
+    }
+}
+
+void SniffWindow::on_action_save_shown_triggered()
+{
+    if(model.local.size() == 0)
+    {
+        QMessageBox::warning(nullptr, QStringLiteral("Empty Table"), QStringLiteral("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
+        return;
+    }
+    QString filename = QFileDialog::getSaveFileName(this, QStringLiteral("Save File"), QStringLiteral(""),
+                       QStringLiteral("hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
+
+    if(filename.endsWith(QStringLiteral(".pcap")))
+    {
+        PcapFile::Save file(filename.toUtf8().constData());
+        for(int& num : model.shownPerRow)
+            file << model.local[num];
+    }
+    else if(filename.endsWith(QStringLiteral(".hspcap")))
+    {
+        HspcapFile::Save file(filename.toUtf8().constData(), model.shownPerRow.size());
+        file << core->base;
+        for(int& num : model.shownPerRow)
+            file << model.local[num];
     }
 }
