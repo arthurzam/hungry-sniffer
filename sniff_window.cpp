@@ -327,6 +327,14 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     if(!firstLevel)
         firstLevel = item;
     QMenu menu;
+    QAction action_copy(QStringLiteral("Copy Value"), nullptr);
+    if(firstLevel != item)
+    {
+        connect(&action_copy, &QAction::triggered, [item, firstLevel]() {
+            QApplication::clipboard()->setText(item->text(1));
+        });
+        menu.addAction(&action_copy);
+    }
     QAction action_add(QStringLiteral("Add Info Header"), nullptr);
     connect(&action_add, &QAction::triggered, [this]() {
         hungry_sniffer::Packet& last = const_cast<hungry_sniffer::Packet&>(this->selected->decodedPacket->getLast());
