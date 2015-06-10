@@ -9,10 +9,6 @@ namespace Ui {
     class SniffWindow;
 }
 
-namespace pcappp {
-    class Packet;
-}
-
 namespace hungry_sniffer {
     class Packet;
     class Protocol;
@@ -27,14 +23,13 @@ namespace DataStructure {
         char* data;
 
         constexpr RawPacketData() : len(0), time({0,0}), data(nullptr) {}
-        RawPacketData(const pcappp::Packet& packet);
         RawPacketData(const RawPacketData& other);
         RawPacketData(RawPacketData&& other);
         RawPacketData& operator=(const RawPacketData& other);
         RawPacketData& operator=(RawPacketData&& other);
         ~RawPacketData();
 
-        void setData(const char* data, uint32_t len);
+        void setData(const void* data, uint32_t len);
     };
 
     struct localPacket {

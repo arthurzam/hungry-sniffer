@@ -67,7 +67,7 @@ extern "C" void add(HungrySniffer_Core& core)
         Protocol& dns = udp.addProtocol(53, init<DNSPacket>, true, "DNS", false, true);
         dns.addFilter("^id *== *([^ ]+)$", DNSPacket::filter_id);
     }
-    udp.addProtocol(1900, init<PacketEmpty>, true, "SSDP", false, false);
+    udp.addProtocol(1900, init<HTTPPacket>, true, "SSDP", false, false);
     udp.addProtocol(17500, init<PacketJson>, true, "Dropbox LAN sync", false, false);
 
     core.addOutputFunction("print", printData);

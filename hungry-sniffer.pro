@@ -2,7 +2,7 @@ CONFIG += c++11
 QT     += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-LIBS   += -lpcap++ -lpcap -ldl -lqhexedit
+LIBS   += -lpcap -ldl -lqhexedit
 QMAKE_LFLAGS_RELEASE += -flto -fno-rtti
 QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
 

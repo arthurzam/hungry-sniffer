@@ -4,7 +4,7 @@
 #include "packetstable_model.h"
 
 #include <QMessageBox>
-#include <pcap++.h>
+#include <pcap.h>
 
 using namespace DataStructure;
 
@@ -43,18 +43,28 @@ void SniffWindow::managePacketsList()
 
 void SniffWindow::runLivePcap_p(const std::string &name)
 {
-    try {
-        pcappp::PcapLive live(name);
-        pcappp::Packet p;
-        while(this->toNotStop && live.next(p))
-        {
-            this->toAdd.push(RawPacketData(p));
-        }
-    }
-    catch(const pcappp::PcapError& e)
+    RawPacketData raw;
+    static constexpr unsigned LIVE_TIMEOUT = 1000; // milliseconds
+    pcap_t* pd = pcap_open_live(name.c_str(), 65535, 1, LIVE_TIMEOUT, NULL);
+
+    struct pcap_pkthdr* header;
+    const u_char* data;
+
+    while(this->toNotStop)
     {
-        QMessageBox::warning(this, QStringLiteral("Sniff Error"), QString::fromLatin1(e.what()));
+        int returnValue = pcap_next_ex(pd, &header, &data);
+        if(returnValue == 0)
+            continue;
+        if(returnValue != 1)
+            break;
+        if(header->caplen != header->len)
+            break;
+        raw.setData(data, header->len);
+        raw.time = header->ts;
+        this->toAdd.push(std::move(raw));
     }
+
+    pcap_close(pd);
 }
 
 void SniffWindow::setCurrentPacket(const struct localPacket& pack)

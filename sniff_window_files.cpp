@@ -4,188 +4,262 @@
 #include "packetstable_model.h"
 
 #include <pcap.h>
-#include <pcap++.h>
 #include <netinet/in.h>
 
 using namespace DataStructure;
 
-enum ObjectType {
-    PACKET = 0,
-    PROTOCOL
-};
-
-static bool savePcap(const char* filename, const std::vector<localPacket>& packets)
-{
-    pcap_t* pd = pcap_open_dead(DLT_EN10MB, 65535);
-    pcap_dumper_t* pdumper = pcap_dump_open(pd, filename);
-    for(const auto& i : packets)
-    {
-        struct pcap_pkthdr pkhdr;
-        pkhdr.caplen = pkhdr.len = i.rawPacket.len;
-        pkhdr.ts = i.rawPacket.time;
-        pcap_dump((u_char*)pdumper, &pkhdr, (const u_char*)i.rawPacket.data);
-    }
-    pcap_dump_close(pdumper);
-    pcap_close(pd);
-    return true;
-}
-
-inline char* readBuffer(FILE* file, uint16_t& len)
-{
-    ::fread(&len, 1, sizeof(len), file);
-    len = ntohs(len);
-    char* buffer = (char*)malloc(len);
-    len = ::fread(buffer, 1, len, file);
-    return buffer;
-}
-
-inline char* readBuffer(FILE* file, uint32_t& len)
-{
-    ::fread(&len, 1, sizeof(len), file);
-    len = ntohl(len);
-    char* buffer = (char*)malloc(len);
-    len = ::fread(buffer, 1, len, file);
-    return buffer;
-}
-
-inline std::string& readString(FILE* file, std::string& str)
-{
-    uint16_t len;
-    char* buffer = readBuffer(file, len);
-    str = std::string(buffer, len);
-    free(buffer);
-    return str;
-}
-
-inline void writeBuffer(FILE* file, uint16_t len, const void* buffer)
-{
-    uint16_t temp = ntohs(len);
-    ::fwrite(&temp, 1, sizeof(temp), file);
-    ::fwrite(buffer, 1, len, file);
-}
-
-inline void writeBuffer(FILE* file, uint32_t len, const void* buffer)
-{
-    uint32_t temp = ntohl(len);
-    ::fwrite(&temp, 1, sizeof(temp), file);
-    ::fwrite(buffer, 1, len, file);
-}
-
-inline void writeString(FILE* file, const std::string& str)
-{
-    writeBuffer(file, (uint16_t)str.length(), str.c_str());
-}
-
-static void saveHspcapProtocol(FILE* file, const hungry_sniffer::Protocol& protocol)
-{
-    uint8_t type = ObjectType::PROTOCOL;
-    auto names = protocol.getNameService();
-    if(names.size() > 0)
-    {
-        ::fwrite(&type, 1, 1, file);
-        uint16_t size = htons(names.size());
-        ::fwrite(&size, sizeof(size), 1, file);
-        writeString(file, protocol.getName());
-        for(auto& i : names)
-        {
-            writeString(file, i.first);
-            writeString(file, i.second);
-        }
-    }
-
-    for(auto& i : protocol.getProtocolsDB())
-    {
-        saveHspcapProtocol(file, i.second);
-    }
-}
-
-static bool saveHspcap(const char* filename, const std::vector<localPacket>& packets)
-{
-    FILE* file = fopen(filename, "wb");
-    uint32_t packetsCount = htonl(packets.size());
-    ::fwrite(&packetsCount, sizeof(packetsCount), 1, file);
-    saveHspcapProtocol(file, SniffWindow::core->base);
-    uint8_t type = ObjectType::PACKET;
-    for(const auto& i : packets)
-    {
-        ::fwrite(&type, 1, 1, file);
-        ::fwrite(&i.rawPacket.time, sizeof(i.rawPacket.time), 1, file);
-        writeBuffer(file, i.rawPacket.len, i.rawPacket.data);
-    }
-
-    fclose(file);
-    return true;
-}
-
 inline timeval calcDiffTimeval(const timeval& curr, const timeval& start, const timeval& base)
 {
-    timeval res{0,0};
+    timeval res{0, 0};
     res.tv_usec = base.tv_usec + curr.tv_usec - start.tv_usec;
     res.tv_sec = (base.tv_sec + curr.tv_sec) + ((res.tv_usec / 1000000) - start.tv_sec);
     res.tv_usec = res.tv_usec % 1000000;
     return res;
 }
 
-static bool readHspcap(const char* filename)
-{
-    FILE* file = fopen(filename, "rb");
-    uint32_t packetsCount = 0;
-    ::fread(&packetsCount, sizeof(packetsCount), 1, file);
-    packetsCount = ntohl(packetsCount);
-    uint8_t type;
-
-    timeval start{0, 0};
-    timeval base{0, 0};
-    gettimeofday(&base, 0);
-
-    while(::fread(&type, 1, 1, file) == 1)
+namespace PcapFile {
+    class Save
     {
-        switch(type)
-        {
-            case ObjectType::PACKET:
+        private:
+            pcap_t* pd;
+            pcap_dumper_t* pdumper;
+        public:
+            Save(const char* filename)
             {
-                RawPacketData raw;
-                ::fread(&raw.time, sizeof(raw.time), 1, file);
-                raw.data = readBuffer(file, raw.len);
-                if((start.tv_sec | start.tv_usec) == 0)
-                    start = raw.time;
-                raw.time = calcDiffTimeval(raw.time, start, base);
-                if(packetsCount > 0)
-                {
-                    SniffWindow::window->toAdd.push(std::move(raw));
-                    packetsCount--;
-                }
-                break;
+                pd = pcap_open_dead(DLT_EN10MB, 65535);
+                pdumper = pcap_dump_open(pd, filename);
             }
-            case ObjectType::PROTOCOL:
+
+            void operator <<(const localPacket& packet)
             {
-                uint16_t size;
-                ::fread(&size, sizeof(size), 1, file);
-                size = ntohs(size);
-                std::string name, key, value;
-                readString(file, name);
-                hungry_sniffer::Protocol* protocol = const_cast<hungry_sniffer::Protocol*>(SniffWindow::core->base.findProtocol(name));
-                if(protocol)
+                struct pcap_pkthdr pkhdr;
+                pkhdr.caplen = pkhdr.len = packet.rawPacket.len;
+                pkhdr.ts = packet.rawPacket.time;
+                pcap_dump((u_char*)pdumper, &pkhdr, (const u_char*)packet.rawPacket.data);
+            }
+
+            ~Save()
+            {
+                pcap_dump_close(pdumper);
+                pcap_close(pd);
+            }
+    };
+
+    class Load
+    {
+        private:
+            pcap_t* pd;
+
+        public:
+            Load(const char* filename)
+            {
+                pd = pcap_open_offline(filename, NULL);
+            }
+
+            bool operator >>(RawPacketData& raw)
+            {
+                struct pcap_pkthdr* header;
+                const u_char* data;
+
+                int returnValue = pcap_next_ex(pd, &header, &data);
+                if(returnValue != 1)
+                    return false;
+                if(header->caplen != header->len)
+                    return false;
+                raw.setData(data, header->len);
+                raw.time = header->ts;
+                return true;
+            }
+
+            ~Load()
+            {
+                pcap_close(pd);
+            }
+    };
+}
+
+namespace HspcapFile {
+
+    enum ObjectType
+    {
+        PACKET = 0,
+        PROTOCOL
+    };
+
+    class Save
+    {
+        private:
+            FILE* file;
+
+            void writeBuffer(uint16_t len, const void* buffer)
+            {
+                uint16_t temp = ntohs(len);
+                ::fwrite(&temp, 1, sizeof(temp), file);
+                ::fwrite(buffer, 1, len, file);
+            }
+
+            void writeBuffer(uint32_t len, const void* buffer)
+            {
+                uint32_t temp = ntohl(len);
+                ::fwrite(&temp, 1, sizeof(temp), file);
+                ::fwrite(buffer, 1, len, file);
+            }
+
+            void writeString(const std::string& str)
+            {
+                writeBuffer((uint16_t)str.length(), str.c_str());
+            }
+
+        public:
+            Save(const char* filename, uint32_t packetsCount)
+            {
+                file = fopen(filename, "wb");
+                packetsCount = htonl(packetsCount);
+                ::fwrite(&packetsCount, sizeof(packetsCount), 1, file);
+            }
+
+            void operator <<(const localPacket& packet)
+            {
+                uint8_t type = ObjectType::PACKET;
+                ::fwrite(&type, 1, 1, file);
+                ::fwrite(&packet.rawPacket.time, sizeof(packet.rawPacket.time), 1, file);
+                writeBuffer(packet.rawPacket.len, packet.rawPacket.data);
+                // TODO: write Own Headers
+            }
+
+            void operator <<(const hungry_sniffer::Protocol& protocol)
+            {
+                uint8_t type = ObjectType::PROTOCOL;
+                auto names = protocol.getNameService();
+                if(names.size() > 0)
                 {
-                    for(int i = size; i != 0; --i)
+                    ::fwrite(&type, 1, 1, file);
+                    uint16_t size = htons(names.size());
+                    ::fwrite(&size, sizeof(size), 1, file);
+                    writeString(protocol.getName());
+                    for(auto& i : names)
                     {
-                        readString(file, key);
-                        readString(file, value);
-                        protocol->associateName(key, value);
+                        writeString(i.first);
+                        writeString(i.second);
                     }
                 }
-                break;
+
+                for(auto& i : protocol.getProtocolsDB())
+                {
+                    *this << i.second;
+                }
             }
-        }
-    }
-    fclose(file);
-    return true;
+
+            ~Save()
+            {
+                fclose(file);
+                file = NULL;
+            }
+    };
+
+    class Load
+    {
+        private:
+            FILE* file;
+
+            char* readBuffer(uint16_t& len)
+            {
+                ::fread(&len, 1, sizeof(len), file);
+                len = ntohs(len);
+                char* buffer = (char*)malloc(len);
+                len = ::fread(buffer, 1, len, file);
+                return buffer;
+            }
+
+            char* readBuffer(uint32_t& len)
+            {
+                ::fread(&len, 1, sizeof(len), file);
+                len = ntohl(len);
+                char* buffer = (char*)malloc(len);
+                len = ::fread(buffer, 1, len, file);
+                return buffer;
+            }
+
+            std::string& readString(std::string& str)
+            {
+                uint16_t len;
+                char* buffer = readBuffer(len);
+                str = std::string(buffer, len);
+                free(buffer);
+                return str;
+            }
+
+        public:
+            Load(const char* filename)
+            {
+                file = fopen(filename, "rb");
+            }
+
+            void readAll()
+            {
+                uint32_t packetsCount = 0;
+                ::fread(&packetsCount, sizeof(packetsCount), 1, file);
+                packetsCount = ntohl(packetsCount);
+                uint8_t type;
+
+                timeval start{0, 0};
+                timeval base{0, 0};
+                gettimeofday(&base, 0);
+
+                while(::fread(&type, 1, 1, file) == 1)
+                {
+                    switch(type)
+                    {
+                        case ObjectType::PACKET:
+                        {
+                            RawPacketData raw;
+                            ::fread(&raw.time, sizeof(raw.time), 1, file);
+                            raw.data = readBuffer(raw.len);
+                            if((start.tv_sec | start.tv_usec) == 0)
+                                start = raw.time;
+                            raw.time = calcDiffTimeval(raw.time, start, base);
+                            if(packetsCount > 0)
+                            {
+                                SniffWindow::window->toAdd.push(std::move(raw));
+                                packetsCount--;
+                            }
+                            break;
+                        }
+                        case ObjectType::PROTOCOL:
+                        {
+                            uint16_t size;
+                            ::fread(&size, sizeof(size), 1, file);
+                            size = ntohs(size);
+                            std::string name, key, value;
+                            readString(name);
+                            hungry_sniffer::Protocol* protocol = const_cast<hungry_sniffer::Protocol*>(SniffWindow::core->base.findProtocol(name));
+                            if(protocol)
+                            {
+                                for(int i = size; i != 0; --i)
+                                {
+                                    readString(key);
+                                    readString(value);
+                                    protocol->associateName(key, value);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ~Load()
+            {
+                fclose(file);
+                file = NULL;
+            }
+    };
 }
 
 void SniffWindow::on_actionOpen_triggered()
 {
     QStringList filenames = QFileDialog::getOpenFileNames(this, QStringLiteral("Open File"), QStringLiteral(""),
-                                 QStringLiteral("All Captures (*.pcap *.hspcap);;hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
+                            QStringLiteral("All Captures (*.pcap *.hspcap);;hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
     for(auto& filename : filenames)
     {
         this->runOfflineFile(filename.toStdString());
@@ -198,18 +272,17 @@ inline bool ends_with(const std::string& value, const std::string& ending)
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-void SniffWindow::runOfflineOpen_p(const std::string &filename)
+void SniffWindow::runOfflineOpen_p(const std::string& filename)
 {
     if(ends_with(filename, ".pcap"))
     {
-        pcappp::PcapOffline off(filename);
-        pcappp::Packet p;
+        PcapFile::Load reader(filename.c_str());
+        RawPacketData raw;
         timeval start{0, 0};
         timeval base{0, 0};
         gettimeofday(&base, 0);
-        while(this->toNotStop && off.next(p))
+        while(this->toNotStop && reader >> raw)
         {
-            RawPacketData raw(p);
             if((start.tv_sec | start.tv_usec) == 0)
                 start = raw.time;
             raw.time = calcDiffTimeval(raw.time, start, base);
@@ -218,7 +291,8 @@ void SniffWindow::runOfflineOpen_p(const std::string &filename)
     }
     else if(ends_with(filename, ".hspcap"))
     {
-        readHspcap(filename.c_str());
+        HspcapFile::Load file(filename.c_str());
+        file.readAll();
         QThread::sleep(1);
         model.reloadText(&SniffWindow::core->base);
         model.rerunFilter(this->filterTree);
@@ -233,14 +307,19 @@ void SniffWindow::on_actionSave_triggered()
         return;
     }
     QString filename = QFileDialog::getSaveFileName(this, QStringLiteral("Save File"), QStringLiteral(""),
-                                                    QStringLiteral("hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
+                       QStringLiteral("hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
 
     if(filename.endsWith(QStringLiteral(".pcap")))
     {
-        savePcap(filename.toUtf8().constData(), model.local);
+        PcapFile::Save file(filename.toUtf8().constData());
+        for(const auto& i : model.local)
+            file << i;
     }
     else if(filename.endsWith(QStringLiteral(".hspcap")))
     {
-        saveHspcap(filename.toUtf8().constData(), model.local);
+        HspcapFile::Save file(filename.toUtf8().constData(), model.local.size());
+        file << core->base;
+        for(const auto& i : model.local)
+            file << i;
     }
 }

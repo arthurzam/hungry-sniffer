@@ -1,14 +1,6 @@
 #include "packetstable_model.h"
 #include "EthernetPacket.h"
 #include "sniff_window.h"
-#include <pcap++.h>
-
-DataStructure::RawPacketData::RawPacketData(const pcappp::Packet& packet)
-{
-    this->time.tv_sec = packet.get_seconds();
-    this->time.tv_usec = packet.get_miliseconds();
-    setData((const char*)packet.get_data(), packet.get_length());
-}
 
 DataStructure::RawPacketData::RawPacketData(const DataStructure::RawPacketData& other) :
     time(other.time)
@@ -52,7 +44,7 @@ DataStructure::RawPacketData::~RawPacketData()
         free(this->data);
 }
 
-void DataStructure::RawPacketData::setData(const char* data, uint32_t len)
+void DataStructure::RawPacketData::setData(const void* data, uint32_t len)
 {
     this->len = len;
     this->data = (char*)malloc(len);

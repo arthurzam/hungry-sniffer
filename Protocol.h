@@ -700,6 +700,7 @@ namespace hungry_sniffer {
                 Packet(protocol, prev),
                 data((const char*)data, (const char*)data + len)
             {
+                std::replace(this->data.begin(), this->data.end(), '\r', ' ');
             }
 
             virtual void updateNameAssociation()

@@ -131,6 +131,10 @@ void PacketsTableModel::rerunFilter(const FilterTree* filter)
 
 void PacketsTableModel::reloadText(const hungry_sniffer::Protocol* protocol)
 {
+    if(shownPerRow.size() == 0)
+    {
+        return;
+    }
     long i = 0; // index in local
     long j = 0; // index in shownPerRow
 
