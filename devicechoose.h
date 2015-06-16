@@ -14,10 +14,10 @@ class DeviceChoose : public QDialog
 {
         Q_OBJECT
     private:
-        Ui::DeviceChoose *ui;
+        Ui::DeviceChoose* ui;
         QStringList results;
     public:
-        explicit DeviceChoose(QWidget *parent = 0);
+        explicit DeviceChoose(QWidget* parent = 0);
         ~DeviceChoose();
 
         QStringList::const_iterator end() const

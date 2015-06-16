@@ -8,7 +8,6 @@
 #include "outputviewer.h"
 #include "additionalheaderspacket.h"
 #include "filter_tree.h"
-#include "packetstable_model.h"
 
 SniffWindow* SniffWindow::window = nullptr;
 
@@ -26,10 +25,13 @@ SniffWindow::SniffWindow(QWidget *parent) :
     ui->setupUi(this);
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     ui->table_packets->setModel(&model);
-    ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->table_packets->horizontalHeader()->setStretchLastSection(true);
+    ui->table_packets->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     connect(ui->table_packets->selectionModel(), SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
             this,SLOT(model_currentRowChanged(QModelIndex,QModelIndex)));
+    connect(this, SIGNAL(sig_showMessageBox(QString,QString)), this, SLOT(showMessageBox(QString,QString)));
 
     ui->tree_packet->setHeaderLabels(QStringList({QStringLiteral("Key"), QStringLiteral("Value")}));
     ui->tree_packet->setColumnCount(2);
@@ -121,7 +123,8 @@ void SniffWindow::on_bt_filter_clear_clicked()
     ui->bt_filter_clear->setEnabled(false);
     ui->bt_filter_apply->setEnabled(false);
 
-    this->filterTree = nullptr;
+    FilterTree* filter = this->filterTree.exchange(nullptr);
+    delete filter;
     model.rerunFilter(nullptr);
     ui->statusBar->updateText();
 }
@@ -141,11 +144,11 @@ void SniffWindow::on_actionStop_triggered()
 
 void SniffWindow::on_actionSniff_triggered()
 {
-    if(!isRoot())
-    {
-        QMessageBox::warning(nullptr, QStringLiteral("Not Root"), QStringLiteral("You should be Root"), QMessageBox::StandardButton::Ok);
-        return;
-    }
+//    if(!isRoot())
+//    {
+//        QMessageBox::warning(nullptr, QStringLiteral("Not Root"), QStringLiteral("You should be Root"), QMessageBox::StandardButton::Ok);
+//        return;
+//    }
 
     DeviceChoose d;
     d.exec();
@@ -185,6 +188,7 @@ void SniffWindow::on_action_remove_all_triggered()
 void SniffWindow::on_action_remove_shown_triggered()
 {
     model.removeShown();
+    ui->statusBar->updateText();
 }
 
 void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText)
@@ -214,11 +218,11 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
     if(listSelected.size() == 0)
         return;
     QModelIndex& item = listSelected[0];
-    QList<QAction*> list;
+    std::vector<QAction*> list;
     QMenu menu;
     int row = model.shownPerRow[item.row()];
     QMenu follow(QStringLiteral("Follow")), nameSrc(QStringLiteral("Associate Name For Source")),
-            nameDst(QStringLiteral("Associate Name For Destination")), optionsMenu(QStringLiteral("Special Options"));
+          nameDst(QStringLiteral("Associate Name For Destination")), optionsMenu(QStringLiteral("Special Options"));
 
     QAction copyValAction(QStringLiteral("Copy Value"), nullptr);
     connect(&copyValAction, &QAction::triggered, [this, item] () {
@@ -229,6 +233,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
     QAction removeRowAction(QStringLiteral("Remove Packet"), nullptr);
     connect(&removeRowAction, &QAction::triggered, [this, row] () {
         model.remove(row);
+        ui->statusBar->updateText();
     });
     menu.addAction(&removeRowAction);
 
@@ -248,7 +253,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                     ui->bt_filter_clear->setEnabled(true);
                 });
                 follow.addAction(action);
-                list.append(action);
+                list.push_back(action);
             }
             if(localPacket->getProtocol()->getIsNameService())
             {
@@ -256,14 +261,14 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                 connect(action, &QAction::triggered, [this, localPacket]() {
                     this->associateName(localPacket, localPacket->realSource());
                 });
-                list.append(action);
+                list.push_back(action);
                 nameSrc.addAction(action);
 
                 action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
                 connect(action, &QAction::triggered, [this, localPacket]() {
                     this->associateName(localPacket, localPacket->realDestination());
                 });
-                list.append(action);
+                list.push_back(action);
                 nameDst.addAction(action);
             }
 
@@ -291,7 +296,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
                         }
                     });
                     subMenu->addAction(action);
-                    list.append(action);
+                    list.push_back(action);
                 }
                 if(subMenu->actions().size() == 0)
                     delete subMenu;
@@ -440,6 +445,11 @@ void SniffWindow::model_currentRowChanged(QModelIndex newSelection, QModelIndex 
         this->setCurrentPacket(this->model.local[loc]);
         ui->statusBar->updateText(loc);
     }
+}
+
+void SniffWindow::showMessageBox(const QString& title, const QString& text)
+{
+    QMessageBox::warning(nullptr, title, text, QMessageBox::Ok);
 }
 
 void SniffWindow::dropEvent(QDropEvent *event)

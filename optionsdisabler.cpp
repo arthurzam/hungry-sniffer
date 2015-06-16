@@ -1,19 +1,23 @@
 #include "optionsdisabler.h"
-#include "ui_optionsdisabler.h"
 #include <QLabel>
 #include <QPushButton>
+#include <QGridLayout>
+#include <QVBoxLayout>
 
 OptionsDisabler::OptionsDisabler(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::OptionsDisabler)
+    QDialog(parent)
 {
-    ui->setupUi(this);
+    this->resize(400, 300);
+    QVBoxLayout* verticalLayout = new QVBoxLayout(this);
+    grid = new QGridLayout();
+    verticalLayout->addLayout(grid);
+
+    this->setWindowTitle(QStringLiteral("Options Disabler"));
     this->setFixedSize(0, 0);
 }
 
 OptionsDisabler::~OptionsDisabler()
 {
-    delete ui;
 //    for(auto& i : this->enabledOptions)
 //    {
 //        free(const_cast<void*>(i.data));
@@ -23,16 +27,16 @@ OptionsDisabler::~OptionsDisabler()
 void OptionsDisabler::refreshOptions()
 {
     // clear the table
-    while(ui->grid->count() > 0)
+    while(grid->count() > 0)
     {
-        QWidget* widget = ui->grid->itemAt(0)->widget();
-        ui->grid->removeWidget(widget);
+        QWidget* widget = grid->itemAt(0)->widget();
+        grid->removeWidget(widget);
         delete widget;
     }
     int row = 0;
     for(const auto& i : this->enabledOptions)
     {
-        ui->grid->addWidget(new QLabel(QString::fromStdString(i.name), this), row, 0);
+        grid->addWidget(new QLabel(QString::fromStdString(i.name), this), row, 0);
         QPushButton* bt = new QPushButton(QStringLiteral("Disable"), this);
 
         connect(bt, &QPushButton::clicked, [this, row]() {
@@ -48,7 +52,7 @@ void OptionsDisabler::refreshOptions()
             }
         });
 
-        ui->grid->addWidget(bt, row, 1);
+        grid->addWidget(bt, row, 1);
 
         ++row;
     }

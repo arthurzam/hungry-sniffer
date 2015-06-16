@@ -319,6 +319,7 @@ namespace optimizeFilter {
 FilterTree::FilterTree(const std::string &filterString)
 {
     TempNode* temp = parseString::parseExpr(filterString.cbegin(), filterString.cend());
+    if(!temp) return;
     optimizeFilter::res r = optimizeFilter::countNodes(temp);
     nodeArr = (FilterTree::Node*)malloc(r.nodeCount * sizeof(FilterTree::Node));
     smatchesArr = new std::vector<std::string>[r.valueCount];

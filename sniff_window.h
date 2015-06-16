@@ -23,7 +23,8 @@ class SniffWindow : public QMainWindow
         static hungry_sniffer::Protocol infoProtocol;
 
         static bool isRoot();
-
+    signals:
+        void sig_showMessageBox(const QString& title, const QString& text);
     public slots:
         void on_actionOpen_triggered();
         void on_tb_filter_textEdited(const QString &arg1);
@@ -51,6 +52,7 @@ class SniffWindow : public QMainWindow
         void on_splitter_splitterMoved(int, int);
 
         void model_currentRowChanged(QModelIndex newSelection,QModelIndex oldSelection);
+        void showMessageBox(const QString& title, const QString& text);
 
     protected:
         void dragEnterEvent(QDragEnterEvent* event);

@@ -8,7 +8,7 @@ StatusBar::StatusBar(QWidget* parent) :
     lb_info(this),
     lb_liveSniffing(this)
 {
-    this->setStyleSheet("QStatusBar::item { border: none; } ");
+    this->setStyleSheet(QStringLiteral("QStatusBar::item{border: none;}"));
 
     QWidget* widget = new QWidget();
     QGridLayout* layout = new QGridLayout(widget);

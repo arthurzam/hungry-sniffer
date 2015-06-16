@@ -26,49 +26,18 @@ inline void loadLibs()
     {
         QLibrary lib(dir.absoluteFilePath(iter));
         function_t foo = (function_t)lib.resolve("add");
-        if(!foo)
+        if(foo)
         {
-            continue;
+            foo(*SniffWindow::core);
         }
-        foo(*SniffWindow::core);
     }
 }
 
 HungrySniffer_Core* SniffWindow::core = nullptr;
 
-inline void setMaxRam()
-{
-    struct rlimit limit;
-    limit.rlim_cur = RLIM_INFINITY;
-    limit.rlim_max = RLIM_INFINITY;
-    setrlimit(RLIMIT_AS, &limit);
-}
-
 int main(int argc, char *argv[])
 {
-    std::vector<std::string> files;
-    files.reserve(argc - 1);
-    bool notEndCmdOption = true;
-    for(int i = 1; i < argc; i++)
-    {
-        if((argv[i][0] == '-') & notEndCmdOption)
-        {
-            if(strcmp(argv[i], "--") == 0)
-                notEndCmdOption = false;
-            else if(strcmp(argv[i], "-quiet") == 0)
-            {
-                ::close(STDOUT_FILENO);
-                ::close(STDERR_FILENO);
-            }
-        }
-        else
-        {
-            files.push_back(argv[i]);
-        }
-    }
-    setMaxRam();
-
-    Protocol base(hungry_sniffer::init<EthernetPacket>, true, "Ethernet", true, true);
+    Protocol base(init<EthernetPacket>, true, "Ethernet", true, true);
     base.addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     base.addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
     HungrySniffer_Core core(base);
@@ -78,8 +47,26 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
     SniffWindow w;
-    for(const auto& i : files)
-        w.runOfflineFile(i);
+
+    bool notEndCmdOption = true;
+    for(int i = 1; i < argc; i++)
+    {
+        if((argv[i][0] == '-') & notEndCmdOption)
+        {
+            if(strcmp(argv[i] + 1, "-") == 0)
+                notEndCmdOption = false;
+            else if(strcmp(argv[i] + 1, "quiet") == 0)
+            {
+                ::close(STDOUT_FILENO);
+                ::close(STDERR_FILENO);
+            }
+        }
+        else
+        {
+            w.runOfflineFile(argv[i]);
+        }
+    }
+
     w.show();
     return a.exec();
 }

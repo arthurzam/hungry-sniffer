@@ -43,9 +43,17 @@ void SniffWindow::managePacketsList()
 
 void SniffWindow::runLivePcap_p(const std::string &name)
 {
-    RawPacketData raw;
     static constexpr unsigned LIVE_TIMEOUT = 1000; // milliseconds
-    pcap_t* pd = pcap_open_live(name.c_str(), 65535, 1, LIVE_TIMEOUT, NULL);
+    char errbuf[PCAP_ERRBUF_SIZE];
+
+    pcap_t* pd = pcap_open_live(name.c_str(), 65535, 1, LIVE_TIMEOUT, errbuf);
+    if(!pd)
+    {
+        emit sig_showMessageBox(QStringLiteral("Live Sniffing error"), QString(errbuf));
+        return;
+    }
+
+    RawPacketData raw;
 
     struct pcap_pkthdr* header;
     const u_char* data;

@@ -1,46 +1,44 @@
 #include "packetstats.h"
-#include "ui_packetstats.h"
 #include "sniff_window.h"
 
 #include <QPushButton>
 #include <QTimer>
 #include <QStandardItemModel>
+#include <QTreeView>
+#include <QVBoxLayout>
 #include "Protocol.h"
 
 using namespace hungry_sniffer;
 
 PacketStats::PacketStats(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::PacketStats)
+    treeView(new QTreeView(this))
 {
-    ui->setupUi(this);
-    timerId = startTimer(1000);
+    this->resize(397, 296);
+    QVBoxLayout* box = new QVBoxLayout(this);
 
-    QPushButton* btRefresh = new QPushButton(QStringLiteral("&Refresh"), ui->buttonBox);
-    connect(btRefresh, SIGNAL(clicked()), this, SLOT(setStats()));
-    ui->buttonBox->addButton(btRefresh, QDialogButtonBox::ActionRole);
+    this->setWindowTitle(QStringLiteral("Packets Count Stats"));
+    treeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    treeView->setSortingEnabled(true);
+    box->addWidget(treeView);
 
     model = new QStandardItemModel;
     addProtocol(&SniffWindow::core->base, model->invisibleRootItem());
     model->setHorizontalHeaderLabels({QStringLiteral("Protocol"), QStringLiteral("Number")});
-    ui->treeView->setModel(model);
-    ui->treeView->expandAll();
-    ui->treeView->resizeColumnToContents(0);
+    treeView->setModel(model);
+    treeView->expandAll();
+    treeView->resizeColumnToContents(0);
+
+    timerId = startTimer(1000);
 }
 
 PacketStats::~PacketStats()
 {
     killTimer(timerId);
     delete model;
-    delete ui;
 }
 
 void PacketStats::timerEvent(QTimerEvent*)
-{
-    setStats();
-}
-
-void PacketStats::setStats()
 {
     for(node& i : this->list)
     {

@@ -3,17 +3,13 @@
 
 #include <QDialog>
 
-namespace Ui {
-    class OutputViewer;
-}
+class QPlainTextEdit;
 
 /**
  * @brief Output Dialog
  */
 class OutputViewer : public QDialog
 {
-        Q_OBJECT
-
     public:
         /**
          * @brief OutputViewer constructor
@@ -22,10 +18,9 @@ class OutputViewer : public QDialog
          * @param name the name for the window
          */
         explicit OutputViewer(const std::stringstream& stream, const std::string& name, QWidget *parent = 0);
-        ~OutputViewer();
 
     private:
-        Ui::OutputViewer *ui;
+        QPlainTextEdit* tb;
 };
 
 #endif // OUTPUTVIEWER_H

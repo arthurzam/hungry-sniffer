@@ -1,17 +1,17 @@
 #include "outputviewer.h"
-#include "ui_outputviewer.h"
+#include <QVBoxLayout>
+#include <QPlainTextEdit>
 #include <sstream>
 
 OutputViewer::OutputViewer(const std::stringstream& stream, const std::string& name, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::OutputViewer)
+    QDialog(parent)
 {
-    ui->setupUi(this);
-    ui->tb->appendHtml(QString::fromStdString(stream.str()).replace("\n", "<br />"));
-    this->setWindowTitle(QString::fromStdString(name));
-}
+    this->resize(400, 300);
+    QVBoxLayout* verticalLayout = new QVBoxLayout(this);
+    tb = new QPlainTextEdit(this);
+    tb->setReadOnly(true);
+    verticalLayout->addWidget(tb);
 
-OutputViewer::~OutputViewer()
-{
-    delete ui;
+    tb->appendHtml(QString::fromStdString(stream.str()).replace("\n", "<br />"));
+    this->setWindowTitle(QString::fromStdString(name));
 }

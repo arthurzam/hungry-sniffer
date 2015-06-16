@@ -47,10 +47,7 @@ HEADERS  += \
 
 FORMS    += \
     devicechoose.ui \
-    sniff_window.ui \
-    packetstats.ui \
-    outputviewer.ui \
-    optionsdisabler.ui
+    sniff_window.ui
 
 RESOURCES += \
     icons/icons.qrc

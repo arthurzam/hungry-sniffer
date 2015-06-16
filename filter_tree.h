@@ -30,9 +30,9 @@ class FilterTree
         };
 
     private:
-        Node* nodeArr;
-        Node* root;
-        std::vector<std::string>* smatchesArr;
+        Node* nodeArr = nullptr;
+        Node* root = nullptr;
+        std::vector<std::string>* smatchesArr = nullptr;
     public:
         /**
          * @brief FilterTree constructor from filter text

@@ -125,6 +125,7 @@ PyObject* hs_removePacket(PyObject*, PyObject* args)
         return NULL;
     }
     SniffWindow::window->model.remove(pos);
+    SniffWindow::window->ui->statusBar->updateText();
     return Py_None;
 }
 
