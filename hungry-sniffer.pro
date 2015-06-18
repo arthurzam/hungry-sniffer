@@ -46,7 +46,6 @@ HEADERS  += \
     statusbar.h
 
 FORMS    += \
-    devicechoose.ui \
     sniff_window.ui
 
 RESOURCES += \

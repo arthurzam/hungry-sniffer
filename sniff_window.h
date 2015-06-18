@@ -9,6 +9,7 @@
 #include "packetstable_model.h"
 
 class PacketStats;
+class QSortFilterProxyModel;
 
 class SniffWindow : public QMainWindow
 {
@@ -61,6 +62,7 @@ class SniffWindow : public QMainWindow
 
     public:
         Ui::SniffWindow *ui;
+        QSortFilterProxyModel* m_sortFilterProxy;
         PacketsTableModel model;
         PacketStats* statsTable;
 

@@ -12,7 +12,6 @@ void SniffWindow::runLivePcap(const std::string &name)
 {
     this->toNotStop = true;
     this->threads.push_back(new std::thread(&SniffWindow::runLivePcap_p, this, name));
-    ui->statusBar->setLiveSniffing(true);
 }
 
 void SniffWindow::runOfflineFile(const std::string &filename)
@@ -52,6 +51,7 @@ void SniffWindow::runLivePcap_p(const std::string &name)
         emit sig_showMessageBox(QStringLiteral("Live Sniffing error"), QString(errbuf));
         return;
     }
+    ui->statusBar->setLiveSniffing(true);
 
     RawPacketData raw;
 

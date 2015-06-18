@@ -3,6 +3,7 @@
 
 #include <QMessageBox>
 #include <unistd.h>
+#include <QSortFilterProxyModel>
 #include "devicechoose.h"
 #include "packetstats.h"
 #include "outputviewer.h"
@@ -24,10 +25,13 @@ SniffWindow::SniffWindow(QWidget *parent) :
     SniffWindow::window = this;
     ui->setupUi(this);
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-    ui->table_packets->setModel(&model);
     ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->table_packets->horizontalHeader()->setStretchLastSection(true);
     ui->table_packets->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+    m_sortFilterProxy = new QSortFilterProxyModel(this);
+    m_sortFilterProxy->setSourceModel(&model);
+    ui->table_packets->setModel(m_sortFilterProxy);
 
     connect(ui->table_packets->selectionModel(), SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
             this,SLOT(model_currentRowChanged(QModelIndex,QModelIndex)));
@@ -144,12 +148,6 @@ void SniffWindow::on_actionStop_triggered()
 
 void SniffWindow::on_actionSniff_triggered()
 {
-//    if(!isRoot())
-//    {
-//        QMessageBox::warning(nullptr, QStringLiteral("Not Root"), QStringLiteral("You should be Root"), QMessageBox::StandardButton::Ok);
-//        return;
-//    }
-
     DeviceChoose d;
     d.exec();
 
@@ -217,20 +215,20 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
     auto listSelected = ui->table_packets->selectionModel()->selectedIndexes();
     if(listSelected.size() == 0)
         return;
-    QModelIndex& item = listSelected[0];
+    QModelIndex item = m_sortFilterProxy->mapToSource(listSelected[0]);
     std::vector<QAction*> list;
     QMenu menu;
     int row = model.shownPerRow[item.row()];
-    QMenu follow(QStringLiteral("Follow")), nameSrc(QStringLiteral("Associate Name For Source")),
-          nameDst(QStringLiteral("Associate Name For Destination")), optionsMenu(QStringLiteral("Special Options"));
+    QMenu follow(QStringLiteral("&Follow")), nameSrc(QStringLiteral("Associate Name For &Source")),
+          nameDst(QStringLiteral("Associate Name For &Destination")), optionsMenu(QStringLiteral("Special &Options"));
 
-    QAction copyValAction(QStringLiteral("Copy Value"), nullptr);
+    QAction copyValAction(QStringLiteral("&Copy Value"), nullptr);
     connect(&copyValAction, &QAction::triggered, [this, item] () {
-        QApplication::clipboard()->setText(model.data(item).toString());
+        QApplication::clipboard()->setText(model.data(item, Qt::DisplayRole).toString());
     });
     menu.addAction(&copyValAction);
 
-    QAction removeRowAction(QStringLiteral("Remove Packet"), nullptr);
+    QAction removeRowAction(QStringLiteral("&Remove Packet"), nullptr);
     connect(&removeRowAction, &QAction::triggered, [this, row] () {
         model.remove(row);
         ui->statusBar->updateText();
@@ -332,7 +330,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     if(!firstLevel)
         firstLevel = item;
     QMenu menu;
-    QAction action_copy(QStringLiteral("Copy Value"), nullptr);
+    QAction action_copy(QStringLiteral("&Copy Value"), nullptr);
     if(firstLevel != item)
     {
         connect(&action_copy, &QAction::triggered, [item, firstLevel]() {
@@ -340,7 +338,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
         });
         menu.addAction(&action_copy);
     }
-    QAction action_add(QStringLiteral("Add Info Header"), nullptr);
+    QAction action_add(QStringLiteral("&Add Info Header"), nullptr);
     connect(&action_add, &QAction::triggered, [this]() {
         hungry_sniffer::Packet& last = const_cast<hungry_sniffer::Packet&>(this->selected->decodedPacket->getLast());
         AdditionalHeadersPacket* pack = static_cast<AdditionalHeadersPacket*>(&last);
@@ -369,7 +367,7 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     });
     menu.addAction(&action_add);
 
-    QAction action_remove(QStringLiteral("Remove"), nullptr);
+    QAction action_remove(QStringLiteral("&Remove"), nullptr);
     if(item != firstLevel && firstLevel->text(0) == QStringLiteral("Own Headers"))
     {
         connect(&action_remove, &QAction::triggered, [this, item, firstLevel]() {
@@ -438,8 +436,8 @@ void SniffWindow::on_splitter_splitterMoved(int, int)
 
 void SniffWindow::model_currentRowChanged(QModelIndex newSelection, QModelIndex oldSelection)
 {
-    int row = newSelection.row();
-    if(row != oldSelection.row())
+    int row = m_sortFilterProxy->mapToSource(newSelection).row();
+    if(row != m_sortFilterProxy->mapToSource(oldSelection).row())
     {
         int loc = model.shownPerRow[row];
         this->setCurrentPacket(this->model.local[loc]);
