@@ -140,9 +140,6 @@ namespace parseString {
                     findMatchingExprEnd(i, end);
 
                     temp = parseNot(exprStart, i);
-//                    if(i == end)
-//                        return temp;
-//                    ++i;
                     break;
                 case '&':
                 case '|':
@@ -177,30 +174,30 @@ namespace parseString {
     }
 
     static TempNode* parseEndExpr(string::const_iterator start, string::const_iterator end)
-{
-    stripSpaces(start, end);
-    string::const_iterator dot = std::find(start, end, '.');
-    string name(start, dot);
-    const hungry_sniffer::Protocol* protocol = SniffWindow::core->base.findProtocol(name);
-
-    if(!protocol)
     {
+        stripSpaces(start, end);
+        string::const_iterator dot = std::find(start, end, '.');
+        string name(start, dot);
+        const hungry_sniffer::Protocol* protocol = SniffWindow::core->base.findProtocol(name);
+
+        if(!protocol)
+        {
 #ifndef QT_NO_DEBUG
-        qDebug("protocol %s not found", name.c_str());
+            qDebug("protocol %s not found", name.c_str());
 #endif
-        return nullptr;
-    }
+            return nullptr;
+        }
 
-    if(end != dot)
-    {
-        std::smatch sm;
-        return new TempNode(protocol, extractRegex(protocol, string(dot + 1, end), sm), sm);
+        if(end != dot)
+        {
+            std::smatch sm;
+            return new TempNode(protocol, extractRegex(protocol, string(dot + 1, end), sm), sm);
+        }
+        else // only name
+        {
+            return new TempNode(protocol);
+        }
     }
-    else // only name
-    {
-        return new TempNode(protocol);
-    }
-}
 }
 
 namespace optimizeFilter {
@@ -229,11 +226,10 @@ namespace optimizeFilter {
                 break;
             case NodeTypes::And:
             case NodeTypes::Or:
-                r += countNodes(root->data.tree.left);
-                r += countNodes(root->data.tree.right);
-                break;
             case NodeTypes::Nor:
             case NodeTypes::Nand:
+                r += countNodes(root->data.tree.left);
+                r += countNodes(root->data.tree.right);
                 break;
         }
         return r;

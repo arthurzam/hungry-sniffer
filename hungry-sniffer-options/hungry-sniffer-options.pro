@@ -11,8 +11,12 @@ SOURCES += \
     call.cpp \
     arpspoof.cpp \
     portredirect.cpp \
-    resolve_hostname.cpp
+    resolve_hostname.cpp \
+    stats_ips.cpp
 
 HEADERS +=\
     Protocol.h \
-    options.h
+    options.h \
+    stats_ips.h
+
+FORMS +=

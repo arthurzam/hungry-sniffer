@@ -2,8 +2,9 @@
 #include "ui_sniff_window.h"
 
 #include <QMessageBox>
-#include <unistd.h>
 #include <QSortFilterProxyModel>
+#include <unistd.h>
+
 #include "devicechoose.h"
 #include "packetstats.h"
 #include "outputviewer.h"
@@ -40,6 +41,7 @@ SniffWindow::SniffWindow(QWidget *parent) :
     ui->tree_packet->setHeaderLabels(QStringList({QStringLiteral("Key"), QStringLiteral("Value")}));
     ui->tree_packet->setColumnCount(2);
     this->setOutputFunctions();
+    this->setStatsFunctions(core->base);
 #ifdef PYTHON_CMD
     initPython();
 #else
@@ -82,17 +84,43 @@ void SniffWindow::setOutputFunctions()
         QAction* temp = new QAction(QString::fromStdString(i.first), this);
         connect(temp, &QAction::triggered, [this, i]() {
             std::stringstream stream;
-            for(const auto& p : this->model.local)
-            {
-                if(p.isShown)
-                    i.second(stream, p.decodedPacket);
-            }
+            const auto& list = model.local;
+            for(int num : model.shownPerRow)
+                i.second(stream, list[num].decodedPacket);
             OutputViewer* window = new OutputViewer(stream, i.first, this);
             window->show();
         });
         output->addAction(temp);
     }
     ui->menubar->addMenu(output);
+}
+
+void SniffWindow::setStatsFunctions(const hungry_sniffer::Protocol& protocol)
+{
+    const auto& list = protocol.getStatsWindowDB();
+    if(list.size() != 0)
+    {
+        QMenu* output = new QMenu(QString::fromStdString(protocol.getName()), ui->menuStats);
+        for(const auto& window : list)
+        {
+            QAction* temp = new QAction(QString::fromStdString(window.first), output);
+            auto func = window.second;
+            connect(temp, &QAction::triggered, [this, func]() {
+                hungry_sniffer::StatWindow* w = func();
+                bool notOnlyShown = !ui->action_only_Shown->isChecked();
+                for(const DataStructure::localPacket& i : model.local)
+                    if(i.isShown | notOnlyShown)
+                        w->addPacket(i.decodedPacket, i.rawPacket.time);
+                w->showWindow();
+            });
+            output->addAction(temp);
+        }
+        ui->menuStats->addMenu(output);
+    }
+    for(const auto& i : protocol.getProtocolsDB())
+    {
+        setStatsFunctions(i.second);
+    }
 }
 
 void SniffWindow::closeEvent(QCloseEvent* bar)
@@ -353,10 +381,10 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
             info = this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
         }
         bool ok;
-        QString key = QInputDialog::getText(this, QStringLiteral("Header Name"), QStringLiteral("Enter the header name"), QLineEdit::Normal, "", &ok);
+        QString key = QInputDialog::getText(this, QStringLiteral("Header Name"), QStringLiteral("Enter the header name"), QLineEdit::Normal, QStringLiteral(""), &ok);
         if(!ok)
             return;
-        QString value = QInputDialog::getText(this, QStringLiteral("Header Value"), QStringLiteral("Enter the header value"), QLineEdit::Normal, "", &ok);
+        QString value = QInputDialog::getText(this, QStringLiteral("Header Value"), QStringLiteral("Enter the header value"), QLineEdit::Normal, QStringLiteral(""), &ok);
         if(!ok)
             return;
         pack->addHeader(key.toStdString(), value.toStdString());

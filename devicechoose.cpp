@@ -40,10 +40,6 @@ DeviceChoose::DeviceChoose(QWidget* parent) :
     vbox->addWidget(buttonBox);
 }
 
-DeviceChoose::~DeviceChoose()
-{
-}
-
 void DeviceChoose::on_buttonBox_accepted()
 {
     this->results.clear();

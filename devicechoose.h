@@ -60,7 +60,7 @@ class DeviceChoose : public QDialog
         DeviceModel* model;
     public:
         explicit DeviceChoose(QWidget* parent = 0);
-        ~DeviceChoose();
+        ~DeviceChoose() {}
 
         QStringList::const_iterator end() const
         {

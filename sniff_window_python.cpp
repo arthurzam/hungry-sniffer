@@ -83,7 +83,7 @@ PyObject* hs_getCountAll(PyObject*)
 
 PyObject* hs_getCountShown(PyObject*)
 {
-    return PyLong_FromLong(SniffWindow::window->model.size());
+    return PyLong_FromLong(SniffWindow::window->model.shownPerRow.size());
 }
 
 PyObject* hs_savePacket(PyObject*, PyObject* args)

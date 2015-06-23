@@ -16,7 +16,7 @@ DataStructure::RawPacketData::RawPacketData(DataStructure::RawPacketData&& other
     other.data = nullptr;
 }
 
-DataStructure::RawPacketData& DataStructure::RawPacketData::operator =(const RawPacketData& other)
+DataStructure::RawPacketData& DataStructure::RawPacketData::operator=(const RawPacketData& other)
 {
     if(this != &other)
     {
@@ -26,7 +26,7 @@ DataStructure::RawPacketData& DataStructure::RawPacketData::operator =(const Raw
     return *this;
 }
 
-DataStructure::RawPacketData& DataStructure::RawPacketData::operator =(RawPacketData&& other)
+DataStructure::RawPacketData& DataStructure::RawPacketData::operator=(RawPacketData&& other)
 {
     if(this != &other)
     {

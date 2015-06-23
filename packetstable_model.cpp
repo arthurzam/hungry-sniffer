@@ -158,11 +158,11 @@ void PacketsTableModel::reloadText(const hungry_sniffer::Protocol* protocol)
         }
         if(shown == i)
         {
-            if(ptr && startChangeRow == -1)
+            if((ptr != nullptr) & (startChangeRow == -1))
             {
                 startChangeRow = j;
             }
-            else if(!ptr && startChangeRow != -1)
+            else if(!((ptr != nullptr) | (startChangeRow == -1)))
             {
                 emit dataChanged(index(startChangeRow, 0), index(j, COLUMNS_COUNT - 1));
                 startChangeRow = -1;

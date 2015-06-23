@@ -8,6 +8,10 @@
 #include "ThreadQueue.h"
 #include "packetstable_model.h"
 
+namespace Ui {
+    class SniffWindow;
+}
+
 class PacketStats;
 class QSortFilterProxyModel;
 
@@ -99,6 +103,7 @@ class SniffWindow : public QMainWindow
         void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);
 
         void setOutputFunctions();
+        void setStatsFunctions(const hungry_sniffer::Protocol& protocol);
 
 #ifdef PYTHON_CMD
     private:

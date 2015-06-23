@@ -5,10 +5,6 @@
 #include <vector>
 #include <mutex>
 
-namespace Ui {
-    class SniffWindow;
-}
-
 namespace hungry_sniffer {
     class Packet;
     class Protocol;
@@ -65,11 +61,6 @@ class PacketsTableModel : public QAbstractTableModel
         explicit PacketsTableModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
 
         int rowCount(const QModelIndex & = QModelIndex()) const
-        {
-            return shownPerRow.size();
-        }
-
-        int size()
         {
             return shownPerRow.size();
         }

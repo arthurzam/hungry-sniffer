@@ -14,7 +14,7 @@ PacketStats::PacketStats(QWidget *parent) :
     QDialog(parent),
     treeView(new QTreeView(this))
 {
-    this->resize(397, 296);
+    this->resize(400, 300);
     QVBoxLayout* box = new QVBoxLayout(this);
 
     this->setWindowTitle(QStringLiteral("Packets Count Stats"));

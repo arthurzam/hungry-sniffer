@@ -34,6 +34,18 @@ namespace hungry_sniffer {
         typedef int (*optionEnableFunction)(const Packet* packet, disabled_options_t& options);
     }
 
+    class StatWindow {
+        public:
+            virtual void addPacket(const Packet* packet, const timeval& time) = 0;
+            virtual void showWindow() = 0;
+
+            template<typename T>
+            static StatWindow* create()
+            {
+                return new T();
+            }
+    };
+
     /**
      * @brief class for holding data about protocol
      *
@@ -51,12 +63,14 @@ namespace hungry_sniffer {
             typedef Packet* (*initFunction)(const void* data, size_t len,
                     const Protocol* protocol, const Packet* prev);
             typedef bool (*filterFunction)(const Packet*, const std::vector<std::string>*);
+            typedef StatWindow* (*statInitFunction)();
 
             typedef std::map<size_t, Protocol> protocols_t;
             typedef std::map<std::string, std::string> names_t;
             typedef std::vector<struct option> options_t;
             typedef std::vector<std::pair<std::regex, filterFunction>> filterFunctions_t;
             typedef std::vector<std::pair<std::string, const int*>> stats_table_t;
+            typedef std::vector<std::pair<std::string, statInitFunction>> stats_init_window_t;
         private:
             std::shared_ptr<protocols_t> subProtocols;
             initFunction function;
@@ -73,6 +87,7 @@ namespace hungry_sniffer {
             bool isConversationEnabeled;
 
             options_t options;
+            stats_init_window_t stats_init_window;
         public:
             /**
              * @brief basic constructor for creating Protocol from function pointer
@@ -216,6 +231,11 @@ namespace hungry_sniffer {
                 return *this->subProtocols.get();
             }
 
+            const stats_init_window_t& getStatsWindowDB() const
+            {
+                return this->stats_init_window;
+            }
+
             /**
              * @brief get Protocol's function
              *
@@ -317,6 +337,11 @@ namespace hungry_sniffer {
             void addFilter(const std::string& filterRegex, filterFunction function)
             {
                 this->filters.push_back({std::regex(filterRegex, std::regex_constants::icase), function});
+            }
+
+            void addStatsWindow(const std::string& name, statInitFunction function)
+            {
+                this->stats_init_window.push_back({name, function});
             }
 
             /**

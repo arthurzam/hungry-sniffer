@@ -1,4 +1,4 @@
-CONFIG += c++11
+CONFIG += c++11 link_pkgconfig
 QT     += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -54,8 +54,7 @@ RESOURCES += \
 OTHER_FILES += hungry-sniffer.desktop
 
 !CONFIG(no-pycmd) {
-    QMAKE_CXXFLAGS += `pkg-config --cflags python3`
-    LIBS += `pkg-config --libs python3`
+    PKGCONFIG+=python3
     DEFINES += PYTHON_CMD
 
     OTHER_FILES += hs.py

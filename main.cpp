@@ -22,7 +22,7 @@ inline void loadLibs()
     QDir dir(QStringLiteral(PLUGINS_DIR));
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
     allFiles.sort(Qt::CaseInsensitive);
-    for(auto& iter : allFiles)
+    for(const auto& iter : allFiles)
     {
         QLibrary lib(dir.absoluteFilePath(iter));
         function_t foo = (function_t)lib.resolve("add");
@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
         {
             if(strcmp(argv[i] + 1, "-") == 0)
                 notEndCmdOption = false;
+            else if(i + 1 < argc && strcmp(argv[i] + 1, "i") == 0)
+                w.runLivePcap(argv[++i]);
             else if(strcmp(argv[i] + 1, "quiet") == 0)
             {
                 ::close(STDOUT_FILENO);
