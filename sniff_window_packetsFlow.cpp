@@ -8,10 +8,10 @@
 
 using namespace DataStructure;
 
-void SniffWindow::runLivePcap(const std::string &name)
+void SniffWindow::runLivePcap(const std::string &name, int maxNumber, QString capture)
 {
     this->toNotStop = true;
-    this->threads.push_back(new std::thread(&SniffWindow::runLivePcap_p, this, name));
+    this->threads.push_back(new std::thread(&SniffWindow::runLivePcap_p, this, name, maxNumber, capture));
 }
 
 void SniffWindow::runOfflineFile(const std::string &filename)
@@ -40,7 +40,7 @@ void SniffWindow::managePacketsList()
     }
 }
 
-void SniffWindow::runLivePcap_p(const std::string &name)
+void SniffWindow::runLivePcap_p(const std::string& name, int maxNumber, QString capture)
 {
     static constexpr unsigned LIVE_TIMEOUT = 1000; // milliseconds
     char errbuf[PCAP_ERRBUF_SIZE];
@@ -55,21 +55,29 @@ void SniffWindow::runLivePcap_p(const std::string &name)
 
     RawPacketData raw;
 
+    struct bpf_program filter;
+    pcap_compile(pd, &filter, capture.toUtf8().constData(), 0, PCAP_NETMASK_UNKNOWN);
+    pcap_setfilter(pd, &filter);
+
     struct pcap_pkthdr* header;
     const u_char* data;
 
+    int i = 0;
     while(this->toNotStop)
     {
         int returnValue = pcap_next_ex(pd, &header, &data);
-        if(returnValue == 0)
+        if(returnValue == 0) // timeout
             continue;
-        if(returnValue != 1)
+        if(returnValue != 1) // error
             break;
         if(header->caplen != header->len)
             break;
         raw.setData(data, header->len);
         raw.time = header->ts;
         this->toAdd.push(std::move(raw));
+        i++;
+        if(i == maxNumber)
+            break;
     }
 
     pcap_close(pd);

@@ -28,7 +28,17 @@ inline void loadLibs()
         function_t foo = (function_t)lib.resolve("add");
         if(foo)
         {
-            foo(*SniffWindow::core);
+            try {
+                foo(*SniffWindow::core);
+#ifndef QT_NO_DEBUG
+            } catch (const std::exception& e) {
+                qDebug("error with %s: %s", iter.toLatin1().constData(), e.what());
+#endif
+            } catch (...) {
+#ifndef QT_NO_DEBUG
+                qDebug("error with %s:", iter.toLatin1().constData());
+#endif
+            }
         }
     }
 }
@@ -56,7 +66,7 @@ int main(int argc, char *argv[])
             if(strcmp(argv[i] + 1, "-") == 0)
                 notEndCmdOption = false;
             else if(i + 1 < argc && strcmp(argv[i] + 1, "i") == 0)
-                w.runLivePcap(argv[++i]);
+                w.runLivePcap(argv[++i], 0, QString());
             else if(strcmp(argv[i] + 1, "quiet") == 0)
             {
                 ::close(STDOUT_FILENO);

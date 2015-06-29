@@ -7,6 +7,8 @@
 
 class QTableView;
 class QSortFilterProxyModel;
+class QLineEdit;
+class QSpinBox;
 
 class DeviceModel : public QAbstractTableModel
 {
@@ -56,6 +58,8 @@ class DeviceChoose : public QDialog
         QTableView* tableView;
         QStringList results;
         QSortFilterProxyModel* m_sortFilterProxy;
+        QLineEdit* tb_filter;
+        QSpinBox* tb_number;
 
         DeviceModel* model;
     public:
@@ -71,6 +75,9 @@ class DeviceChoose : public QDialog
         {
             return results.cbegin();
         }
+
+        QString getCaptureFilter() const;
+        int getMaxCaptureNumber() const;
 
     private slots:
 

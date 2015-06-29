@@ -84,11 +84,11 @@ class SniffWindow : public QMainWindow
         OptionsDisabler optionsDisablerWin;
 
     public:
-        void runLivePcap(const std::string& name);
+        void runLivePcap(const std::string& name, int maxNumber, QString capture);
         void runOfflineFile(const std::string& filename);
 
     private:
-        void runLivePcap_p(const std::string& name);
+        void runLivePcap_p(const std::string& name, int maxNumber, QString capture);
         void runOfflineOpen_p(const std::string& filename);
         void managePacketsList();
 

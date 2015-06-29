@@ -164,7 +164,8 @@ namespace HspcapFile {
 
             char* readBuffer(uint16_t& len)
             {
-                ::fread(&len, 1, sizeof(len), file);
+                if(::fread(&len, 1, sizeof(len), file) != sizeof(len))
+                    return NULL;
                 len = ntohs(len);
                 char* buffer = (char*)malloc(len);
                 len = ::fread(buffer, 1, len, file);
@@ -173,7 +174,8 @@ namespace HspcapFile {
 
             char* readBuffer(uint32_t& len)
             {
-                ::fread(&len, 1, sizeof(len), file);
+                if(::fread(&len, 1, sizeof(len), file) != sizeof(len))
+                    return NULL;
                 len = ntohl(len);
                 char* buffer = (char*)malloc(len);
                 len = ::fread(buffer, 1, len, file);
@@ -198,7 +200,8 @@ namespace HspcapFile {
             void readAll()
             {
                 uint32_t packetsCount = 0;
-                ::fread(&packetsCount, sizeof(packetsCount), 1, file);
+                if(::fread(&packetsCount, sizeof(packetsCount), 1, file) != sizeof(packetsCount))
+                    return;
                 packetsCount = ntohl(packetsCount);
                 uint8_t type;
 
@@ -213,7 +216,8 @@ namespace HspcapFile {
                         case ObjectType::PACKET:
                         {
                             RawPacketData raw;
-                            ::fread(&raw.time, sizeof(raw.time), 1, file);
+                            if(::fread(&raw.time, sizeof(raw.time), 1, file) != sizeof(raw.time))
+                                return;
                             raw.data = readBuffer(raw.len);
                             if((start.tv_sec | start.tv_usec) == 0)
                                 start = raw.time;
@@ -228,7 +232,8 @@ namespace HspcapFile {
                         case ObjectType::PROTOCOL:
                         {
                             uint16_t size;
-                            ::fread(&size, sizeof(size), 1, file);
+                            if(::fread(&size, sizeof(size), 1, file) != sizeof(size))
+                                return;
                             size = ntohs(size);
                             std::string name, key, value;
                             readString(name);

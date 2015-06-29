@@ -179,9 +179,11 @@ void SniffWindow::on_actionSniff_triggered()
     DeviceChoose d;
     d.exec();
 
+    QString filter = d.getCaptureFilter();
+    int num = d.getMaxCaptureNumber();
     for(const auto& i : d)
     {
-        this->runLivePcap(i.toStdString());
+        this->runLivePcap(i.toStdString(), num, filter);
     }
 }
 

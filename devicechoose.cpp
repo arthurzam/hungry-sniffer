@@ -4,9 +4,12 @@
 #include <QLabel>
 #include <QSortFilterProxyModel>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QDialogButtonBox>
 #include <QTableView>
 #include <QHeaderView>
+#include <QLineEdit>
+#include <QSpinBox>
 
 #include <pcap.h>
 #include <arpa/inet.h>
@@ -15,11 +18,11 @@
 DeviceChoose::DeviceChoose(QWidget* parent) :
     QDialog(parent)
 {
-    this->resize(417, 279);
+    this->resize(400, 300);
     this->setWindowTitle(QStringLiteral("Device Chooser"));
     QVBoxLayout* vbox = new QVBoxLayout(this);
 
-    tableView = new QTableView(this);
+    tableView = new QTableView();
     model = new DeviceModel(this);
     m_sortFilterProxy = new QSortFilterProxyModel(this);
     m_sortFilterProxy->setSourceModel(model);
@@ -30,6 +33,21 @@ DeviceChoose::DeviceChoose(QWidget* parent) :
     tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     vbox->addWidget(tableView);
 
+    QHBoxLayout* hbox_filter = new QHBoxLayout();
+    hbox_filter->addWidget(new QLabel(QStringLiteral("Capture Filter"), this));
+    tb_filter = new QLineEdit(this);
+    tb_filter->setToolTip(QStringLiteral("Capture Filter in Pcap format"));
+    hbox_filter->addWidget(tb_filter);
+    vbox->addLayout(hbox_filter);
+
+    QHBoxLayout* hbox_num = new QHBoxLayout();
+    hbox_num->addWidget(new QLabel(QStringLiteral("Max Capture Number"), this));
+    tb_number = new QSpinBox(this);
+    tb_number->setValue(0);
+    tb_number->setRange(0, INT_MAX);
+    hbox_num->addWidget(tb_number);
+    vbox->addLayout(hbox_num);
+
     QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
     buttonBox->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
     QPushButton* btRefresh = new QPushButton(QStringLiteral("&Refresh"), buttonBox);
@@ -38,6 +56,19 @@ DeviceChoose::DeviceChoose(QWidget* parent) :
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(on_buttonBox_accepted()));
     connect(buttonBox, SIGNAL(rejected()), this, SLOT(close()));
     vbox->addWidget(buttonBox);
+}
+
+QString DeviceChoose::getCaptureFilter() const
+{
+    return tb_filter->text();
+}
+
+int DeviceChoose::getMaxCaptureNumber() const
+{
+    int val = tb_number->value();
+    if(val == 0)
+        return -1;
+    return val;
 }
 
 void DeviceChoose::on_buttonBox_accepted()
@@ -50,7 +81,7 @@ void DeviceChoose::on_buttonBox_accepted()
     this->close();
 }
 
-int get_numeric_address(struct sockaddr* sa, char* outbuf, size_t buflen)
+bool get_numeric_address(struct sockaddr* sa, char* outbuf, size_t buflen)
 {
     socklen_t len;
     switch (sa->sa_family)
@@ -62,13 +93,13 @@ int get_numeric_address(struct sockaddr* sa, char* outbuf, size_t buflen)
             len = sizeof(struct sockaddr_in6);
             break;
         default:
-            return -1;
+            return false;
     }
     if (getnameinfo(sa, len, outbuf, buflen, NULL, 0, NI_NUMERICHOST))
     {
-        return -1;
+        return false;
     }
-    return 0;
+    return true;
 }
 
 DeviceModel::Device::Device(pcap_if_t* p) :
@@ -77,7 +108,7 @@ DeviceModel::Device::Device(pcap_if_t* p) :
     char buf[NI_MAXHOST];
     for(pcap_addr_t* addr = p->addresses; addr; addr = addr->next)
     {
-        if (!get_numeric_address(addr->addr, buf, sizeof(buf)))
+        if (get_numeric_address(addr->addr, buf, sizeof(buf)))
         {
             if(this->addr1.isEmpty())
                 this->addr1 = buf;
