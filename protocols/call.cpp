@@ -13,18 +13,6 @@
 
 Protocol dataProtocol(init<PacketText>, false, "Data", false, false);
 
-bool printData(std::ostream& stream, const hungry_sniffer::Packet* packet)
-{
-    const hungry_sniffer::Packet& last = packet->getLast();
-    if(last.getProtocol() == &dataProtocol)
-    {
-        stream << "<font color=\"red\">" << packet->getSource() << " -> " << packet->getDestination() << "</font>";
-        stream << std::endl << last.getInfo() << std::endl;
-        return true;
-    }
-    return false;
-}
-
 extern "C" void add(HungrySniffer_Core& core)
 {
     Protocol& ipv4 = core.base.addProtocol(ETHERTYPE_IP, init<IPPacket>, true, "IP", true, true);
@@ -69,6 +57,4 @@ extern "C" void add(HungrySniffer_Core& core)
     }
     udp.addProtocol(1900, init<HTTPPacket>, true, "SSDP", false, false);
     udp.addProtocol(17500, init<PacketJson>, true, "Dropbox LAN sync", false, false);
-
-    core.addOutputFunction("print", printData);
 }

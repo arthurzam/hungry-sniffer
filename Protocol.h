@@ -823,16 +823,10 @@ namespace hungry_sniffer {
 
 struct HungrySniffer_Core {
         typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
-        std::map<std::string, outputFunction_t> outputFunctions;
         hungry_sniffer::Protocol& base;
 
         HungrySniffer_Core(hungry_sniffer::Protocol& base)
             : base(base) {}
-
-        void addOutputFunction(const std::string& name, outputFunction_t func)
-        {
-            this->outputFunctions.insert({name, func});
-        }
 };
 
 #endif /* PROTOCOL_H_ */

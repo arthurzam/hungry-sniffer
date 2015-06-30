@@ -102,7 +102,6 @@ class SniffWindow : public QMainWindow
 
         void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);
 
-        void setOutputFunctions();
         void setStatsFunctions(const hungry_sniffer::Protocol& protocol);
 
 #ifdef PYTHON_CMD

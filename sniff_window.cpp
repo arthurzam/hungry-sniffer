@@ -40,7 +40,6 @@ SniffWindow::SniffWindow(QWidget *parent) :
 
     ui->tree_packet->setHeaderLabels(QStringList({QStringLiteral("Key"), QStringLiteral("Value")}));
     ui->tree_packet->setColumnCount(2);
-    this->setOutputFunctions();
     this->setStatsFunctions(core->base);
 #ifdef PYTHON_CMD
     initPython();
@@ -68,31 +67,6 @@ SniffWindow::~SniffWindow()
 bool SniffWindow::isRoot()
 {
     return !(getuid() && geteuid());
-}
-
-void SniffWindow::setOutputFunctions()
-{
-    if(core->outputFunctions.size() == 0)
-        return;
-
-    QMenu* output = new QMenu(QStringLiteral("Output"), this);
-    for(const auto& i : core->outputFunctions)
-    {
-        if(i.second == nullptr)
-            continue;
-
-        QAction* temp = new QAction(QString::fromStdString(i.first), this);
-        connect(temp, &QAction::triggered, [this, i]() {
-            std::stringstream stream;
-            const auto& list = model.local;
-            for(int num : model.shownPerRow)
-                i.second(stream, list[num].decodedPacket);
-            OutputViewer* window = new OutputViewer(stream, i.first, this);
-            window->show();
-        });
-        output->addAction(temp);
-    }
-    ui->menubar->addMenu(output);
 }
 
 void SniffWindow::setStatsFunctions(const hungry_sniffer::Protocol& protocol)

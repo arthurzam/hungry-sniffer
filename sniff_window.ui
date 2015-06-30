@@ -200,9 +200,9 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Sniff"/>
-   <addaction name="menuAbout"/>
    <addaction name="menuStats"/>
    <addaction name="menu_View"/>
+   <addaction name="menuAbout"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
