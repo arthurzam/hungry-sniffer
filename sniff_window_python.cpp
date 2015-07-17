@@ -167,6 +167,12 @@ PyObject* ui_stop(PyObject*)
     return Py_None;
 }
 
+PyObject* ui_exit(PyObject*)
+{
+    SniffWindow::window->close();
+    return Py_None;
+}
+
 static PyMethodDef hs_methods[] = {
     { "getPacketNum", (PyCFunction)hs_getPacketNum, METH_VARARGS, NULL },
     { "getNextShown", (PyCFunction)hs_getNextShown, METH_VARARGS, NULL },
@@ -192,6 +198,7 @@ static PyMethodDef ui_methods[] = {
     { "reset", (PyCFunction)ui_reset, METH_NOARGS, NULL },
     { "open", (PyCFunction)ui_open, METH_VARARGS, NULL },
     { "stop", (PyCFunction)ui_stop, METH_NOARGS, NULL },
+    { "exit", (PyCFunction)ui_exit, METH_NOARGS, NULL },
     { NULL, NULL, 0, NULL }
 };
 

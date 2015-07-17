@@ -14,6 +14,8 @@ class Layer:
     def __str__(self):
         res = self.name + "\n"
         res += self.info + "\n"
+        for k,v in self.headers.items():
+            res += " " + k + " : " + v + "\n"
         return res
 
     def __repr__(self):
