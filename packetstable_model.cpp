@@ -51,6 +51,21 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
             {
                 return QBrush(Qt::yellow);
             }
+            unsigned r = 0, b = 0, g = 0;
+            for(const hungry_sniffer::Packet* pack = decodedPacket; pack; pack = pack->getNext())
+            {
+                uint32_t color = pack->getColor();
+                unsigned a = (color >> 24);
+                if(a != 0) // not fully transperent
+                {
+                    unsigned unA = 255 - a;
+                    r = (((color & 0x00FF0000) >> 16) * a + unA * r) / 255;
+                    g = (((color & 0x0000FF00) >> 8 ) * a + unA * g) / 255;
+                    b = (((color & 0x000000FF)      ) * a + unA * b) / 255;
+                }
+            }
+            if((r | b | g) != 0)
+                return QBrush(QColor(r, g, b));
             break;
     }
     return QVariant();
