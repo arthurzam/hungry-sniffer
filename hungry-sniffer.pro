@@ -2,12 +2,14 @@ CONFIG += c++11 link_pkgconfig
 QT     += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-LIBS   += -lpcap -ldl -lqhexedit
+LIBS   += -lpcap -ldl
 QMAKE_LFLAGS_RELEASE += -flto -fno-rtti
 QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
 
 TARGET = hungry-sniffer
 TEMPLATE = app
+
+include(QHexEdit/QHexEdit.pri)
 
 CONFIG(test) {
     DEFINES += PLUGINS_DIR=\\\"$$OUT_PWD/plugins\\\"

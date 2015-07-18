@@ -6,6 +6,10 @@
 #include <pcap.h>
 #include <netinet/in.h>
 
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QThread>
+
 using namespace DataStructure;
 
 inline timeval calcDiffTimeval(const timeval& curr, const timeval& start, const timeval& base)

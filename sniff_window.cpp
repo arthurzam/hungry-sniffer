@@ -1,7 +1,10 @@
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
 
+#include <QClipboard>
+#include <QInputDialog>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QSortFilterProxyModel>
 #include <unistd.h>
 

@@ -4,6 +4,7 @@
 #include "packetstable_model.h"
 
 #include <QMessageBox>
+#include <QThread>
 #include <pcap.h>
 
 using namespace DataStructure;
