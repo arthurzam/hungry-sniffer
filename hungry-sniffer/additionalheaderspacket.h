@@ -24,6 +24,11 @@ class AdditionalHeadersPacket : public hungry_sniffer::Packet {
                 }
             }
         }
+
+        virtual unsigned getLength() const
+        {
+            return 0;
+        }
 };
 
 #endif // ADDITIONALHEADERSPACKET_H

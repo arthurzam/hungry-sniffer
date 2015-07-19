@@ -35,6 +35,7 @@ class VRRPPacket : public PacketStructed<struct vrrphdr> {
     public:
         VRRPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~VRRPPacket() {}
+        virtual unsigned getLength() const;
 };
 
 #endif /* VRRPPACKET_H_ */

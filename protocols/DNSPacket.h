@@ -1,10 +1,3 @@
-/*
- * DNSPacket.h
- *
- *  Created on: Nov 8, 2014
- *      Author: arthur
- */
-
 #ifndef DNSPACKET_H_
 #define DNSPACKET_H_
 
@@ -54,10 +47,15 @@ class DNSPacket : public PacketStructed<struct dnshdr> {
 
         std::vector<struct query> queries;
         std::string id;
+        unsigned size;
     public:
         DNSPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~DNSPacket() {}
         virtual std::string getConversationFilterText() const;
+        virtual unsigned getLength() const
+        {
+            return this->size;
+        }
 
         static bool filter_id(const Packet* packet, const std::vector<std::string>* res);
 };

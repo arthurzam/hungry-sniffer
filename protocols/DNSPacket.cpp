@@ -1,10 +1,3 @@
-/*
- * DNSPacket.cpp
- *
- *  Created on: Nov 8, 2014
- *      Author: arthur
- */
-
 #include "DNSPacket.h"
 #include <netinet/in.h>
 
@@ -13,6 +6,7 @@ DNSPacket::DNSPacket(const void* data, size_t len, const Protocol* protocol,
         PacketStructed(data, len, protocol, prev),
         id(std::to_string(ntohs(this->value.id)))
 {
+    size = len;
     this->queries.reserve(ntohs(this->value.q_count));
 
     this->headers.push_back({"Transaction ID", id});

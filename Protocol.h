@@ -44,6 +44,8 @@ namespace hungry_sniffer {
             {
                 return new T();
             }
+
+            virtual ~StatWindow() {}
     };
 
     /**
@@ -588,6 +590,8 @@ namespace hungry_sniffer {
                 return this->color;
             }
 
+            virtual unsigned getLength() const = 0;
+
             /**
              * @brief get the packet (or sub packet) whose protocol is the same as given
              *
@@ -731,6 +735,11 @@ namespace hungry_sniffer {
                 }
                 memcpy(&value, data, sizeof(value));
             }
+        public:
+            virtual unsigned getLength() const
+            {
+                return sizeof(value);
+            }
     };
 
     class PacketText : public Packet {
@@ -767,6 +776,11 @@ namespace hungry_sniffer {
                     this->info.erase(newL);
                     this->info.append(" ...");
                 }
+            }
+
+            virtual unsigned getLength() const
+            {
+                return data.size();
             }
     };
 
@@ -823,6 +837,11 @@ namespace hungry_sniffer {
             virtual std::string getConversationFilterText() const
             {
                 return this->protocol->getName();
+            }
+
+            virtual unsigned getLength() const
+            {
+                return 0;
             }
     };
 

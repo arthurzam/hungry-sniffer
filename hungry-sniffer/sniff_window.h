@@ -14,6 +14,7 @@ namespace Ui {
 
 class PacketStats;
 class QSortFilterProxyModel;
+class QTreeWidgetItem;
 
 class SniffWindow : public QMainWindow
 {
@@ -44,6 +45,7 @@ class SniffWindow : public QMainWindow
         void on_action_remove_shown_triggered();
         void on_table_packets_customContextMenuRequested(const QPoint &pos);
         void on_tree_packet_customContextMenuRequested(const QPoint &pos);
+        void on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
         void on_actionDisableOptions_triggered();
 #ifdef PYTHON_CMD
         void on_tb_command_returnPressed();

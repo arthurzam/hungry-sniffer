@@ -60,6 +60,11 @@ void TCPPacket::updateNameAssociation()
 #undef PUSH_FLAG_TEXT
 }
 
+unsigned TCPPacket::getLength() const
+{
+    return (this->value.th_off * 4);
+}
+
 bool TCPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>* res)
 {
     const TCPPacket* tcp = static_cast<const TCPPacket*>(packet);

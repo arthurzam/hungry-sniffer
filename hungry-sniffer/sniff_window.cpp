@@ -478,3 +478,35 @@ void SniffWindow::dragEnterEvent(QDragEnterEvent* event)
     if (event->mimeData()->hasUrls())
         event->acceptProposedAction();
 }
+
+void SniffWindow::on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+{
+    if(!current)
+        return;
+    QTreeWidgetItem* item = current->parent();
+    if(!item)
+        item = current;
+
+    if(previous)
+    {
+        QTreeWidgetItem* prev = previous->parent();
+        if(!prev)
+            prev = previous;
+        if(prev == item)
+            return;
+    }
+
+    int row = ui->tree_packet->indexOfTopLevelItem(item);
+    unsigned start = 0, end;
+    const hungry_sniffer::Packet* layer = this->selected->decodedPacket;
+    if(layer->isGoodPacket())
+    {
+        for(int i = 0; i < row; i++)
+        {
+            start += layer->getLength();
+            layer = layer->getNext();
+        }
+        end = start + layer->getLength();
+        ui->hexEdit->setSelection(start, end);
+    }
+}

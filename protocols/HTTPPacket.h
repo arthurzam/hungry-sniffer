@@ -1,10 +1,3 @@
-/*
- * HTTPPacket.h
- *
- *  Created on: Dec 21, 2014
- *      Author: arthur
- */
-
 #ifndef HTTPPACKET_H_
 #define HTTPPACKET_H_
 

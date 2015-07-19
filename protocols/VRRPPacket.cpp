@@ -28,3 +28,8 @@ VRRPPacket::VRRPPacket(const void* data, size_t len, const Protocol* protocol, c
         ip += 4;
     }
 }
+
+unsigned VRRPPacket::getLength() const
+{
+    return sizeof(value) + (this->value.naddr * 4);
+}

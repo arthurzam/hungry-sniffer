@@ -94,6 +94,7 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
         if(!headers.empty())
         {
             QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(packet->getProtocol()->getName())));
+
             if(!packet->isLocalGood())
             {
                 head->setBackgroundColor(0, Qt::yellow);
@@ -111,5 +112,6 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
     ui->tree_packet->resizeColumnToContents(0);
     ui->tree_packet->collapseAll();
 
+    ui->hexEdit->setSelection(0, 0);
     ui->hexEdit->setData(QByteArray((char*)pack.rawPacket.data, (int)pack.rawPacket.len));
 }
