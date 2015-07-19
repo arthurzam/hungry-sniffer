@@ -23,7 +23,7 @@ static PyObject* getLayer(const hungry_sniffer::Packet* layer)
 
     PyObject* headers = PyDict_New();
     for(auto& i : layer->getHeaders())
-        HS_PYDICT_ADD_STRINGS(headers, i.first, i.second);
+        HS_PYDICT_ADD_STRINGS(headers, i.key, i.value);
     HS_PYDICT_ADD_OBJECT(d, "headers", headers);
 
     return d;

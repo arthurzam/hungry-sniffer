@@ -12,9 +12,9 @@ static std::string trimSpaces(const std::string& str)
     return std::string(start, end);
 }
 
-static bool cmpEncoding(const HTTPPacket::headers_category_t::value_type& i)
+static bool cmpEncoding(const HTTPPacket::headers_t::value_type& i)
 {
-    return i.first == "Content-Encoding";
+    return i.key == "Content-Encoding";
 }
 
 HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
@@ -76,7 +76,7 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
         if(encoding != this->headers.cend())
         {
             std::hash<std::string> hasher;
-            this->setNext(hasher(trimSpaces(encoding->second)), dataStarting, nextDataLen);
+            this->setNext(hasher(trimSpaces(encoding->value)), dataStarting, nextDataLen);
         }
         if(this->next == nullptr)
         {

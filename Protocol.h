@@ -448,15 +448,38 @@ namespace hungry_sniffer {
      */
     class Packet {
         public:
-            typedef std::vector<std::pair<std::string, std::string>> headers_category_t;
-            typedef std::vector<std::pair<std::string, headers_category_t>>  headers_t;
+            struct header_t{
+                std::string key;
+                std::string value;
+                long pos;
+                long len;
+                std::vector<header_t> subHeaders;
+
+                header_t() = delete;
+
+                header_t(const char* key, const std::string& value, long pos = 0, long len = 0) :
+                    key(key),
+                    value(value),
+                    pos(pos),
+                    len(len)
+                {}
+
+                header_t(const std::string& key, const std::string& value, long pos = 0, long len = 0) :
+                    key(key),
+                    value(value),
+                    pos(pos),
+                    len(len)
+                {}
+            };
+
+            typedef std::vector<header_t> headers_t;
         protected:
             const Protocol* protocol; /*!<The protocol by which this Packet was created*/
             Packet* next; /*!<The next packet*/
             const Packet* prev; /*!<The previous packet*/
             bool isGood = true; /*!<Is the packet not corrupted*/
 
-            headers_category_t headers; /*!<The headers to be add to the tree*/
+            headers_t headers; /*!<The headers to be add to the tree*/
 
             std::string source; /*!<The displayed source*/
             std::string destination; /*!<The displayed destination*/
@@ -670,7 +693,7 @@ namespace hungry_sniffer {
                 return this->destination;
             }
 
-            const headers_category_t& getHeaders() const
+            const headers_t& getHeaders() const
             {
                 return this->headers;
             }
@@ -768,7 +791,7 @@ namespace hungry_sniffer {
                 this->info.append(start, end);
 
                 this->headers.clear();
-                this->headers.push_back({"Data", this->info});
+                this->headers.push_back(header_t("Data", this->info, 0, data.size()));
 
                 auto newL = std::find(info.begin(), info.end(), '\n');
                 if(newL != info.end())

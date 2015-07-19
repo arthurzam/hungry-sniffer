@@ -17,7 +17,7 @@ class AdditionalHeadersPacket : public hungry_sniffer::Packet {
         {
             for(auto i = this->headers.begin(); i != this->headers.end(); ++i)
             {
-                if(i->first == key)
+                if(i->key == key)
                 {
                     this->headers.erase(i);
                     return;

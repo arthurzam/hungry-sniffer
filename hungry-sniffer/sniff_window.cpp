@@ -328,14 +328,20 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint &pos)
 
 hungry_sniffer::Protocol SniffWindow::infoProtocol(nullptr, false, "Own Headers", false, false);
 
+static QTreeWidgetItem* getRootOfItem(QTreeWidgetItem* item)
+{
+    QTreeWidgetItem* prev = nullptr;
+    for(; item; item = item->parent())
+        prev = item;
+    return prev;
+}
+
 void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
 {
     QTreeWidgetItem* item = ui->tree_packet->itemAt(pos);
     if(!item)
         return;
-    QTreeWidgetItem* firstLevel = item->parent();
-    if(!firstLevel)
-        firstLevel = item;
+    QTreeWidgetItem* firstLevel = getRootOfItem(item);
     QMenu menu;
     QAction action_copy(QStringLiteral("&Copy Value"), nullptr);
     if(firstLevel != item)
@@ -479,24 +485,30 @@ void SniffWindow::dragEnterEvent(QDragEnterEvent* event)
         event->acceptProposedAction();
 }
 
+static const hungry_sniffer::Packet::header_t* itemToHeader(QTreeWidget* tree, QTreeWidgetItem* item, const hungry_sniffer::Packet* packet)
+{
+    int row;
+    QTreeWidgetItem* parent = item->parent();
+    if(parent)
+    {
+        row = parent->indexOfChild(item);
+        const hungry_sniffer::Packet::header_t* res = itemToHeader(tree, parent, packet);
+        if(res)
+            return &res->subHeaders[row];
+        return &packet->getHeaders()[row];
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
 void SniffWindow::on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
-    if(!current)
+    if(!current || previous == current)
         return;
-    QTreeWidgetItem* item = current->parent();
-    if(!item)
-        item = current;
 
-    if(previous)
-    {
-        QTreeWidgetItem* prev = previous->parent();
-        if(!prev)
-            prev = previous;
-        if(prev == item)
-            return;
-    }
-
-    int row = ui->tree_packet->indexOfTopLevelItem(item);
+    int row = ui->tree_packet->indexOfTopLevelItem(getRootOfItem(current));
     unsigned start = 0, end;
     const hungry_sniffer::Packet* layer = this->selected->decodedPacket;
     if(layer->isGoodPacket())
@@ -506,7 +518,16 @@ void SniffWindow::on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QT
             start += layer->getLength();
             layer = layer->getNext();
         }
-        end = start + layer->getLength();
+        const hungry_sniffer::Packet::header_t* head = itemToHeader(ui->tree_packet, current, layer);
+        if(head)
+        {
+            start += head->pos;
+            end = start + head->len;
+        }
+        else
+        {
+            end = start + layer->getLength();
+        }
         ui->hexEdit->setSelection(start, end);
     }
 }

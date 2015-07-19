@@ -84,13 +84,27 @@ void SniffWindow::runLivePcap_p(const std::string& name, int maxNumber, QString 
     pcap_close(pd);
 }
 
+static QTreeWidgetItem* getTreeItemFromHeader(const hungry_sniffer::Packet::header_t& header)
+{
+    QTreeWidgetItem* head;
+    if(header.value.length() != 0)
+        head = new QTreeWidgetItem(QStringList({QString::fromStdString(header.key), QString::fromStdString(header.value)}));
+    else
+        head = new QTreeWidgetItem(QStringList(QString::fromStdString(header.key)));
+
+    for(const auto& j : header.subHeaders)
+        head->addChild(getTreeItemFromHeader(j));
+
+    return head;
+}
+
 void SniffWindow::setCurrentPacket(const struct localPacket& pack)
 {
     this->selected = const_cast<struct localPacket*>(&pack);
     ui->tree_packet->clear();
     for(const hungry_sniffer::Packet* packet = pack.decodedPacket; packet; packet = packet->getNext())
     {
-        const hungry_sniffer::Packet::headers_category_t& headers = packet->getHeaders();
+        const hungry_sniffer::Packet::headers_t& headers = packet->getHeaders();
         if(!headers.empty())
         {
             QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QString::fromStdString(packet->getProtocol()->getName())));
@@ -102,7 +116,7 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
             }
             for(const auto& j : headers)
             {
-                head->addChild(new QTreeWidgetItem(QStringList({QString::fromStdString(j.first), QString::fromStdString(j.second)})));
+                head->addChild(getTreeItemFromHeader(j));
             }
 
             ui->tree_packet->addTopLevelItem(head);
