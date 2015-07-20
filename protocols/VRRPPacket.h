@@ -1,10 +1,3 @@
-/*
- * VRRPPacket.h
- *
- *  Created on: Nov 23, 2014
- *      Author: arthur
- */
-
 #ifndef VRRPPACKET_H_
 #define VRRPPACKET_H_
 
@@ -12,7 +5,7 @@
 
 using namespace hungry_sniffer;
 
-struct vrrphdr {
+struct  __attribute__((packed)) vrrphdr {
 #if BYTE_ORDER == BIG_ENDIAN
     unsigned char version :4; // type
     unsigned char type    :4; // version

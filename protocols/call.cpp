@@ -33,9 +33,9 @@ extern "C" void add(HungrySniffer_Core& core)
     ipv6.addOption("Drop From Source", IPv6Packet::drop_srcIP, true);
     ipv6.addOption("Drop From Destination", IPv6Packet::drop_dstIP, true);
 
-    Protocol& tcp = ipv4.addProtocol(6, init<TCPPacket>, true, "TCP", true, true);
-    Protocol& udp = ipv4.addProtocol(17, init<UDPPacket>, true, "UDP", true, true);
-    ipv4.addProtocol(1, init<ICMPPacket>, true, "ICMP", false, false);
+    Protocol& tcp = ipv4.addProtocol(IPPROTO_TCP, init<TCPPacket>, true, "TCP", true, true);
+    Protocol& udp = ipv4.addProtocol(IPPROTO_UDP, init<UDPPacket>, true, "UDP", true, true);
+    ipv4.addProtocol(IPPROTO_ICMP, init<ICMPPacket>, true, "ICMP", false, false);
     ipv4.addProtocol(112, init<VRRPPacket>, true, "VRRP", false, false);
 
     tcp.addFilter("^dst *== *([^ ]+)$", TCPPacket::filter_dstPort);

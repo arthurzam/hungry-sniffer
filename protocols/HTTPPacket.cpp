@@ -33,7 +33,7 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
         return;
     }
     if(temp - start <= MAX_FIELD_LEN)
-        this->headers.push_back({(isRequest ? "Method" : "Version"), std::string(start, temp)});
+        this->headers.push_back({(isRequest ? "Method" : "Version"), std::string(start, temp), start - this->data.begin(), temp - start});
     else
         return;
     start = temp + 1;
@@ -43,7 +43,7 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
         return;
     }
     if(temp - start <= MAX_FIELD_LEN)
-        this->headers.push_back({(isRequest ? "URI" : "Status Code"), std::string(start, temp)});
+        this->headers.push_back({(isRequest ? "URI" : "Status Code"), std::string(start, temp), start - this->data.begin(), temp - start});
     else
         return;
     start = temp + 1;
@@ -54,7 +54,7 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
     }
     int ____len = (temp - start);
     if((____len <= MAX_FIELD_LEN) & (____len > 0))
-        this->headers.push_back({(isRequest ? "Version" : "Phrase"), std::string(start, temp - 1)});
+        this->headers.push_back({(isRequest ? "Version" : "Phrase"), std::string(start, temp - 1), start - this->data.begin(), temp - 1 - start});
     else
         return;
     start = temp + 1;
@@ -62,7 +62,7 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
     // parse headers block
     static const char blockDivide[] = "\r\n\r\n";
     auto startOfData = std::search(start, end, blockDivide, blockDivide + 4);
-    this->extractTextHeaders(start, startOfData);
+    this->extractTextHeaders(start, startOfData, start - this->data.begin());
 
     startOfData += 4;
 

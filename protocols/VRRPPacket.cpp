@@ -1,10 +1,3 @@
-/*
- * VRRPPacket.cpp
- *
- *  Created on: Nov 23, 2014
- *      Author: arthur
- */
-
 #include "VRRPPacket.h"
 #include <arpa/inet.h>
 

@@ -32,9 +32,9 @@ void EthernetPacket::updateNameAssociation()
     this->destination = this->protocol->getNameAssociated(this->_realDestination);
 
     this->headers.clear();
-    this->headers.push_back({"Source MAC", this->source});
-    this->headers.push_back({"Destination MAC", this->destination});
-    this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value.ether_type))});
+    this->headers.push_back({"Source MAC", this->source, 6, 6});
+    this->headers.push_back({"Destination MAC", this->destination, 0, 6});
+    this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value.ether_type)), 12, 2});
 }
 
 bool EthernetPacket::filter_dstMac(const Packet* packet, const std::vector<std::string>* res)

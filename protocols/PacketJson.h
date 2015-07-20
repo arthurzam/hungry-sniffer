@@ -1,10 +1,3 @@
-/*
- * PacketJson.h
- *
- *  Created on: Dec 1, 2014
- *      Author: arthur
- */
-
 #ifndef PACKETJSON_H_
 #define PACKETJSON_H_
 

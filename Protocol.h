@@ -818,8 +818,9 @@ namespace hungry_sniffer {
              * @param start the start index
              * @param end the end index
              */
-            void extractTextHeaders(std::vector<char>::iterator start, std::vector<char>::iterator end)
+            void extractTextHeaders(std::vector<char>::iterator start, std::vector<char>::iterator end, long startPos)
             {
+                std::vector<char>::iterator origStart = start;
                 auto colon = start,
                      endLine = start,
                      part = start;
@@ -844,7 +845,7 @@ namespace hungry_sniffer {
                             break;
                     }
                     this->headers.push_back({std::string(start, colon),
-                        std::string(part, endLine)});
+                        std::string(part, endLine), startPos + (start - origStart), endLine - start});
                     start = endLine + 1;
                 }
             }

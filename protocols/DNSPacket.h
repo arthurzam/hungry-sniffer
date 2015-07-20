@@ -5,7 +5,7 @@
 
 using namespace hungry_sniffer;
 
-struct dnshdr {
+struct __attribute__((packed)) dnshdr {
         unsigned short id; // identification number
 
 #if BYTE_ORDER == BIG_ENDIAN
@@ -39,13 +39,6 @@ struct dnshdr {
 
 class DNSPacket : public PacketStructed<struct dnshdr> {
     private:
-        struct query {
-                std::string host;
-                unsigned short t1;
-                unsigned short t2;
-        };
-
-        std::vector<struct query> queries;
         std::string id;
         unsigned size;
     public:

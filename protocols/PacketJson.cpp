@@ -1,12 +1,6 @@
-/*
- * PacketJson.cpp
- *
- *  Created on: Dec 1, 2014
- *      Author: arthur
- */
-
 #include "PacketJson.h"
 #include <json/json.h>
+
 PacketJson::PacketJson(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
     : PacketTextHeaders(data, len, protocol, prev)
 {

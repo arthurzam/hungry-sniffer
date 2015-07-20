@@ -10,7 +10,7 @@ class HTTPPacket : public PacketTextHeaders {
         bool isRequest;
     public:
         HTTPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
-        ~HTTPPacket() {};
+        ~HTTPPacket() {}
 };
 
 #endif /* HTTPPACKET_H_ */

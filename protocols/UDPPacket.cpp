@@ -9,10 +9,14 @@ UDPPacket::UDPPacket(const void* data, size_t len, const Protocol* protocol, con
     this->_realSource = std::to_string(ntohs(this->value.uh_sport));
     this->_realDestination = std::to_string(ntohs(this->value.uh_dport));
 
+    this->headers.push_back({"Source Port", this->_realSource, 0, 2});
+    this->headers.push_back({"Destination Port", this->_realDestination, 2, 2});
+    this->headers.push_back({"Length", std::to_string(ntohs(this->value.uh_ulen)), 4, 2});
     this->updateNameAssociation();
 
     const void* __data = (const char*)data + sizeof(value);
     size_t __data_len = len - sizeof(value);
+
     if(!Packet::setNext(ntohs(this->value.uh_sport), __data, __data_len))
         Packet::setNext(ntohs(this->value.uh_dport), __data, __data_len);
     if(this->next == nullptr)
@@ -40,11 +44,6 @@ void UDPPacket::updateNameAssociation()
     this->destination = this->prev->localDestination();
     this->destination.append(":");
     this->destination.append(this->protocol->getNameAssociated(this->_realDestination));
-
-    this->headers.clear();
-    this->headers.push_back({"Source Port", this->_realSource});
-    this->headers.push_back({"Destination Port", this->_realDestination});
-    this->headers.push_back({"Length", std::to_string(this->value.uh_ulen)});
 }
 
 bool UDPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>* res)

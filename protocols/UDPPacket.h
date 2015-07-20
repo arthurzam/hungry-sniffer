@@ -1,10 +1,3 @@
-/*
- * UDPPacket.h
- *
- *  Created on: Sep 2, 2014
- *      Author: arthur
- */
-
 #ifndef UDPPACKET_H_
 #define UDPPACKET_H_
 

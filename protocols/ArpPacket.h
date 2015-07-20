@@ -10,15 +10,15 @@ using namespace hungry_sniffer;
 
 class ArpPacket : public PacketStructed<struct arphdr> {
     private:
-        union {
-            struct {
+        union __attribute__((packed)) {
+            struct __attribute__((packed)) {
                 uint8_t arp_sha[ETH_ALEN]; /* Sender hardware address.  */
                 uint8_t arp_sip[4];        /* Sender IP address.  */
                 uint8_t arp_tha[ETH_ALEN]; /* Target hardware address.  */
                 uint8_t arp_tip[4];        /* Target IP address.  */
             } eth_ip;
 
-            struct {
+            struct __attribute__((packed)) {
                 uint8_t arp_sha[ETH_ALEN]; /* Sender hardware address.  */
                 struct in6_addr arp_sip;   /* Sender IP address.  */
                 uint8_t arp_tha[ETH_ALEN]; /* Target hardware address.  */
