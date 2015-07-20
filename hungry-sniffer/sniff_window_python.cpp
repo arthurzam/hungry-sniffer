@@ -2,7 +2,10 @@
 #include "Python.h"
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
+#include "history_line_edit.h"
 #include "EthernetPacket.h"
+
+#include <QPlainTextEdit>
 
 #define HS_PYDICT_ADD_OBJECT(dict, k, v) PyDict_SetItem(dict, PyUnicode_FromString(k), v)
 #define HS_PYDICT_ADD_NUM(dict, k, num) HS_PYDICT_ADD_OBJECT(dict, k, PyLong_FromLong(num))
@@ -147,7 +150,7 @@ PyObject* hs_getFilter(PyObject*)
 
 PyObject* ui_reset(PyObject*)
 {
-    SniffWindow::window->ui->lb_cmd->clear();
+    SniffWindow::window->lb_cmd->clear();
     return Py_None;
 }
 
@@ -271,8 +274,8 @@ void SniffWindow::addPyCommand(const char* command)
     output.append("<font color=\"green\">");
     output.append(QString(command).replace("<", "&lt;").replace(">", "&gt;"));
     output.append("</font>");
-    ui->lb_cmd->appendHtml(output);
-    ui->tb_command->clear();
+    lb_cmd->appendHtml(output);
+    tb_command->clear();
 
     if(command[0] == '\0' && !this->py_checkCommand.block)
         return;
@@ -299,7 +302,7 @@ void SniffWindow::execPyCommand()
     QString res(PyUnicode_AsUTF8(output));
     if(res.length() > 0)
     {
-        ui->lb_cmd->appendHtml(res.arg((error ? QStringLiteral("red") : QStringLiteral("blue"))));
+        lb_cmd->appendHtml(res.arg((error ? QStringLiteral("red") : QStringLiteral("blue"))));
         PyRun_SimpleString("catchOutErr.value = ''");
     }
 
@@ -369,9 +372,9 @@ bool SniffWindow::checkPyCommand(const char* command)
     return isFinished;
 }
 
-void SniffWindow::on_tb_command_returnPressed()
+void SniffWindow::tb_command_returnPressed()
 {
-    this->addPyCommand(ui->tb_command->text().toUtf8().constData());
+    this->addPyCommand(tb_command->text().toUtf8().constData());
 }
 
 #endif

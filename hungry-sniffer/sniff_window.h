@@ -12,9 +12,12 @@ namespace Ui {
     class SniffWindow;
 }
 
+class History_Line_Edit;
 class PacketStats;
 class QSortFilterProxyModel;
+class QPlainTextEdit;
 class QTreeWidgetItem;
+
 
 class SniffWindow : public QMainWindow
 {
@@ -48,9 +51,7 @@ class SniffWindow : public QMainWindow
         void on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
         void on_actionDisableOptions_triggered();
 #ifdef PYTHON_CMD
-        void on_tb_command_returnPressed();
-#else
-        void on_tb_command_returnPressed() {}
+        void tb_command_returnPressed();
 #endif
         void on_action_Table_toggled(bool arg1);
         void on_action_Tree_toggled(bool arg1);
@@ -107,6 +108,9 @@ class SniffWindow : public QMainWindow
         void setStatsFunctions(const hungry_sniffer::Protocol& protocol);
 
 #ifdef PYTHON_CMD
+    public:
+        QPlainTextEdit* lb_cmd;
+        History_Line_Edit* tb_command;
     private:
         void initPython();
         void stopPython();

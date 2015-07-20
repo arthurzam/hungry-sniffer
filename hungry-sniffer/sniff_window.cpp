@@ -5,10 +5,12 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QPlainTextEdit>
 #include <QSortFilterProxyModel>
 #include <unistd.h>
 
 #include "devicechoose.h"
+#include "history_line_edit.h"
 #include "packetstats.h"
 #include "outputviewer.h"
 #include "additionalheaderspacket.h"
@@ -46,10 +48,28 @@ SniffWindow::SniffWindow(QWidget *parent) :
     this->setStatsFunctions(core->base);
 #ifdef PYTHON_CMD
     initPython();
+
+    QWidget* verticalLayoutWidget = new QWidget(ui->splitter);
+    QVBoxLayout* panel_python = new QVBoxLayout(verticalLayoutWidget);
+    panel_python->setContentsMargins(0, 0, 0, 0);
+    lb_cmd = new QPlainTextEdit(verticalLayoutWidget);
+    panel_python->addWidget(lb_cmd);
+    QHBoxLayout* horizontalLayout = new QHBoxLayout();
+    horizontalLayout->setContentsMargins(0, 0, 0, 0);
+    QLabel* img_python = new QLabel(verticalLayoutWidget);
+    QSizePolicy sizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    sizePolicy.setHeightForWidth(img_python->sizePolicy().hasHeightForWidth());
+    img_python->setSizePolicy(sizePolicy);
+    img_python->setMaximumSize(QSize(32, 32));
+    img_python->setPixmap(QPixmap(QStringLiteral(":/icons/python.png")));
+    horizontalLayout->addWidget(img_python);
+    tb_command = new History_Line_Edit(verticalLayoutWidget);
+    connect(tb_command, SIGNAL(returnPressed()), this, SLOT(tb_command_returnPressed()));
+    horizontalLayout->addWidget(tb_command);
+    panel_python->addLayout(horizontalLayout);
+    ui->splitter->addWidget(verticalLayoutWidget);
 #else
     ui->action_Python->setVisible(false);
-    ui->action_Python->setChecked(false);
-    on_splitter_splitterMoved(0, 0);
 #endif
     setAcceptDrops(true);
 }
@@ -443,7 +463,9 @@ void SniffWindow::on_splitter_splitterMoved(int, int)
     sizes[0] &= -(ui->action_Table->isChecked());
     sizes[1] &= -(ui->action_Tree->isChecked());
     sizes[2] &= -(ui->action_Hex->isChecked());
+#ifdef PYTHON_CMD
     sizes[3] &= -(ui->action_Python->isChecked());
+#endif
     ui->splitter->setSizes(sizes);
 }
 
