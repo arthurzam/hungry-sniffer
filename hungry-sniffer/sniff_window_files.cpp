@@ -14,10 +14,19 @@ using namespace DataStructure;
 
 inline timeval calcDiffTimeval(const timeval& curr, const timeval& start, const timeval& base)
 {
-    timeval res{0, 0};
+    timeval res;
     res.tv_usec = base.tv_usec + curr.tv_usec - start.tv_usec;
-    res.tv_sec = (base.tv_sec + curr.tv_sec) + ((res.tv_usec / 1000000) - start.tv_sec);
-    res.tv_usec = res.tv_usec % 1000000;
+    res.tv_sec = base.tv_sec + curr.tv_sec - start.tv_sec;
+    if(res.tv_usec < 0)
+    {
+        res.tv_usec += 1000000;
+        --res.tv_sec;
+    }
+    else if(res.tv_usec > 1000000)
+    {
+        res.tv_usec -= 1000000;
+        ++res.tv_sec;
+    }
     return res;
 }
 
