@@ -281,7 +281,7 @@ namespace hungry_sniffer {
             int getRawPacketsCount() const
             {
                 int count = this->countPackets;
-                for(auto& i : *subProtocols)
+                for(const auto& i : *subProtocols)
                 {
                     count -= i.second.getPacketsCount();
                 }
@@ -458,18 +458,10 @@ namespace hungry_sniffer {
                 header_t() = delete;
 
                 header_t(const char* key, const std::string& value, long pos = 0, long len = 0) :
-                    key(key),
-                    value(value),
-                    pos(pos),
-                    len(len)
-                {}
+                    key(key), value(value), pos(pos), len(len) {}
 
                 header_t(const std::string& key, const std::string& value, long pos = 0, long len = 0) :
-                    key(key),
-                    value(value),
-                    pos(pos),
-                    len(len)
-                {}
+                    key(key), value(value), pos(pos), len(len) {}
             };
 
             typedef std::vector<header_t> headers_t;
@@ -729,7 +721,7 @@ namespace hungry_sniffer {
 
             bool isGoodPacket() const
             {
-                return this->isGood & (!this->next || this->next->isGoodPacket());
+                return this->isGood && (!this->next || this->next->isGoodPacket());
             }
 
             bool isLocalGood() const
@@ -851,7 +843,7 @@ namespace hungry_sniffer {
             }
     };
 
-    class PacketEmpty : public Packet {
+    class PacketEmpty final : public Packet {
         public:
             PacketEmpty(const void*, size_t, const Protocol* protocol, const Packet* prev = nullptr)
                 : Packet(protocol, prev) { }

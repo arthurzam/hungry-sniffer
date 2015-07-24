@@ -1,13 +1,12 @@
-#include "sniff_window.h"
-
 #include <QApplication>
-#include <QLibrary>
 #include <QDir>
+#include <QLibrary>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
 
 #include "EthernetPacket.h"
+#include "sniff_window.h"
 
 #ifndef PLUGINS_DIR
 #define PLUGINS_DIR "/usr/share/hungry-sniffer/plugins/"
@@ -24,8 +23,7 @@ inline void loadLibs()
     allFiles.sort(Qt::CaseInsensitive);
     for(const auto& iter : allFiles)
     {
-        QLibrary lib(dir.absoluteFilePath(iter));
-        function_t foo = (function_t)lib.resolve("add");
+        function_t foo = (function_t)QLibrary::resolve(dir.absoluteFilePath(iter), "add");
         if(foo)
         {
             try {

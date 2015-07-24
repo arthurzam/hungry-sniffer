@@ -6,7 +6,7 @@
 
 namespace hungry_sniffer {
 
-    class EthernetPacket : public PacketStructed<struct ether_header> {
+    class EthernetPacket final : public PacketStructed<struct ether_header> {
         public:
             EthernetPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev = nullptr);
 

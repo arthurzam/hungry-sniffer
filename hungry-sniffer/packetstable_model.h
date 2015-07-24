@@ -50,7 +50,6 @@ namespace DataStructure {
 
 class PacketsTableModel : public QAbstractTableModel
 {
-        Q_OBJECT
     public:
         std::vector<DataStructure::localPacket> local;
         std::vector<int> shownPerRow;

@@ -22,7 +22,6 @@ SOURCES += main.cpp\
     sniff_window_python.cpp \
     EthernetPacket.cpp \
     packetstats.cpp \
-    outputviewer.cpp \
     optionsdisabler.cpp \
     history_line_edit.cpp \
     packetstable_model.cpp \
@@ -38,7 +37,6 @@ HEADERS += \
     EthernetPacket.h \
     packetstats.h \
     filter_tree.h \
-    outputviewer.h \
     optionsdisabler.h \
     history_line_edit.h \
     additionalheaderspacket.h \

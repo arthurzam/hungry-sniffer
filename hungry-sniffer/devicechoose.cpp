@@ -157,9 +157,10 @@ QVariant DeviceModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
+static const QString headers[] = {QStringLiteral("Name"), QStringLiteral("Address"), QStringLiteral("Description"),};
+
 QVariant DeviceModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    static const QString headers[] = {QStringLiteral("Name"), QStringLiteral("Address"), QStringLiteral("Description"),};
     if ((role == Qt::DisplayRole) & (orientation == Qt::Horizontal))
     {
         return headers[section];

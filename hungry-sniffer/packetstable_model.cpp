@@ -71,10 +71,11 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+static const QString headers[] = {QStringLiteral("No."), QStringLiteral("Arrival Time"), QStringLiteral("Protocol"), QStringLiteral("Length"),
+                                  QStringLiteral("Source"), QStringLiteral("Destination"), QStringLiteral("Info")};
+
 QVariant PacketsTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    static const QString headers[] = {QStringLiteral("No."), QStringLiteral("Arrival Time"), QStringLiteral("Protocol"), QStringLiteral("Length"),
-                                      QStringLiteral("Source"), QStringLiteral("Destination"), QStringLiteral("Info")};
     static_assert(sizeof(headers) == COLUMNS_COUNT * sizeof(QString), "bad COLUMNS_COUNT");
     if ((role == Qt::DisplayRole) & (orientation == Qt::Horizontal)) {
         return headers[section];
