@@ -3,14 +3,14 @@
 ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
     : PacketStructed(data, len, protocol, prev)
 {
-    uint16_t arp_protocol = ntohs(this->value.ar_pro);
-    uint16_t arp_format = ntohs(this->value.ar_hrd);
+    uint16_t arp_protocol = ntohs(this->value->ar_pro);
+    uint16_t arp_format = ntohs(this->value->ar_hrd);
     this->headers.push_back({"Hardware Type", std::to_string(arp_format), 0, 2});
     this->headers.push_back({"Protocol Type", std::to_string(arp_protocol), 2, 2});
-    this->headers.push_back({"Hardware Size", std::to_string(this->value.ar_hln), 4, 1});
-    this->headers.push_back({"Protocol Size", std::to_string(this->value.ar_pln), 5, 1});
+    this->headers.push_back({"Hardware Size", std::to_string(this->value->ar_hln), 4, 1});
+    this->headers.push_back({"Protocol Size", std::to_string(this->value->ar_pln), 5, 1});
 
-    if(ntohs(this->value.ar_op) == ARPOP_REQUEST)
+    if(ntohs(this->value->ar_op) == ARPOP_REQUEST)
     {
         this->headers.push_back({"Type", "Request", 6, 2});
         this->info = "ARP Request";
@@ -24,9 +24,8 @@ ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, con
     if(arp_format == 1 && (arp_protocol == 0x0800 || arp_protocol == 0x86dd))
     {
         size = (arp_protocol == 0x0800 ? sizeof(this->data.eth_ip) : sizeof(this->data.eth_ipv6));
-        memcpy(&this->data, (const char*)data + sizeof(value),
-                (size));
-        size += sizeof(value);
+        memcpy(&this->data, (const char*)data + sizeof(*value), size);
+        size += sizeof(*value);
 
         char str[INET6_ADDRSTRLEN];
         if(arp_protocol == 0x0800)

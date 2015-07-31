@@ -9,12 +9,12 @@ EthernetPacket::EthernetPacket(const void* data, size_t len,
         const Protocol* protocol, const Packet* prev) :
         PacketStructed(data, len, protocol, prev)
 {
-    this->_realSource = ether_ntoa((struct ether_addr*) this->value.ether_shost);
-    this->_realDestination = ether_ntoa((struct ether_addr*) this->value.ether_dhost);
+    this->_realSource = ether_ntoa((struct ether_addr*) this->value->ether_shost);
+    this->_realDestination = ether_ntoa((struct ether_addr*) this->value->ether_dhost);
 
     this->updateNameAssociation();
 
-    this->setNext(ntohs(this->value.ether_type), (const char*) data + sizeof(value), len - sizeof(value));
+    this->setNext(ntohs(this->value->ether_type), (const char*) data + sizeof(*value), len - sizeof(*value));
 }
 
 std::string EthernetPacket::getConversationFilterText() const
@@ -34,7 +34,7 @@ void EthernetPacket::updateNameAssociation()
     this->headers.clear();
     this->headers.push_back({"Source MAC", this->source, 6, 6});
     this->headers.push_back({"Destination MAC", this->destination, 0, 6});
-    this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value.ether_type)), 12, 2});
+    this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value->ether_type)), 12, 2});
 }
 
 bool EthernetPacket::filter_dstMac(const Packet* packet, const std::vector<std::string>* res)

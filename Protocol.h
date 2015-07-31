@@ -750,22 +750,22 @@ namespace hungry_sniffer {
     template<typename T>
     class PacketStructed : public Packet {
         protected:
-            T value; /*!<the struct*/
+            const T* value; /*!<the struct*/
 
             PacketStructed(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
                     Packet(protocol, prev)
             {
-                if (len < sizeof(value))
+                if (len < sizeof(*value))
                 {
                     this->isGood = false;
                     return;
                 }
-                memcpy(&value, data, sizeof(value));
+                value = (const T*)data;
             }
         public:
             virtual unsigned getLength() const
             {
-                return sizeof(value);
+                return sizeof(*value);
             }
     };
 

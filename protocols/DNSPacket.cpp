@@ -16,24 +16,24 @@ static std::string getTypeStr(uint16_t type)
 DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
         const Packet* prev) :
         PacketStructed(_data, len, protocol, prev),
-        id(std::to_string(ntohs(this->value.id)))
+        id(std::to_string(ntohs(this->value->id)))
 {
     size = len;
 
     this->headers.push_back({"Transaction ID", id, 0, 2});
 
-    this->headers.push_back({"Authoritive answer", (this->value.aa ? "Yes" : "No"), 2, 2});
-    this->headers.push_back({"Truncated message", (this->value.tc ? "Yes" : "No"), 2, 2});
-    this->headers.push_back({"Recursion desired", (this->value.rd ? "Yes" : "No"), 2, 2});
+    this->headers.push_back({"Authoritive answer", (this->value->aa ? "Yes" : "No"), 2, 2});
+    this->headers.push_back({"Truncated message", (this->value->tc ? "Yes" : "No"), 2, 2});
+    this->headers.push_back({"Recursion desired", (this->value->rd ? "Yes" : "No"), 2, 2});
 
-    uint16_t questionsCount = ntohs(this->value.q_count);
-    uint16_t answersCount = ntohs(this->value.ans_count);
+    uint16_t questionsCount = ntohs(this->value->q_count);
+    uint16_t answersCount = ntohs(this->value->ans_count);
     this->headers.push_back({"Questions Count", std::to_string(questionsCount), 4, 2});
     this->headers.push_back({"Answers Count", std::to_string(answersCount), 6, 2});
-    this->headers.push_back({"Authorities Count", std::to_string(ntohs(this->value.auth_count)), 8, 2});
-    this->headers.push_back({"Resources Count", std::to_string(ntohs(this->value.add_count)), 10, 2});
+    this->headers.push_back({"Authorities Count", std::to_string(ntohs(this->value->auth_count)), 8, 2});
+    this->headers.push_back({"Resources Count", std::to_string(ntohs(this->value->add_count)), 10, 2});
 
-    const char* data = (const char*)_data + sizeof(value);
+    const char* data = (const char*)_data + sizeof(*value);
     for(int i = 0; i < questionsCount; ++i)
     {
         header_t q("Query " + std::to_string(i + 1), "");

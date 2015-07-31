@@ -6,12 +6,12 @@ using namespace std;
 
 IPPacket::IPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev) : PacketStructed(data, len, protocol, prev)
 {
-    this->_realSource = inet_ntoa(this->value.ip_src);
-    this->_realDestination = inet_ntoa(this->value.ip_dst);
+    this->_realSource = inet_ntoa(this->value->ip_src);
+    this->_realDestination = inet_ntoa(this->value->ip_dst);
 
     this->updateNameAssociation();
 
-    this->setNext(this->value.ip_p, (const char*)data + sizeof(value), len - sizeof(value));
+    this->setNext(this->value->ip_p, (const char*)data + sizeof(*value), len - sizeof(*value));
 }
 
 std::string IPPacket::getConversationFilterText() const
@@ -31,7 +31,7 @@ void IPPacket::updateNameAssociation()
     this->headers.clear();
     this->headers.push_back({"Source IP", this->source});
     this->headers.push_back({"Destination IP", this->destination});
-    this->headers.push_back({"TTL", std::to_string(this->value.ip_ttl)});
+    this->headers.push_back({"TTL", std::to_string(this->value->ip_ttl)});
 
     if(this->next)
         this->next->updateNameAssociation();

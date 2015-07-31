@@ -6,14 +6,14 @@ IPv6Packet::IPv6Packet(const void* data, size_t len, const Protocol* protocol,
         const Packet* prev) : PacketStructed(data, len, protocol, prev)
 {
     char str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &this->value.ip6_src, str, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, &this->value->ip6_src, str, INET6_ADDRSTRLEN);
     this->_realSource = str;
-    inet_ntop(AF_INET6, &this->value.ip6_dst, str, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, &this->value->ip6_dst, str, INET6_ADDRSTRLEN);
     this->_realDestination = str;
 
     this->updateNameAssociation();
 
-    this->setNext(this->value.ip6_ctlun.ip6_un1.ip6_un1_nxt, (const char*)data + sizeof(value), len - sizeof(value));
+    this->setNext(this->value->ip6_ctlun.ip6_un1.ip6_un1_nxt, (const char*)data + sizeof(*value), len - sizeof(*value));
 }
 
 std::string IPv6Packet::getConversationFilterText() const
@@ -33,9 +33,9 @@ void IPv6Packet::updateNameAssociation()
     this->headers.clear();
     this->headers.push_back({"Source ipv6", this->source});
     this->headers.push_back({"Destination ipv6", this->destination});
-    this->headers.push_back({"Payload Length", std::to_string(ntohs(this->value.ip6_ctlun.ip6_un1.ip6_un1_plen))});
-    this->headers.push_back({"Next Protocol (number)", std::to_string(this->value.ip6_ctlun.ip6_un1.ip6_un1_nxt)});
-    this->headers.push_back({"Hop Limit", std::to_string(this->value.ip6_ctlun.ip6_un1.ip6_un1_hlim)});
+    this->headers.push_back({"Payload Length", std::to_string(ntohs(this->value->ip6_ctlun.ip6_un1.ip6_un1_plen))});
+    this->headers.push_back({"Next Protocol (number)", std::to_string(this->value->ip6_ctlun.ip6_un1.ip6_un1_nxt)});
+    this->headers.push_back({"Hop Limit", std::to_string(this->value->ip6_ctlun.ip6_un1.ip6_un1_hlim)});
 
     if(this->next)
         this->next->updateNameAssociation();

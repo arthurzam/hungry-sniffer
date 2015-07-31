@@ -58,7 +58,7 @@ void Preferences::accept()
 
 void Preferences::on_tree_select_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
-    if(current == previous) return;
+    if(!current || current == previous) return;
     QVariant var = current->data(0, Qt::UserRole);
     if(var.isNull()) return;
     QWidget* item = var.value<QWidget*>();

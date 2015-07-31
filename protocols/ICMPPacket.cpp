@@ -7,8 +7,8 @@ using namespace std;
 ICMPPacket::ICMPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
             : PacketStructed(data, len, protocol, prev)
 {
-    int type = (int)this->value.type,
-        code = (int)this->value.code;
+    int type = (int)this->value->type,
+        code = (int)this->value->code;
 
     this->headers.push_back({"Type", std::to_string(type)});
     this->headers.push_back({"Code", std::to_string(code)});
@@ -40,7 +40,7 @@ void ICMPPacket::setByTypes(int type, int code)
                 case 3: this->info.append(" for Type of Service and Host"); break;
             }
             struct in_addr addr;
-            addr.s_addr = this->value.un.gateway;
+            addr.s_addr = this->value->un.gateway;
             this->headers.push_back({"Redirect to IP", inet_ntoa(addr)});
         }
             break;
