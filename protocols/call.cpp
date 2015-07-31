@@ -11,13 +11,13 @@
 #include "HTTPPacket.h"
 #include <netinet/ether.h>
 
-Protocol dataProtocol(init<PacketText>, false, "Data", false, false);
+Protocol dataProtocol(init<PacketText>, "Data", false, false);
 
 extern "C" void add(HungrySniffer_Core& core)
 {
-    Protocol& ipv4 = core.base.addProtocol(ETHERTYPE_IP, init<IPPacket>, true, "IP", true, true);
+    Protocol& ipv4 = core.base.addProtocol(ETHERTYPE_IP, init<IPPacket>, "IP", true, true);
     Protocol& ipv6 = core.base.addProtocol(ETHERTYPE_IPV6, ipv4, init<IPv6Packet>, "IPv6");
-    core.base.addProtocol(ETHERTYPE_ARP, init<ArpPacket>, true, "ARP", false, false);
+    core.base.addProtocol(ETHERTYPE_ARP, init<ArpPacket>, "ARP", false, false);
 
     ipv4.addFilter("^dst *== *([^ ]+)$", IPPacket::filter_dstIP);
     ipv4.addFilter("^src *== *([^ ]+)$", IPPacket::filter_srcIP);
@@ -33,28 +33,28 @@ extern "C" void add(HungrySniffer_Core& core)
     ipv6.addOption("Drop From Source", IPv6Packet::drop_srcIP, true);
     ipv6.addOption("Drop From Destination", IPv6Packet::drop_dstIP, true);
 
-    Protocol& tcp = ipv4.addProtocol(IPPROTO_TCP, init<TCPPacket>, true, "TCP", true, true);
-    Protocol& udp = ipv4.addProtocol(IPPROTO_UDP, init<UDPPacket>, true, "UDP", true, true);
-    ipv4.addProtocol(IPPROTO_ICMP, init<ICMPPacket>, true, "ICMP", false, false);
-    ipv4.addProtocol(112, init<VRRPPacket>, true, "VRRP", false, false);
+    Protocol& tcp = ipv4.addProtocol(IPPROTO_TCP, init<TCPPacket>, "TCP", true, true);
+    Protocol& udp = ipv4.addProtocol(IPPROTO_UDP, init<UDPPacket>, "UDP", true, true);
+    ipv4.addProtocol(IPPROTO_ICMP, init<ICMPPacket>, "ICMP", false, false);
+    ipv4.addProtocol(112, init<VRRPPacket>, "VRRP", false, false);
 
     tcp.addFilter("^dst *== *([^ ]+)$", TCPPacket::filter_dstPort);
     tcp.addFilter("^src *== *([^ ]+)$", TCPPacket::filter_srcPort);
     tcp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", TCPPacket::filter_follow);
 
-    tcp.addProtocol(80, init<HTTPPacket>, true, "HTTP", false, false);
-    tcp.addProtocol(443, init<PacketEmpty>, true, "HTTPS", false, false);
-    tcp.addProtocol(25, init<PacketText>, true, "SMTP", false, false);
-    tcp.addProtocol(587, init<PacketText>, true, "SMTP", false, false);
+    tcp.addProtocol(80, init<HTTPPacket>, "HTTP", false, false);
+    tcp.addProtocol(443, init<PacketEmpty>, "HTTPS", false, false);
+    tcp.addProtocol(25, init<PacketText>, "SMTP", false, false);
+    tcp.addProtocol(587, init<PacketText>, "SMTP", false, false);
 
     udp.addFilter("^dst *== *([^ ]+)$", UDPPacket::filter_dstPort);
     udp.addFilter("^src *== *([^ ]+)$", UDPPacket::filter_srcPort);
     udp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", UDPPacket::filter_follow);
 
     {
-        Protocol& dns = udp.addProtocol(53, init<DNSPacket>, true, "DNS", false, true);
+        Protocol& dns = udp.addProtocol(53, init<DNSPacket>, "DNS", false, true);
         dns.addFilter("^id *== *([^ ]+)$", DNSPacket::filter_id);
     }
-    udp.addProtocol(1900, init<HTTPPacket>, true, "SSDP", false, false);
-    udp.addProtocol(17500, init<PacketJson>, true, "Dropbox LAN sync", false, false);
+    udp.addProtocol(1900, init<HTTPPacket>, "SSDP", false, false);
+    udp.addProtocol(17500, init<PacketJson>, "Dropbox LAN sync", false, false);
 }

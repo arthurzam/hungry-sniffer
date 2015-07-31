@@ -83,7 +83,6 @@ namespace hungry_sniffer {
             typedef std::map<std::string, std::string> names_t;
             typedef std::vector<struct option> options_t;
             typedef std::vector<std::pair<std::regex, filterFunction>> filterFunctions_t;
-            typedef std::vector<std::pair<std::string, const int*>> stats_table_t;
             typedef std::vector<std::pair<std::string, statInitFunction>> stats_init_window_t;
         private:
             std::shared_ptr<protocols_t> subProtocols;
@@ -91,7 +90,6 @@ namespace hungry_sniffer {
 
             std::string name; /*!<The name for the protocol*/
 
-            bool isStats; /*!<is this Protocol part part of statistics calculations*/
             mutable int countPackets = 0; /*!<The amount of packets sniffed of this Protocol*/
 
             bool isNameService;
@@ -115,18 +113,16 @@ namespace hungry_sniffer {
                     isConversationEnabeled(false)
             {
                 this->function = function;
-                this->isStats = true;
                 this->isNameService = false;
             }
 
-            Protocol(initFunction function, bool isStats, const std::string& name,
+            Protocol(initFunction function, const std::string& name,
                     bool isNameService, bool isConversationEnabeled = false) :
                     subProtocols(std::make_shared<protocols_t>()),
                     name(name),
                     filters()
             {
                 this->function = function;
-                this->isStats = isStats;
                 this->isNameService = isNameService;
                 this->isConversationEnabeled = isConversationEnabeled;
             }
@@ -137,7 +133,6 @@ namespace hungry_sniffer {
                     filters(other.filters)
             {
                 this->function = other.function;
-                this->isStats = other.isStats;
                 this->countPackets = other.countPackets;
                 this->isNameService = other.isNameService;
                 this->isConversationEnabeled = other.isConversationEnabeled;
@@ -149,7 +144,6 @@ namespace hungry_sniffer {
                     filters(other.filters)
             {
                 this->function = function;
-                this->isStats = other.isStats;
                 this->countPackets = other.countPackets;
                 this->isNameService = other.isNameService;
                 this->isConversationEnabeled = other.isConversationEnabeled;
@@ -161,7 +155,6 @@ namespace hungry_sniffer {
                     filters(std::move(other.filters))
             {
                 this->function = other.function;
-                this->isStats = other.isStats;
                 this->countPackets = other.countPackets;
                 this->isNameService = other.isNameService;
                 this->isConversationEnabeled = other.isConversationEnabeled;
@@ -171,11 +164,11 @@ namespace hungry_sniffer {
             {
             }
 
-            Protocol& addProtocol(size_t type, initFunction function, bool isStats = true,
+            Protocol& addProtocol(size_t type, initFunction function,
                     const std::string& name = "unknown", bool isNameService = false,
                     bool isConversationEnabeled = false)
             {
-                return this->subProtocols->insert({type, Protocol(function, isStats, name, isNameService,
+                return this->subProtocols->insert({type, Protocol(function, name, isNameService,
                                                    isConversationEnabeled)}).first->second;
             }
 
@@ -283,33 +276,7 @@ namespace hungry_sniffer {
              */
             int getPacketsCount() const
             {
-                return (this->countPackets & -(this->isStats));
-            }
-
-            /**
-             * @brief return the raw packets count of this protocol
-             * @return the raw packets count of this protocol
-             */
-            int getRawPacketsCount() const
-            {
-                int count = this->countPackets;
-                for(const auto& i : *subProtocols)
-                {
-                    count -= i.second.getPacketsCount();
-                }
-                return count;
-            }
-
-            /**
-             * @brief reset the packet counter of this and evry sub-protocols
-             */
-            void cleanStats()
-            {
-                this->countPackets = 0;
-                for(auto& i : *subProtocols)
-                {
-                    i.second.cleanStats();
-                }
+                return this->countPackets;
             }
 
             /**
@@ -318,24 +285,6 @@ namespace hungry_sniffer {
             const std::string& getName() const
             {
                 return this->name;
-            }
-
-            /**
-             * @brief return statistics table
-             *
-             * @param stats reference to a holder for the table that the statistics will be hold there.
-             *
-             * All the values inside the table are references to statistics in the protocols.
-             * As a result, there is no need to calculate once again the table.
-             */
-            void getStats(stats_table_t& stats) const
-            {
-                if (this->isStats)
-                    stats.push_back({name, &countPackets});
-                for(auto& i : *subProtocols)
-                {
-                    i.second.getStats(stats);
-                }
             }
 
             /**
