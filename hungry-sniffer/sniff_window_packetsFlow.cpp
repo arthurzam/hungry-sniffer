@@ -95,6 +95,7 @@ static QTreeWidgetItem* getTreeItemFromHeader(const hungry_sniffer::Packet::head
     for(const auto& j : header.subHeaders)
         head->addChild(getTreeItemFromHeader(j));
 
+    head->setData(0, QVariant::UserType, QVariant::fromValue<void*>((void*)&header));
     return head;
 }
 

@@ -143,7 +143,10 @@ namespace parseString {
                     break;
                 case '&':
                 case '|':
-                    exprStart = ++i;
+                    ++i;
+                    if((*i ^ *(i-1)) == 0)
+                        ++i;
+                    exprStart = i;
                     findMatchingExprEnd(i, end);
 
                     temp = new TempNode(temp, parseExpr(exprStart, i),

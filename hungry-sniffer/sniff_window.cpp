@@ -527,24 +527,6 @@ void SniffWindow::dragEnterEvent(QDragEnterEvent* event)
         event->acceptProposedAction();
 }
 
-static const hungry_sniffer::Packet::header_t* itemToHeader(QTreeWidget* tree, QTreeWidgetItem* item, const hungry_sniffer::Packet* packet)
-{
-    int row;
-    QTreeWidgetItem* parent = item->parent();
-    if(parent)
-    {
-        row = parent->indexOfChild(item);
-        const hungry_sniffer::Packet::header_t* res = itemToHeader(tree, parent, packet);
-        if(res)
-            return &res->subHeaders[row];
-        return &packet->getHeaders()[row];
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
 void SniffWindow::on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
     if(!current || previous == current)
@@ -560,7 +542,9 @@ void SniffWindow::on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QT
             start += layer->getLength();
             layer = layer->getNext();
         }
-        const hungry_sniffer::Packet::header_t* head = itemToHeader(ui->tree_packet, current, layer);
+        QVariant var = current->data(0, QVariant::UserType);
+        const hungry_sniffer::Packet::header_t* head = (var.isNull() ? nullptr :
+                static_cast<const hungry_sniffer::Packet::header_t*>(var.value<void*>()));
         if(head)
         {
             start += head->pos;
