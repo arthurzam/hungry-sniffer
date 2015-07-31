@@ -6,6 +6,8 @@ LIBS   += -lpcap -ldl
 QMAKE_LFLAGS_RELEASE += -flto -fno-rtti
 QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
 
+INCLUDEPATH += $$PWD/../util
+
 TARGET = hungry-sniffer
 TEMPLATE = app
 
@@ -34,7 +36,6 @@ HEADERS += \
     devicechoose.h \
     sniff_window.h \
     ThreadQueue.h \
-    Protocol.h \
     EthernetPacket.h \
     packetstats.h \
     filter_tree.h \

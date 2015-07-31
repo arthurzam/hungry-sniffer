@@ -15,8 +15,9 @@ SOURCES += \
     stats_ips.cpp
 
 HEADERS +=\
-    Protocol.h \
     options.h \
     stats_ips.h
+
+INCLUDEPATH += $$PWD/../util
 
 FORMS +=

@@ -1,4 +1,6 @@
 TEMPLATE = subdirs
-SUBDIRS = hungry-sniffer hungry-sniffer-options protocols QHexEdit
+SUBDIRS = hungry-sniffer hungry-sniffer-options protocols QHexEdit util
 
-hungry-sniffer.depends = QHexEdit
+hungry-sniffer-options.depends = util
+protocols.depends = util
+hungry-sniffer.depends = QHexEdit util

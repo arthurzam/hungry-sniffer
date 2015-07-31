@@ -29,7 +29,6 @@ HEADERS += \
   HTTPPacket.h \
   IPPacket.h \
   IPv6Packet.h \
-  Protocol.h \
   UDPPacket.h \
   DNSPacket.h \
   ICMPPacket.h \
@@ -37,3 +36,5 @@ HEADERS += \
   PacketJson.h \
   TCPPacket.h \
   VRRPPacket.h
+
+INCLUDEPATH += $$PWD/../util
