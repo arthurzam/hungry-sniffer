@@ -7,5 +7,6 @@
         <file>capture_stop.png</file>
         <file>capture_start.png</file>
         <file>python.png</file>
+        <file>preferences.png</file>
     </qresource>
 </RCC>

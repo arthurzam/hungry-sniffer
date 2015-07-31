@@ -1,8 +1,5 @@
 #include "ArpPacket.h"
 
-using namespace std;
-
-
 ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
     : PacketStructed(data, len, protocol, prev)
 {

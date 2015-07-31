@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     packetstable_model.cpp \
     data_structure.cpp \
     filter_tree.cpp \
-    statusbar.cpp
+    statusbar.cpp \
+    preferences.cpp
 
 HEADERS += \
     devicechoose.h \
@@ -41,9 +42,11 @@ HEADERS += \
     history_line_edit.h \
     additionalheaderspacket.h \
     packetstable_model.h \
-    statusbar.h
+    statusbar.h \
+    preferences.h
 
-FORMS += sniff_window.ui
+FORMS += sniff_window.ui \
+    preferences.ui
 
 RESOURCES += icons/icons.qrc
 

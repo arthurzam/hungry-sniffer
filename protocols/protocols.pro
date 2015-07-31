@@ -1,5 +1,5 @@
 TEMPLATE = lib
-CONFIG -= app_bundle qt
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 

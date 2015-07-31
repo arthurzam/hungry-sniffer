@@ -1,12 +1,15 @@
 #include <QApplication>
 #include <QDir>
 #include <QLibrary>
+#include <QSettings>
+
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
 
 #include "EthernetPacket.h"
 #include "sniff_window.h"
+#include "preferences.h"
 
 #ifndef PLUGINS_DIR
 #define PLUGINS_DIR "/usr/share/hungry-sniffer/plugins/"
@@ -23,7 +26,8 @@ inline void loadLibs()
     allFiles.sort(Qt::CaseInsensitive);
     for(const auto& iter : allFiles)
     {
-        function_t foo = (function_t)QLibrary::resolve(dir.absoluteFilePath(iter), "add");
+        QLibrary lib(dir.absoluteFilePath(iter));
+        function_t foo = (function_t)lib.resolve("add");
         if(foo)
         {
             try {
@@ -32,16 +36,22 @@ inline void loadLibs()
             } catch (const std::exception& e) {
                 qDebug("error with %s: %s", iter.toLatin1().constData(), e.what());
 #endif
+                continue;
             } catch (...) {
 #ifndef QT_NO_DEBUG
                 qDebug("error with %s:", iter.toLatin1().constData());
 #endif
+                continue;
             }
+            Preferences::reloadFunc_t reload = (Preferences::reloadFunc_t)lib.resolve("reload");
+            if(reload)
+                Preferences::reloadFunctions.push_back(reload);
         }
     }
 }
 
 HungrySniffer_Core* SniffWindow::core = nullptr;
+QSettings* Preferences::settings = nullptr;
 
 int main(int argc, char *argv[])
 {
@@ -52,6 +62,9 @@ int main(int argc, char *argv[])
     SniffWindow::core = &core;
 
     loadLibs();
+
+    QSettings settings("/home/arthur/QT/build-hungry-sniffer-Desktop-Debug/settings.conf", QSettings::NativeFormat);
+    Preferences::settings = &settings;
 
     QApplication a(argc, argv);
     SniffWindow w;

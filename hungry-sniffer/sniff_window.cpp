@@ -12,6 +12,7 @@
 #include "devicechoose.h"
 #include "history_line_edit.h"
 #include "packetstats.h"
+#include "preferences.h"
 #include "additionalheaderspacket.h"
 #include "filter_tree.h"
 
@@ -71,6 +72,9 @@ SniffWindow::SniffWindow(QWidget* parent) :
     ui->action_Python->setVisible(false);
 #endif
     setAcceptDrops(true);
+
+    if(core->preferences.empty())
+        ui->action_preferences->setVisible(false);
 }
 
 SniffWindow::~SniffWindow()
@@ -182,6 +186,11 @@ void SniffWindow::on_actionSniff_triggered()
     {
         this->runLivePcap(i.toStdString(), num, filter);
     }
+}
+
+void SniffWindow::on_action_preferences_triggered()
+{
+    Preferences().exec();
 }
 
 void SniffWindow::on_actionTable_triggered()

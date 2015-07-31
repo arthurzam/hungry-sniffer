@@ -3,7 +3,6 @@
 
 #include <QAbstractItemModel>
 #include <QDialog>
-#include <map>
 #include "Protocol.h"
 
 class StatsIpsModel : public QAbstractTableModel

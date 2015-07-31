@@ -7,6 +7,9 @@
 #include <list>
 #include <vector>
 
+class QSettings;
+class QWidget;
+
 namespace hungry_sniffer {
 
     class Packet;
@@ -46,6 +49,15 @@ namespace hungry_sniffer {
             }
 
             virtual ~StatWindow() {}
+    };
+
+    class PreferencePanel {
+
+        public:
+            virtual QWidget* get() = 0;
+            virtual void save(QSettings& settings) = 0;
+
+            virtual ~PreferencePanel() {}
     };
 
     /**
@@ -874,11 +886,30 @@ namespace hungry_sniffer {
 }
 
 struct HungrySniffer_Core {
-        typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
-        hungry_sniffer::Protocol& base;
+    typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
+    hungry_sniffer::Protocol& base;
 
-        HungrySniffer_Core(hungry_sniffer::Protocol& base)
-            : base(base) {}
+    typedef hungry_sniffer::PreferencePanel* (*preferencesFunction_t)(const HungrySniffer_Core& core, QSettings& settings);
+
+    struct Preference {
+        std::string name;
+        preferencesFunction_t func;
+        std::vector<Preference> subPreferences;
+
+        Preference(const std::string& name, preferencesFunction_t func) :
+            name(name), func(func) {}
+    };
+
+    std::vector<Preference> preferences;
+
+    HungrySniffer_Core(hungry_sniffer::Protocol& base)
+        : base(base) {}
+
+    Preference& addProtocolPreference(Preference&& pref)
+    {
+        preferences.push_back(std::move(pref));
+        return preferences.at(preferences.size() - 1);
+    }
 };
 
 #endif /* PROTOCOL_H_ */

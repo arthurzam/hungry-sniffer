@@ -36,6 +36,7 @@ class SniffWindow : public QMainWindow
         void sig_showMessageBox(const QString& title, const QString& text);
     public slots:
         void on_actionOpen_triggered();
+        void on_action_preferences_triggered();
         void on_tb_filter_textEdited(const QString &arg1);
         void on_bt_filter_clear_clicked();
         void on_action_save_all_triggered();
