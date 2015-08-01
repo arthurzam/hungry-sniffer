@@ -55,7 +55,7 @@ QSettings* Preferences::settings = nullptr;
 
 int main(int argc, char *argv[])
 {
-    Protocol base(init<EthernetPacket>, "Ethernet", true, true);
+    Protocol base(init<EthernetPacket>, "Ethernet", Protocol::getFlags(true, true));
     base.addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     base.addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
     HungrySniffer_Core core(base);

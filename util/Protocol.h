@@ -73,6 +73,11 @@ namespace hungry_sniffer {
                 bool isRootRequired;
             };
 
+            enum FLAGS {
+                FLAG_NAME_SERVICE = 0x1,
+                FLAG_CONVERSATION = 0x2
+            };
+
         public:
             typedef Packet* (*initFunction)(const void* data, size_t len,
                     const Protocol* protocol, const Packet* prev);
@@ -92,15 +97,19 @@ namespace hungry_sniffer {
 
             mutable int countPackets = 0; /*!<The amount of packets sniffed of this Protocol*/
 
-            bool isNameService;
             names_t names;
-
             filterFunctions_t filters;
-            bool isConversationEnabeled;
-
             options_t options;
             stats_init_window_t stats_init_window;
+
+            uint8_t flags;
         public:
+            static constexpr uint8_t getFlags(bool isNameService, bool isConversationEnabeled)
+            {
+                return (isNameService ? FLAGS::FLAG_NAME_SERVICE : 0) |
+                       (isConversationEnabeled ? FLAGS::FLAG_CONVERSATION : 0);
+            }
+
             /**
              * @brief basic constructor for creating Protocol from function pointer
              *
@@ -109,22 +118,18 @@ namespace hungry_sniffer {
             Protocol(initFunction function) :
                     subProtocols(std::make_shared<protocols_t>()),
                     name("unknown"),
-                    filters(),
-                    isConversationEnabeled(false)
-            {
-                this->function = function;
-                this->isNameService = false;
-            }
-
-            Protocol(initFunction function, const std::string& name,
-                    bool isNameService, bool isConversationEnabeled = false) :
-                    subProtocols(std::make_shared<protocols_t>()),
-                    name(name),
                     filters()
             {
                 this->function = function;
-                this->isNameService = isNameService;
-                this->isConversationEnabeled = isConversationEnabeled;
+                this->flags = 0;
+            }
+
+            Protocol(initFunction function, const std::string& name, uint8_t flags = 0) :
+                    subProtocols(std::make_shared<protocols_t>()),
+                    name(name), filters()
+            {
+                this->function = function;
+                this->flags = flags;
             }
 
             Protocol(const Protocol& other) :
@@ -134,8 +139,7 @@ namespace hungry_sniffer {
             {
                 this->function = other.function;
                 this->countPackets = other.countPackets;
-                this->isNameService = other.isNameService;
-                this->isConversationEnabeled = other.isConversationEnabeled;
+                this->flags = other.flags;
             }
 
             Protocol(const Protocol& other, initFunction function, const std::string& name) :
@@ -145,8 +149,7 @@ namespace hungry_sniffer {
             {
                 this->function = function;
                 this->countPackets = other.countPackets;
-                this->isNameService = other.isNameService;
-                this->isConversationEnabeled = other.isConversationEnabeled;
+                this->flags = other.flags;
             }
 
             Protocol(Protocol&& other) :
@@ -156,8 +159,7 @@ namespace hungry_sniffer {
             {
                 this->function = other.function;
                 this->countPackets = other.countPackets;
-                this->isNameService = other.isNameService;
-                this->isConversationEnabeled = other.isConversationEnabeled;
+                this->flags = other.flags;
             }
 
             virtual ~Protocol()
@@ -165,11 +167,9 @@ namespace hungry_sniffer {
             }
 
             Protocol& addProtocol(size_t type, initFunction function,
-                    const std::string& name = "unknown", bool isNameService = false,
-                    bool isConversationEnabeled = false)
+                    const std::string& name = "unknown", uint8_t flags = 0)
             {
-                return this->subProtocols->insert({type, Protocol(function, name, isNameService,
-                                                   isConversationEnabeled)}).first->second;
+                return this->subProtocols->insert({type, Protocol(function, name, flags)}).first->second;
             }
 
             /**
@@ -383,12 +383,12 @@ namespace hungry_sniffer {
              */
             bool getIsNameService() const
             {
-                return isNameService;
+                return flags & FLAGS::FLAG_NAME_SERVICE;
             }
 
             bool getIsConversationEnabeled() const
             {
-                return isConversationEnabeled;
+                return flags & FLAGS::FLAG_CONVERSATION;
             }
 
             void addOption(const std::string& optionName, Option::optionEnableFunction func, bool rootNeeded = false)

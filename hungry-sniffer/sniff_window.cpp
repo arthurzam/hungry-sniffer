@@ -361,7 +361,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
     qDeleteAll(list);
 }
 
-hungry_sniffer::Protocol SniffWindow::infoProtocol(nullptr, "Own Headers", false, false);
+hungry_sniffer::Protocol SniffWindow::infoProtocol(nullptr, "Own Headers");
 
 static QTreeWidgetItem* getRootOfItem(QTreeWidgetItem* item)
 {
