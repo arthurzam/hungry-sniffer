@@ -3,7 +3,6 @@ SOURCES += \
     $$PWD/general_ui.cpp
 
 HEADERS += \
-    $$PWD/prefs_add.h \
     $$PWD/general_ui.h
 
 FORMS += \

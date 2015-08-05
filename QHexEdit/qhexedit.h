@@ -4,7 +4,7 @@
 #include <QScrollArea>
 #include <QHBoxLayout>
 
-class QHexEditPrivate;
+#include "qhexedit_p.h"
 
 /** \mainpage
 QHexEdit is a binary editor widget for Qt.
@@ -114,7 +114,7 @@ class QHexEdit : public QScrollArea
         it will be selected.
 
         */
-        int indexOf(const QByteArray& ba, int from = 0) const;
+        int indexOf(const QByteArray& ba, int from = 0);
 
         /*! Inserts a byte array.
         \param i Index position, where to insert
@@ -139,7 +139,7 @@ class QHexEdit : public QScrollArea
         it will be selected.
 
         */
-        int lastIndexOf(const QByteArray& ba, int from = 0) const;
+        int lastIndexOf(const QByteArray& ba, int from = 0);
 
         /*! Removes len bytes from the content.
         \param pos Index position, where to remove
@@ -230,7 +230,7 @@ class QHexEdit : public QScrollArea
 
     private:
         /*! \cond docNever */
-        QHexEditPrivate* qHexEdit_p;
+        QHexEditPrivate qHexEdit_p;
         QHBoxLayout* layout;
         QScrollArea* scrollArea;
         /*! \endcond docNever */

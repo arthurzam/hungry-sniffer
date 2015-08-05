@@ -105,13 +105,13 @@ class QHexEditPrivate : public QWidget
 
         XByteArray _xData;                      // Hält den Inhalt des Hex Editors
 
-        bool _blink;                            // true: then cursor blinks
-        bool _renderingRequired;                // Flag to store that rendering is necessary
-        bool _addressArea;                      // left area of QHexEdit
-        bool _asciiArea;                        // medium area
-        bool _highlighting;                     // highlighting of changed bytes
-        bool _overwriteMode;
-        bool _readOnly;                         // true: the user can only look and navigate
+        bool _blink = false;                    // true: then cursor blinks
+        bool _renderingRequired = false;        // Flag to store that rendering is necessary
+        bool _addressArea = false;              // left area of QHexEdit
+        bool _asciiArea = false;                // medium area
+        bool _highlighting = false;             // highlighting of changed bytes
+        bool _overwriteMode = false;
+        bool _readOnly = false;                 // true: the user can only look and navigate
 
         int _charWidth, _charHeight;            // char dimensions (dpendend on font)
         int _cursorX, _cursorY;                 // graphics position of the cursor

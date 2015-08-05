@@ -847,8 +847,17 @@ int QHexEditPrivate::getSelectionEnd()
 
 void QHexEditPrivate::setSelection(int begin, int end)
 {
-    resetSelection(begin * 2);
-    setSelection(end * 2);
+    if (begin < 0)
+        begin = 0;
+    if (end < 0)
+        end = 0;
+    if (end < begin)
+        std::swap(begin, end);
+
+    _selectionInit = begin;
+    _selectionBegin = begin;
+    _selectionEnd = end;
+
     ensureVisible();
     update();
 }
