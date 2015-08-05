@@ -276,7 +276,7 @@ namespace HspcapFile {
 
 void SniffWindow::on_actionOpen_triggered()
 {
-    QStringList filenames = QFileDialog::getOpenFileNames(this, QStringLiteral("Open File"), QStringLiteral(""),
+    QStringList filenames = QFileDialog::getOpenFileNames(this, QStringLiteral("Open File"), default_open_location,
                             QStringLiteral("All Captures (*.pcap *.hspcap);;hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
     for(auto& filename : filenames)
     {

@@ -54,6 +54,7 @@ class PacketsTableModel : public QAbstractTableModel
         std::vector<DataStructure::localPacket> local;
         std::vector<int> shownPerRow;
         mutable std::mutex mutex_shownPerRow;
+        bool showColors = true;
 
         static constexpr unsigned COLUMNS_COUNT = 7;
     public:

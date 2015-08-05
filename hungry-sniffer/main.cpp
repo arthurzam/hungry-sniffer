@@ -15,6 +15,8 @@
 #define PLUGINS_DIR "/usr/share/hungry-sniffer/plugins/"
 #endif
 
+void addPrefs(HungrySniffer_Core& core);
+
 using namespace hungry_sniffer;
 
 inline void loadLibs()
@@ -61,10 +63,11 @@ int main(int argc, char *argv[])
     HungrySniffer_Core core(base);
     SniffWindow::core = &core;
 
-    loadLibs();
-
     QSettings settings("/home/arthur/QT/build-hungry-sniffer-Desktop-Debug/settings.conf", QSettings::NativeFormat);
     Preferences::settings = &settings;
+
+    addPrefs(*SniffWindow::core);
+    loadLibs();
 
     QApplication a(argc, argv);
     SniffWindow w;

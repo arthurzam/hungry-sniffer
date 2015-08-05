@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QPlainTextEdit>
+#include <QSettings>
 #include <QSortFilterProxyModel>
 #include <unistd.h>
 
@@ -75,6 +76,31 @@ SniffWindow::SniffWindow(QWidget* parent) :
 
     if(core->preferences.empty())
         ui->action_preferences->setVisible(false);
+
+    {
+        QSettings& settings = *Preferences::settings;
+        settings.beginGroup(QStringLiteral("General"));
+        settings.beginGroup(QStringLiteral("UI"));
+        bool flag = settings.value(QStringLiteral("splitter_sizes"), false).toBool();
+        default_open_location = settings.value(QStringLiteral("default_dir"), QStringLiteral()).toString();
+        settings.endGroup();
+        settings.endGroup();
+
+        if(flag)
+        {
+            settings.beginGroup(QStringLiteral("SniffWindow"));
+            QVariant var = settings.value(QStringLiteral("splitter_sizes"));
+            if(!var.isNull())
+            {
+                QVariantList l = var.value<QVariantList>();
+                QList<int> sizes;
+                for(auto i : var.value<QVariantList>())
+                    sizes << i.toInt();
+                ui->splitter->setSizes(sizes);
+            }
+            settings.endGroup();
+        }
+    }
 }
 
 SniffWindow::~SniffWindow()
@@ -140,6 +166,24 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
             break;
         }
     }
+    QSettings& settings = *Preferences::settings;
+    settings.beginGroup(QStringLiteral("General"));
+    settings.beginGroup(QStringLiteral("UI"));
+    bool flag = settings.value(QStringLiteral("splitter_sizes"), false).toBool();
+    model.showColors = settings.value(QStringLiteral("colored_packets"), true).toBool();
+    settings.endGroup();
+    settings.endGroup();
+
+    if(flag)
+    {
+        settings.beginGroup(QStringLiteral("SniffWindow"));
+        QVariantList l;
+        for(int i : ui->splitter->sizes())
+            l << i;
+        settings.setValue(QStringLiteral("splitter_sizes"), l);
+        settings.endGroup();
+    }
+
     bar->accept();
 }
 

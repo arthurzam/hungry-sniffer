@@ -32,6 +32,7 @@ class SniffWindow : public QMainWindow
         static hungry_sniffer::Protocol infoProtocol;
 
         static bool isRoot();
+        QString default_open_location;
     signals:
         void sig_showMessageBox(const QString& title, const QString& text);
     public slots:
