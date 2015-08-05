@@ -1,7 +1,8 @@
 TEMPLATE = lib
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++11 link_pkgconfig
+PKGCONFIG += jsoncpp
 
 TARGET = hungry-sniffer-protocols
 TEMPLATE = lib

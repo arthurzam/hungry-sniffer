@@ -847,6 +847,18 @@ struct HungrySniffer_Core {
 
         Preference(const std::string& name, preferencesFunction_t func) :
             name(name), func(func) {}
+
+        Preference(const std::string& name) :
+            name(name), func(nullptr) {}
+
+        Preference(const char* name) :
+            name(name), func(nullptr) {}
+
+        Preference& add(Preference&& pref)
+        {
+            subPreferences.push_back(std::move(pref));
+            return subPreferences.at(subPreferences.size() - 1);
+        }
     };
 
     std::vector<Preference> preferences;

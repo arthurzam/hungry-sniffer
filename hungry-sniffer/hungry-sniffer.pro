@@ -46,8 +46,7 @@ HEADERS += \
     statusbar.h \
     preferences.h
 
-FORMS += sniff_window.ui \
-    preferences.ui
+FORMS += sniff_window.ui
 
 RESOURCES += icons/icons.qrc
 
@@ -80,7 +79,5 @@ unix {
 unix|win32: LIBS += -L$$OUT_PWD/../QHexEdit/ -lQHexEdit
 
 INCLUDEPATH += $$PWD/..
-DEPENDPATH += $$PWD/../QHexEdit
 
-win32:!win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../QHexEdit/QHexEdit.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$OUT_PWD/../QHexEdit/libQHexEdit.a
+include(prefs/prefs.pri)
