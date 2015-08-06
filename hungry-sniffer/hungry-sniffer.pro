@@ -53,7 +53,12 @@ RESOURCES += icons/icons.qrc
 OTHER_FILES += hungry-sniffer.desktop
 
 !CONFIG(no-pycmd) {
-    PKGCONFIG += python3
+    CONFIG(python2) {
+        PKGCONFIG += python2
+        DEFINES += PYTHON2
+    } else {
+        PKGCONFIG += python3
+    }
     DEFINES += PYTHON_CMD
 
     OTHER_FILES += hs.py

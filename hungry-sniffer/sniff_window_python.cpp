@@ -7,9 +7,18 @@
 
 #include <QPlainTextEdit>
 
-#define HS_PYDICT_ADD_OBJECT(dict, k, v) PyDict_SetItem(dict, PyUnicode_FromString(k), v)
+#ifdef PYTHON2
+typedef void initModuleReturn;
+#define PyUnicode_AsUTF8 PyString_AsString
+#define GetPyString PyString_FromString
+#else
+typedef PyObject* initModuleReturn;
+#define GetPyString PyUnicode_FromString
+#endif
+
+#define HS_PYDICT_ADD_OBJECT(dict, k, v) PyDict_SetItem(dict, GetPyString(k), v)
 #define HS_PYDICT_ADD_NUM(dict, k, num) HS_PYDICT_ADD_OBJECT(dict, k, PyLong_FromLong(num))
-#define HS_PYDICT_ADD_STRING(dict, k, v) HS_PYDICT_ADD_OBJECT(dict, k, PyUnicode_FromString(v.c_str()))
+#define HS_PYDICT_ADD_STRING(dict, k, v) HS_PYDICT_ADD_OBJECT(dict, k, GetPyString(v.c_str()))
 #define HS_PYDICT_ADD_STRINGS(dict, k, v) HS_PYDICT_ADD_STRING(dict, k.c_str(), v)
 
 #ifndef PYTHON_DIR
@@ -145,7 +154,7 @@ PyObject* hs_setFilter(PyObject*, PyObject* args)
 
 PyObject* hs_getFilter(PyObject*)
 {
-    return PyUnicode_FromString(SniffWindow::window->ui->tb_filter->text().toUtf8().data());
+    return GetPyString(SniffWindow::window->ui->tb_filter->text().toUtf8().data());
 }
 
 PyObject* ui_reset(PyObject*)
@@ -161,6 +170,19 @@ PyObject* ui_open(PyObject*, PyObject* args)
         return NULL;
     }
     SniffWindow::window->runOfflineFile(str);
+    return Py_None;
+}
+
+PyObject* ui_cmd_output(PyObject*, PyObject* args)
+{
+    char* str = NULL;
+    if (!PyArg_ParseTuple(args, "s", &str)) {
+        return NULL;
+    }
+    QPlainTextEdit* cmd = SniffWindow::window->lb_cmd;
+    cmd->moveCursor(QTextCursor::End);
+    cmd->textCursor().insertHtml(str);
+    cmd->moveCursor(QTextCursor::End);
     return Py_None;
 }
 
@@ -188,30 +210,43 @@ static PyMethodDef hs_methods[] = {
     { NULL, NULL, 0, NULL }
 };
 
+#ifndef PYTHON2
 static PyModuleDef hsModule = {
     PyModuleDef_HEAD_INIT, "_hs_private", NULL, -1, hs_methods, NULL, NULL, NULL, NULL
 };
+#endif
 
-static PyObject* PyInit_hs(void)
+static initModuleReturn PyInit_hs(void)
 {
+#ifdef PYTHON2
+    Py_InitModule("_hs_private", hs_methods);
+#else
     return PyModule_Create(&hsModule);
+#endif
 }
 
 static PyMethodDef ui_methods[] = {
     { "reset", (PyCFunction)ui_reset, METH_NOARGS, NULL },
     { "open", (PyCFunction)ui_open, METH_VARARGS, NULL },
+    { "cmd_output", (PyCFunction)ui_cmd_output, METH_VARARGS, NULL },
     { "stop", (PyCFunction)ui_stop, METH_NOARGS, NULL },
     { "exit", (PyCFunction)ui_exit, METH_NOARGS, NULL },
     { NULL, NULL, 0, NULL }
 };
 
+#ifndef PYTHON2
 static PyModuleDef uiModule = {
     PyModuleDef_HEAD_INIT, "_hs_ui", NULL, -1, ui_methods, NULL, NULL, NULL, NULL
 };
+#endif
 
-static PyObject* PyInit_hs_ui(void)
+static initModuleReturn PyInit_hs_ui(void)
 {
+#ifdef PYTHON2
+    Py_InitModule("_hs_ui", ui_methods);
+#else
     return PyModule_Create(&uiModule);
+#endif
 }
 
 static void redirect(PyObject* globals)
@@ -219,15 +254,14 @@ static void redirect(PyObject* globals)
     const char* stdOutErr =
             "import sys\n"
             "class CatchOutErr:\n"
-            "   def __init__(self):\n"
-            "       self.value = ''\n"
+            "   def __init__(self, color):\n"
+            "       self.color = color\n"
             "   def write(self, txt):\n"
             "       if txt != None and txt != '':\n"
-            "           self.value += '<font color=\"%1\">' + str(txt).replace('\\n','<br/>') + '</font>'\n"
+            "           cmd_output('<font color=\"{0}\">{1}</font>'.format(self.color, str(txt).replace('\\n','<br/>')))\n"
             "\n"
-            "catchOutErr = CatchOutErr()\n"
-            "sys.stdout = catchOutErr\n"
-            "sys.stderr = catchOutErr\n";
+            "sys.stdout = CatchOutErr('blue')\n"
+            "sys.stderr = CatchOutErr('red')\n";
     PyRun_String(stdOutErr, Py_file_input, globals, globals);
 }
 
@@ -235,7 +269,7 @@ static void addDirToPath(const char* path)
 {
     PyObject* sys = PyImport_ImportModule("sys");
     PyObject* sys_path = PyObject_GetAttrString(sys, "path");
-    PyObject* folder_path = PyUnicode_FromString(path);
+    PyObject* folder_path = GetPyString(path);
     PyList_Append(sys_path, folder_path);
 }
 
@@ -259,9 +293,8 @@ void SniffWindow::initPython()
     PyModule_AddObject(mainModule, "hs", hsModule);
 
     this->pyGlobals = PyModule_GetDict(mainModule);
-    redirect((PyObject*)this->pyGlobals);
     PyRun_String("from _hs_ui import *", Py_single_input, (PyObject*)pyGlobals, (PyObject*)pyGlobals);
-    this->pyCatcher = PyObject_GetAttrString(mainModule,"catchOutErr");
+    redirect((PyObject*)this->pyGlobals);
 }
 
 void SniffWindow::addPyCommand(const char* command)
@@ -273,8 +306,10 @@ void SniffWindow::addPyCommand(const char* command)
         output.append(".  .  . ");
     output.append("<font color=\"green\">");
     output.append(QString(command).replace("<", "&lt;").replace(">", "&gt;"));
-    output.append("</font>");
-    lb_cmd->appendHtml(output);
+    output.append("</font><br />");
+    lb_cmd->moveCursor(QTextCursor::End);
+    lb_cmd->textCursor().insertHtml(output);
+    lb_cmd->moveCursor(QTextCursor::End);
     tb_command->clear();
 
     if(command[0] == '\0' && !this->py_checkCommand.block)
@@ -297,13 +332,6 @@ void SniffWindow::execPyCommand()
     {
         PyErr_Print();
         PyErr_Clear();
-    }
-    PyObject *output = PyObject_GetAttrString((PyObject*)pyCatcher,"value");
-    QString res(PyUnicode_AsUTF8(output));
-    if(res.length() > 0)
-    {
-        lb_cmd->appendHtml(res.arg((error ? QStringLiteral("red") : QStringLiteral("blue"))));
-        PyRun_SimpleString("catchOutErr.value = ''");
     }
 
     this->py_checkCommand.reset();

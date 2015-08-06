@@ -123,7 +123,6 @@ class SniffWindow : public QMainWindow
 
     private:
         void* pyGlobals;
-        void* pyCatcher;
 
         std::string pyCommand;
         struct {

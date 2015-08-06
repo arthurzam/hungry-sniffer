@@ -6,3 +6,4 @@ moc_*
 html/*
 latex/*
 __pycache__
+*.pyc
