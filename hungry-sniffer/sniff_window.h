@@ -65,7 +65,10 @@ class SniffWindow : public QMainWindow
 
         void model_currentRowChanged(QModelIndex newSelection,QModelIndex oldSelection);
         void showMessageBox(const QString& title, const QString& text);
+
         void recentFile_triggered();
+        void copy_to_clipboard();
+        void tree_add_info_header();
 
     protected:
         void dragEnterEvent(QDragEnterEvent* event);

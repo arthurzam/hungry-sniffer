@@ -32,7 +32,7 @@ namespace hungry_sniffer {
             ENABLE_OPTION_RETURN_MALLOCED_DATA = 0x4, /*!<The data in disableOption is allocated*/
         };
 
-        typedef std::list<struct enabledOption> disabled_options_t;
+        typedef std::vector<struct enabledOption> disabled_options_t;
 
         typedef int (*optionEnableFunction)(const Packet* packet, disabled_options_t& options);
     }

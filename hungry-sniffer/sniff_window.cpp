@@ -55,6 +55,7 @@ SniffWindow::SniffWindow(QWidget* parent) :
     QVBoxLayout* panel_python = new QVBoxLayout(verticalLayoutWidget);
     panel_python->setContentsMargins(0, 0, 0, 0);
     lb_cmd = new QPlainTextEdit(verticalLayoutWidget);
+    lb_cmd->setReadOnly(true);
     panel_python->addWidget(lb_cmd);
     QHBoxLayout* horizontalLayout = new QHBoxLayout();
     horizontalLayout->setContentsMargins(0, 0, 0, 0);
@@ -64,6 +65,11 @@ SniffWindow::SniffWindow(QWidget* parent) :
     img_python->setSizePolicy(sizePolicy);
     img_python->setMaximumSize(QSize(32, 32));
     img_python->setPixmap(QPixmap(QStringLiteral(":/icons/python.png")));
+#ifdef PYTHON2
+    img_python->setToolTip(QStringLiteral("Python 2"));
+#else
+    img_python->setToolTip(QStringLiteral("Python 3"));
+#endif
     horizontalLayout->addWidget(img_python);
     tb_command = new History_Line_Edit(verticalLayoutWidget);
     connect(tb_command, SIGNAL(returnPressed()), this, SLOT(tb_command_returnPressed()));
@@ -340,10 +346,8 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
           nameDst(QStringLiteral("Associate Name For &Destination")), optionsMenu(QStringLiteral("Special &Options"));
 
     QAction copyValAction(QStringLiteral("&Copy Value"), nullptr);
-    connect(&copyValAction, &QAction::triggered, [this, item] ()
-    {
-        QApplication::clipboard()->setText(model.data(item, Qt::DisplayRole).toString());
-    });
+    copyValAction.setData(model.data(item, Qt::DisplayRole).toString());
+    connect(&copyValAction, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
     menu.addAction(&copyValAction);
 
     QAction removeRowAction(QStringLiteral("&Remove Packet"), nullptr);
@@ -460,40 +464,12 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     QAction action_copy(QStringLiteral("&Copy Value"), nullptr);
     if(firstLevel != item)
     {
-        connect(&action_copy, &QAction::triggered, [item, firstLevel]()
-        {
-            QApplication::clipboard()->setText(item->text(1));
-        });
+        action_copy.setData(item->text(1));
+        connect(&action_copy, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
         menu.addAction(&action_copy);
     }
     QAction action_add(QStringLiteral("&Add Info Header"), nullptr);
-    connect(&action_add, &QAction::triggered, [this]()
-    {
-        hungry_sniffer::Packet& last = const_cast<hungry_sniffer::Packet&>(this->selected->decodedPacket->getLast());
-        AdditionalHeadersPacket* pack = static_cast<AdditionalHeadersPacket*>(&last);
-        QTreeWidgetItem* info = nullptr;
-        if(last.getProtocol() != &infoProtocol)
-        {
-            last.setNext(pack = new AdditionalHeadersPacket(&infoProtocol));
-            info = new QTreeWidgetItem(QStringList(QStringLiteral("Own Headers")));
-        }
-        else
-        {
-            info = this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
-        }
-        bool ok;
-        QString key = QInputDialog::getText(this, QStringLiteral("Header Name"), QStringLiteral("Enter the header name"), QLineEdit::Normal, QStringLiteral(""), &ok);
-        if(!ok)
-            return;
-        QString value = QInputDialog::getText(this, QStringLiteral("Header Value"), QStringLiteral("Enter the header value"), QLineEdit::Normal, QStringLiteral(""), &ok);
-        if(!ok)
-            return;
-        pack->addHeader(key.toStdString(), value.toStdString());
-
-        info->addChild(new QTreeWidgetItem(QStringList({key, value})));
-        if(pack != &last)
-            ui->tree_packet->addTopLevelItem(info);
-    });
+    connect(&action_add, SIGNAL(triggered()), this, SLOT(tree_add_info_header()));
     menu.addAction(&action_add);
 
     QAction action_remove(QStringLiteral("&Remove"), nullptr);
@@ -586,9 +562,44 @@ void SniffWindow::showMessageBox(const QString& title, const QString& text)
 
 void SniffWindow::recentFile_triggered()
 {
-    QAction *action = qobject_cast<QAction *>(sender());
+    QAction* action = qobject_cast<QAction *>(sender());
     if (action)
         this->runOfflineFile(recentFiles_paths[action->data().toInt()].toStdString());
+}
+
+void SniffWindow::copy_to_clipboard()
+{
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action)
+        QApplication::clipboard()->setText(action->data().toString());
+}
+
+void SniffWindow::tree_add_info_header()
+{
+    hungry_sniffer::Packet& last = const_cast<hungry_sniffer::Packet&>(this->selected->decodedPacket->getLast());
+    AdditionalHeadersPacket* pack = static_cast<AdditionalHeadersPacket*>(&last);
+    QTreeWidgetItem* info = nullptr;
+    if(last.getProtocol() != &infoProtocol)
+    {
+        last.setNext(pack = new AdditionalHeadersPacket(&infoProtocol));
+        info = new QTreeWidgetItem(QStringList(QStringLiteral("Own Headers")));
+    }
+    else
+    {
+        info = this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
+    }
+    bool ok;
+    QString key = QInputDialog::getText(this, QStringLiteral("Header Name"), QStringLiteral("Enter the header name"), QLineEdit::Normal, QStringLiteral(""), &ok);
+    if(!ok)
+        return;
+    QString value = QInputDialog::getText(this, QStringLiteral("Header Value"), QStringLiteral("Enter the header value"), QLineEdit::Normal, QStringLiteral(""), &ok);
+    if(!ok)
+        return;
+    pack->addHeader(key.toStdString(), value.toStdString());
+
+    info->addChild(new QTreeWidgetItem(QStringList({key, value})));
+    if(pack != &last)
+        ui->tree_packet->addTopLevelItem(info);
 }
 
 void SniffWindow::dropEvent(QDropEvent* event)
