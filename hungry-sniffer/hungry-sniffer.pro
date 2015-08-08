@@ -25,7 +25,6 @@ SOURCES += main.cpp\
     EthernetPacket.cpp \
     packetstats.cpp \
     optionsdisabler.cpp \
-    history_line_edit.cpp \
     packetstable_model.cpp \
     data_structure.cpp \
     filter_tree.cpp \
@@ -40,7 +39,6 @@ HEADERS += \
     packetstats.h \
     filter_tree.h \
     optionsdisabler.h \
-    history_line_edit.h \
     additionalheaderspacket.h \
     packetstable_model.h \
     statusbar.h \
@@ -86,3 +84,4 @@ unix|win32: LIBS += -L$$OUT_PWD/../QHexEdit/ -lQHexEdit
 INCLUDEPATH += $$PWD/..
 
 include(prefs/prefs.pri)
+include(widgets/widgets.pri)

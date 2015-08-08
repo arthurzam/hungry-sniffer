@@ -2,10 +2,12 @@
 #include "Python.h"
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
-#include "history_line_edit.h"
+#include "widgets/history_line_edit.h"
 #include "EthernetPacket.h"
+#include "preferences.h"
 
 #include <QPlainTextEdit>
+#include <QSettings>
 
 #ifdef PYTHON2
 typedef void initModuleReturn;
@@ -271,6 +273,21 @@ static void addDirToPath(const char* path)
     PyObject* sys_path = PyObject_GetAttrString(sys, "path");
     PyObject* folder_path = GetPyString(path);
     PyList_Append(sys_path, folder_path);
+
+    QSettings& settings = *Preferences::settings;
+    settings.beginGroup(QStringLiteral("General"));
+    settings.beginGroup(QStringLiteral("Modules"));
+    QVariant var = settings.value(QStringLiteral("python_dir"));
+    if(!var.isNull())
+    {
+        for(const QString& p : var.toStringList())
+        {
+            folder_path = GetPyString(p.toUtf8().constData());
+            PyList_Append(sys_path, folder_path);
+        }
+    }
+    settings.endGroup();
+    settings.endGroup();
 }
 
 }

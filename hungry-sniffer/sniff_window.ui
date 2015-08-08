@@ -349,7 +349,7 @@
   <customwidget>
    <class>History_Line_Edit</class>
    <extends>QLineEdit</extends>
-   <header>history_line_edit.h</header>
+   <header>widgets/history_line_edit.h</header>
   </customwidget>
   <customwidget>
    <class>StatusBar</class>

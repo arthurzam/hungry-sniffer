@@ -19,11 +19,11 @@ void addPrefs(HungrySniffer_Core& core);
 
 using namespace hungry_sniffer;
 
-inline void loadLibs()
+inline void loadLibs(const QString& path)
 {
     typedef void (*function_t)(HungrySniffer_Core&);
 
-    QDir dir(QStringLiteral(PLUGINS_DIR));
+    QDir dir(path);
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
     allFiles.sort(Qt::CaseInsensitive);
     for(const auto& iter : allFiles)
@@ -67,7 +67,20 @@ int main(int argc, char *argv[])
     Preferences::settings = &settings;
 
     addPrefs(*SniffWindow::core);
-    loadLibs();
+
+    { // plugins load
+        loadLibs(QStringLiteral(PLUGINS_DIR));
+        settings.beginGroup(QStringLiteral("General"));
+        settings.beginGroup(QStringLiteral("Modules"));
+        QVariant var = settings.value(QStringLiteral("plugins_dir"));
+        if(!var.isNull())
+        {
+            for(const QString& path : var.toStringList())
+                loadLibs(path);
+        }
+        settings.endGroup();
+        settings.endGroup();
+    }
 
     QApplication a(argc, argv);
     SniffWindow w;

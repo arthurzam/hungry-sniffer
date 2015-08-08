@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 #include "devicechoose.h"
-#include "history_line_edit.h"
+#include "widgets/history_line_edit.h"
 #include "packetstats.h"
 #include "preferences.h"
 #include "additionalheaderspacket.h"

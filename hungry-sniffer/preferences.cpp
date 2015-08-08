@@ -48,11 +48,10 @@ static QWidget* extractData(QTreeWidgetItem* item)
 Preferences::Preferences(QWidget* parent) :
     QDialog(parent)
 {
-    this->resize(400, 300);
+    this->resize(800, 600);
     QVBoxLayout* verticalLayout_2 = new QVBoxLayout(this);
     splitter = new QSplitter(this);
     splitter->setOrientation(Qt::Horizontal);
-    splitter->setSizes(QList<int>({175, 400 - 175}));
 
     QWidget* verticalLayoutWidget = new QWidget(splitter);
     QVBoxLayout* verticalLayout = new QVBoxLayout(verticalLayoutWidget);
@@ -84,6 +83,8 @@ Preferences::Preferences(QWidget* parent) :
     connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
     connect(tb_search, SIGNAL(textChanged(QString)), this, SLOT(on_tb_search_textEdited(QString)));
     connect(tree_select, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), this, SLOT(on_tree_select_currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)));
+
+    splitter->setSizes(QList<int>({175, 599}));
 }
 
 Preferences::~Preferences()
