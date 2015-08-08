@@ -281,6 +281,9 @@ void SniffWindow::on_actionOpen_triggered()
     for(auto& filename : filenames)
     {
         this->runOfflineFile(filename.toStdString());
+        this->recentFiles_paths.removeAll(filename);
+        this->recentFiles_paths.prepend(filename);
+        updateRecentsMenu();
     }
 }
 

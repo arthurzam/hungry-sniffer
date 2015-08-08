@@ -26,11 +26,14 @@ void GeneralUI::save(QSettings& settings)
     settings.setValue(QStringLiteral("splitter_sizes"), ui->cb_splitter_sizes->isChecked());
     SniffWindow::window->default_open_location = ui->tb_default_dir->text();
     settings.setValue(QStringLiteral("default_dir"), ui->tb_default_dir->text());
+    SniffWindow::window->max_recent_files = ui->tb_recents_num->value();
+    SniffWindow::window->updateRecentsMenu();
+    settings.setValue(QStringLiteral("max_recent_files"), ui->tb_recents_num->value());
     settings.endGroup();
     settings.endGroup();
 }
 
-hungry_sniffer::PreferencePanel* GeneralUI::init(const HungrySniffer_Core& core, QSettings& settings)
+hungry_sniffer::PreferencePanel* GeneralUI::init(const HungrySniffer_Core&, QSettings& settings)
 {
     GeneralUI* res = new GeneralUI();
 
@@ -39,6 +42,7 @@ hungry_sniffer::PreferencePanel* GeneralUI::init(const HungrySniffer_Core& core,
     res->ui->cb_colored->setChecked(settings.value(QStringLiteral("colored_packets"), true).toBool());
     res->ui->cb_splitter_sizes->setChecked(settings.value(QStringLiteral("splitter_sizes"), false).toBool());
     res->ui->tb_default_dir->setText(settings.value(QStringLiteral("default_dir"), QStringLiteral()).toString());
+    res->ui->tb_recents_num->setValue(SniffWindow::window->max_recent_files);
     settings.endGroup();
     settings.endGroup();
 

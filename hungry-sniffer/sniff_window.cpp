@@ -2,6 +2,7 @@
 #include "ui_sniff_window.h"
 
 #include <QClipboard>
+#include <QFileInfo>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QMimeData>
@@ -77,19 +78,21 @@ SniffWindow::SniffWindow(QWidget* parent) :
     if(core->preferences.empty())
         ui->action_preferences->setVisible(false);
 
-    {
+    { // settings block
         QSettings& settings = *Preferences::settings;
+        QVariant var;
         settings.beginGroup(QStringLiteral("General"));
         settings.beginGroup(QStringLiteral("UI"));
         bool flag = settings.value(QStringLiteral("splitter_sizes"), false).toBool();
         default_open_location = settings.value(QStringLiteral("default_dir"), QStringLiteral()).toString();
+        max_recent_files = settings.value(QStringLiteral("max_recent_files"), 10).toInt();
         settings.endGroup();
         settings.endGroup();
 
+        settings.beginGroup(QStringLiteral("SniffWindow"));
         if(flag)
         {
-            settings.beginGroup(QStringLiteral("SniffWindow"));
-            QVariant var = settings.value(QStringLiteral("splitter_sizes"));
+            var = settings.value(QStringLiteral("splitter_sizes"));
             if(!var.isNull())
             {
                 QVariantList l = var.value<QVariantList>();
@@ -98,8 +101,25 @@ SniffWindow::SniffWindow(QWidget* parent) :
                     sizes << i.toInt();
                 ui->splitter->setSizes(sizes);
             }
-            settings.endGroup();
         }
+        var = settings.value(QStringLiteral("recent_files"));
+        if(!var.isNull())
+        {
+            this->recentFiles_paths = var.toStringList();
+        }
+        settings.endGroup();
+    }
+
+    { // recent files
+        recentFiles_actions.resize(max_recent_files, nullptr);
+        for(int i = 0; i < max_recent_files; i++)
+        {
+            QAction* temp = recentFiles_actions[i] = new QAction(ui->menu_recent_files);
+            temp->setData(i);
+            connect(temp, SIGNAL(triggered(bool)), this, SLOT(recentFile_triggered()));
+            ui->menu_recent_files->addAction(temp);
+        }
+        updateRecentsMenu();
     }
 }
 
@@ -114,6 +134,20 @@ SniffWindow::~SniffWindow()
     this->manageThread.join();
     delete this->filterTree;
     delete ui;
+}
+
+void SniffWindow::updateRecentsMenu()
+{
+    int numRecentFiles = qMin(recentFiles_paths.size(), max_recent_files);
+    for(int i = 0; i < numRecentFiles; i++)
+    {
+        recentFiles_actions[i]->setText(QFileInfo(recentFiles_paths[i]).fileName());
+        recentFiles_actions[i]->setToolTip(recentFiles_paths[i]);
+        recentFiles_actions[i]->setVisible(true);
+    }
+    ui->menu_recent_files->setDisabled(numRecentFiles == 0);
+    for(int i = numRecentFiles; i < max_recent_files; i++)
+        recentFiles_actions[i]->setVisible(false);
 }
 
 bool SniffWindow::isRoot()
@@ -174,15 +208,16 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
     settings.endGroup();
     settings.endGroup();
 
+    settings.beginGroup(QStringLiteral("SniffWindow"));
     if(flag)
     {
-        settings.beginGroup(QStringLiteral("SniffWindow"));
         QVariantList l;
         for(int i : ui->splitter->sizes())
             l << i;
         settings.setValue(QStringLiteral("splitter_sizes"), l);
-        settings.endGroup();
     }
+    settings.setValue(QStringLiteral("recent_files"), this->recentFiles_paths);
+    settings.endGroup();
 
     bar->accept();
 }
@@ -547,6 +582,13 @@ void SniffWindow::model_currentRowChanged(QModelIndex newSelection, QModelIndex 
 void SniffWindow::showMessageBox(const QString& title, const QString& text)
 {
     QMessageBox::warning(nullptr, title, text, QMessageBox::Ok);
+}
+
+void SniffWindow::recentFile_triggered()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action)
+        this->runOfflineFile(recentFiles_paths[action->data().toInt()].toStdString());
 }
 
 void SniffWindow::dropEvent(QDropEvent* event)

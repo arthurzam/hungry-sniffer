@@ -22,7 +22,7 @@ class GeneralUI : public QWidget, public hungry_sniffer::PreferencePanel
 
         virtual void save(QSettings& settings);
 
-        static hungry_sniffer::PreferencePanel* init(const HungrySniffer_Core& core, QSettings& settings);
+        static hungry_sniffer::PreferencePanel* init(const HungrySniffer_Core&, QSettings& settings);
 
     private slots:
         void on_bt_default_dir_clicked();

@@ -14,6 +14,7 @@ namespace Ui {
 
 class History_Line_Edit;
 class PacketStats;
+class QAction;
 class QSortFilterProxyModel;
 class QPlainTextEdit;
 class QTreeWidgetItem;
@@ -33,6 +34,7 @@ class SniffWindow : public QMainWindow
 
         static bool isRoot();
         QString default_open_location;
+        int max_recent_files;
     signals:
         void sig_showMessageBox(const QString& title, const QString& text);
     public slots:
@@ -63,6 +65,7 @@ class SniffWindow : public QMainWindow
 
         void model_currentRowChanged(QModelIndex newSelection,QModelIndex oldSelection);
         void showMessageBox(const QString& title, const QString& text);
+        void recentFile_triggered();
 
     protected:
         void dragEnterEvent(QDragEnterEvent* event);
@@ -88,6 +91,8 @@ class SniffWindow : public QMainWindow
 
         OptionsDisabler optionsDisablerWin;
 
+        std::vector<QAction*> recentFiles_actions;
+        QStringList recentFiles_paths;
     public:
         void runLivePcap(const std::string& name, int maxNumber, QString capture);
         void runOfflineFile(const std::string& filename);
@@ -108,6 +113,7 @@ class SniffWindow : public QMainWindow
         void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);
 
         void setStatsFunctions(const hungry_sniffer::Protocol& protocol);
+        void updateRecentsMenu();
 
 #ifdef PYTHON_CMD
     public:
