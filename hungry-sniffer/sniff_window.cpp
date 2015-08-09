@@ -145,6 +145,29 @@ SniffWindow::~SniffWindow()
 void SniffWindow::updateRecentsMenu()
 {
     int numRecentFiles = qMin(recentFiles_paths.size(), max_recent_files);
+    int diff = max_recent_files - recentFiles_actions.size();
+    if(diff != 0)
+    {
+        if(diff > 0)
+        {
+            int i = recentFiles_actions.size();
+            recentFiles_actions.resize(max_recent_files);
+            for(; i < max_recent_files; i++)
+            {
+                QAction* temp = recentFiles_actions[i] = new QAction(ui->menu_recent_files);
+                temp->setData(i);
+                connect(temp, SIGNAL(triggered(bool)), this, SLOT(recentFile_triggered()));
+                ui->menu_recent_files->addAction(temp);
+            }
+        }
+        else
+        {
+            for(unsigned i = max_recent_files; i < recentFiles_actions.size(); i++)
+                delete recentFiles_actions[i];
+            recentFiles_actions.resize(max_recent_files);
+        }
+    }
+
     for(int i = 0; i < numRecentFiles; i++)
     {
         recentFiles_actions[i]->setText(QFileInfo(recentFiles_paths[i]).fileName());
