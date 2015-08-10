@@ -29,7 +29,6 @@
 OptionsDisabler::OptionsDisabler(QWidget *parent) :
     QDialog(parent)
 {
-    this->resize(400, 300);
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
     grid = new QGridLayout();
     verticalLayout->addLayout(grid);

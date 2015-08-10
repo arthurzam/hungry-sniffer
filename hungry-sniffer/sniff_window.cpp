@@ -36,6 +36,7 @@
     #include <unistd.h>
 #endif
 
+#include "about.h"
 #include "devicechoose.h"
 #include "widgets/history_line_edit.h"
 #include "packetstats.h"
@@ -297,6 +298,11 @@ void SniffWindow::on_bt_filter_clear_clicked()
     delete filter;
     model.rerunFilter(nullptr);
     ui->statusBar->updateText();
+}
+
+void SniffWindow::on_action_about_triggered()
+{
+    (new About(this))->show();
 }
 
 void SniffWindow::on_actionStop_triggered()

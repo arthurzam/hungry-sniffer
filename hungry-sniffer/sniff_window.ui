@@ -139,6 +139,7 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
+    <addaction name="action_about"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
    <widget class="QMenu" name="menu_Sniff">
@@ -212,6 +213,9 @@
    <property name="text">
     <string>&amp;Quit</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
   </action>
   <action name="action_save_all">
    <property name="icon">
@@ -226,12 +230,11 @@
    </property>
   </action>
   <action name="actionAbout_Qt">
-   <property name="icon">
-    <iconset resource="icons/icons.qrc">
-     <normaloff>:/icons/about.png</normaloff>:/icons/about.png</iconset>
-   </property>
    <property name="text">
     <string>About &amp;Qt</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::AboutQtRole</enum>
    </property>
   </action>
   <action name="actionStop">
@@ -242,6 +245,9 @@
    <property name="text">
     <string>&amp;Stop</string>
    </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
   </action>
   <action name="actionSniff">
    <property name="icon">
@@ -250,6 +256,9 @@
    </property>
    <property name="text">
     <string>Sni&amp;ff</string>
+   </property>
+   <property name="shortcut">
+    <string>F4</string>
    </property>
   </action>
   <action name="actionTable">
@@ -336,6 +345,24 @@
    </property>
    <property name="text">
     <string>Preferences</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="action_about">
+   <property name="icon">
+    <iconset resource="icons/icons.qrc">
+     <normaloff>:/icons/about.png</normaloff>:/icons/about.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::AboutRole</enum>
    </property>
   </action>
  </widget>

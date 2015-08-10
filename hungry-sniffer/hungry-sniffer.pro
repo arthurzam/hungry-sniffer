@@ -2,6 +2,10 @@ CONFIG += c++11 link_pkgconfig
 QT     += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+TARGET = hungry-sniffer
+VERSION = 1.0
+TEMPLATE = app
+
 win32: LIBS += -lwpcap -lws2_32
 unix: LIBS += -lpcap -ldl
 win32: DEFINES += WIN32
@@ -11,8 +15,7 @@ QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
 
 INCLUDEPATH += $$PWD/../util
 
-TARGET = hungry-sniffer
-TEMPLATE = app
+DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 CONFIG(test) {
     DEFINES += PLUGINS_DIR=\\\"$$OUT_PWD/../plugins\\\"
@@ -32,7 +35,8 @@ SOURCES += main.cpp\
     data_structure.cpp \
     filter_tree.cpp \
     statusbar.cpp \
-    preferences.cpp
+    preferences.cpp \
+    about.cpp
 
 HEADERS += \
     devicechoose.h \
@@ -45,7 +49,8 @@ HEADERS += \
     additionalheaderspacket.h \
     packetstable_model.h \
     statusbar.h \
-    preferences.h
+    preferences.h \
+    about.h
 
 FORMS += sniff_window.ui
 
