@@ -2,7 +2,10 @@ CONFIG += c++11 link_pkgconfig
 QT     += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-LIBS   += -lpcap -ldl
+win32: LIBS += -lwpcap -lws2_32
+unix: LIBS += -lpcap -ldl
+win32: DEFINES += WIN32
+
 QMAKE_LFLAGS_RELEASE += -flto -fno-rtti
 QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
 
@@ -48,14 +51,31 @@ FORMS += sniff_window.ui
 
 RESOURCES += icons/icons.qrc
 
-OTHER_FILES += hungry-sniffer.desktop
+unix: OTHER_FILES += hungry-sniffer.desktop
 
 !CONFIG(no-pycmd) {
-    CONFIG(python2) {
-        PKGCONFIG += python2
-        DEFINES += PYTHON2
-    } else {
-        PKGCONFIG += python3
+    unix {
+        CONFIG(python2) {
+            PKGCONFIG += python2
+            DEFINES += PYTHON2
+        } else {
+            PKGCONFIG += python3
+        }
+    }
+
+    win32{
+        isEmpty(PYTHON_VERSION) {
+            PYTHON_VERSION=34
+        }
+        RESULT = $$find(PYTHON_VERSION, "^2.*")
+        count(RESULT, 1){
+            DEFINES += PYTHON2
+        }
+        isEmpty(PYTHON_PATH) {
+            PYTHON_PATH = C:/Python$$PYTHON_VERSION
+        }
+        LIBS += -L$$PYTHON_PATH/libs -lpython$$PYTHON_VERSION
+        INCLUDEPATH += $$PYTHON_PATH/include
     }
     DEFINES += PYTHON_CMD
 

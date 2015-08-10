@@ -9,10 +9,12 @@ QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 
 SOURCES += \
     call.cpp \
-    arpspoof.cpp \
-    portredirect.cpp \
     resolve_hostname.cpp \
     stats_ips.cpp
+
+unix: SOURCES += \
+    arpspoof.cpp \
+    portredirect.cpp
 
 HEADERS +=\
     options.h \
@@ -21,3 +23,6 @@ HEADERS +=\
 INCLUDEPATH += $$PWD/../util
 
 FORMS +=
+
+
+win32: LIBS += -lws2_32

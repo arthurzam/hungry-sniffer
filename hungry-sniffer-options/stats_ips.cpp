@@ -21,7 +21,6 @@
 */
 
 #include "stats_ips.h"
-#include <netinet/ether.h>
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QHeaderView>
@@ -54,8 +53,8 @@ void StatsIps::addPacket(const Packet* packet, const timeval&)
     if(IPv4 == nullptr)
     {
         const Protocol* Ethernet = packet->getProtocol();
-        IPv4 = Ethernet->getProtocol(ETHERTYPE_IP);
-        IPv6 = Ethernet->getProtocol(ETHERTYPE_IPV6);
+        IPv4 = Ethernet->getProtocol(0x0800);
+        IPv6 = Ethernet->getProtocol(0x86dd);
     }
     const Packet* p = packet->hasProtocol(IPv4);
     if(p == nullptr && (p = packet->hasProtocol(IPv6)) == nullptr)

@@ -21,15 +21,38 @@
 */
 
 #include "TCPPacket.h"
-#include <netinet/in.h>
+
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+#elif defined(Q_OS_UNIX)
+    #include <netinet/in.h>
+#endif
 
 extern Protocol dataProtocol;
 
 TCPPacket::TCPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
       PacketStructed(data, len, protocol, prev)
 {
+    if(!value) return;
     this->_realSource = std::to_string(ntohs(this->value->th_sport));
     this->_realDestination = std::to_string(ntohs(this->value->th_dport));
+
+    this->headers.push_back({"Source Port", this->_realSource, 0, 2});
+    this->headers.push_back({"Destination Port", this->_realDestination, 2, 2});
+    this->headers.push_back({"Sequence Number", std::to_string(ntohl(this->value->th_seq)), 4, 4});
+    this->headers.push_back({"Acknowledgement Number", std::to_string(ntohl(this->value->th_ack)), 8, 4});
+    this->headers.push_back({"Data Offset", std::to_string(this->value->th_off), 12, 1});
+
+    header_t flags("Flags", "", 12, 2);
+#define PUSH_FLAG_TEXT(str, flag) flags.subHeaders.push_back({str, (flag ? "ON" : "OFF"), 12, 2})
+    PUSH_FLAG_TEXT("SYN flag", this->value->syn);
+    PUSH_FLAG_TEXT("ACK flag", this->value->ack);
+    PUSH_FLAG_TEXT("RST flag", this->value->rst);
+    PUSH_FLAG_TEXT("FIN flag", this->value->fin);
+    PUSH_FLAG_TEXT("PSH flag", this->value->psh);
+    PUSH_FLAG_TEXT("URG flag", this->value->urg);
+#undef PUSH_FLAG_TEXT
+    this->headers.push_back(std::move(flags));
 
     this->updateNameAssociation();
 
@@ -66,20 +89,6 @@ void TCPPacket::updateNameAssociation()
     this->destination = this->prev->localDestination();
     this->destination.append(":");
     this->destination.append(this->protocol->getNameAssociated(this->_realDestination));
-
-    this->headers.clear();
-    this->headers.push_back({"Source Port", this->_realSource});
-    this->headers.push_back({"Destination Port", this->_realDestination});
-    this->headers.push_back({"Data Offset", std::to_string(this->value->th_off)});
-
-#define PUSH_FLAG_TEXT(str, flag) this->headers.push_back({str, (flag ? "ON" : "OFF")})
-    PUSH_FLAG_TEXT("SYN flag", this->value->syn);
-    PUSH_FLAG_TEXT("ACK flag", this->value->ack);
-    PUSH_FLAG_TEXT("RST flag", this->value->rst);
-    PUSH_FLAG_TEXT("FIN flag", this->value->fin);
-    PUSH_FLAG_TEXT("PSH flag", this->value->psh);
-    PUSH_FLAG_TEXT("URG flag", this->value->urg);
-#undef PUSH_FLAG_TEXT
 }
 
 unsigned TCPPacket::getLength() const

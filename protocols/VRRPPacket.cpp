@@ -21,18 +21,24 @@
 */
 
 #include "VRRPPacket.h"
-#include <arpa/inet.h>
+#if defined(Q_OS_WIN)
+    #include <Ws2tcpip.h>
+    const char* inet_ntop(int af, const void* src, char* dst, int cnt);
+#elif defined(Q_OS_UNIX)
+    #include <arpa/inet.h>
+#endif
 
 VRRPPacket::VRRPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
     : PacketStructed(data, len, protocol, prev)
 {
-    this->headers.push_back({"Type", std::to_string(this->value->type)});
-    this->headers.push_back({"Version", std::to_string(this->value->version)});
-    this->headers.push_back({"Virtual Router ID", std::to_string(this->value->vrid)});
-    this->headers.push_back({"Priority", std::to_string(this->value->priority)});
-    this->headers.push_back({"Address Count", std::to_string(this->value->naddr)});
-    this->headers.push_back({"Authenticate Type", std::to_string(this->value->auth_type)});
-    this->headers.push_back({"Advertisement Interval", std::to_string(this->value->adver_int)});
+    if(!value) return;
+    this->headers.push_back({"Type", std::to_string(this->value->type), 0, 1});
+    this->headers.push_back({"Version", std::to_string(this->value->version), 0, 1});
+    this->headers.push_back({"Virtual Router ID", std::to_string(this->value->vrid), 1, 1});
+    this->headers.push_back({"Priority", std::to_string(this->value->priority), 2, 1});
+    this->headers.push_back({"Address Count", std::to_string(this->value->naddr), 3, 1});
+    this->headers.push_back({"Authenticate Type", std::to_string(this->value->auth_type), 4, 1});
+    this->headers.push_back({"Advertisement Interval", std::to_string(this->value->adver_int), 5, 1});
 
     const uint8_t* ip = (const uint8_t*)data + sizeof(this->value);
     char str[INET_ADDRSTRLEN];

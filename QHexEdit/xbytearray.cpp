@@ -25,7 +25,7 @@ int XByteArray::addressWidth()
 
 void XByteArray::setAddressWidth(int width)
 {
-    if ((width >= 0) and (width <= 6))
+    if ((width >= 0) && (width <= 6))
     {
         _addressNumbers = width;
     }

@@ -24,11 +24,34 @@
 #define ICMPPACKET_H_
 
 #include "Protocol.h"
-#include <netinet/ip_icmp.h>
+
+#pragma pack(push,1)
+struct icmp_hdr
+{
+    uint8_t type;		/* message type */
+    uint8_t code;		/* type sub-code */
+    uint16_t checksum;
+    union
+    {
+        struct
+        {
+            uint16_t	id;
+            uint16_t	sequence;
+        } echo;			/* echo datagram */
+        uint32_t	gateway;	/* gateway address */
+        struct
+        {
+            uint16_t	__glibc_reserved;
+            uint16_t	mtu;
+        } frag;			/* path mtu discovery */
+    } un;
+};
+#pragma pack(pop)
+static_assert(sizeof(struct icmp_hdr) == 8, "check struct");
 
 using namespace hungry_sniffer;
 
-class ICMPPacket: public PacketStructed<struct icmphdr> {
+class ICMPPacket: public PacketStructed<struct icmp_hdr> {
     private:
         void setByTypes(int type, int code);
     public:

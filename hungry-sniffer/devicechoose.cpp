@@ -33,9 +33,13 @@
 #include <QLineEdit>
 #include <QSpinBox>
 
-#include <pcap.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include <stdint.h>
+#if defined(Q_OS_WIN)
+    #include <ws2tcpip.h>
+#elif defined(Q_OS_UNIX)
+    #include <arpa/inet.h>
+    #include <netdb.h>
+#endif
 
 DeviceChoose::DeviceChoose(QWidget* parent) :
     QDialog(parent)
@@ -201,10 +205,7 @@ void DeviceModel::refresh()
     this->list.clear();
     for(pcap_if_t* dev = devs; dev != NULL; dev = dev->next)
     {
-        if(dev->flags & PCAP_IF_UP)
-        {
-            this->list.push_back(Device(dev));
-        }
+        this->list.push_back(Device(dev));
     }
     pcap_freealldevs(devs);
 

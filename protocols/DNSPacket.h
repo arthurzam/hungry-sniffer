@@ -27,39 +27,44 @@
 
 using namespace hungry_sniffer;
 
-struct __attribute__((packed)) dnshdr {
-        unsigned short id; // identification number
+#pragma pack(push,1)
+struct dnshdr
+{
+    uint16_t id; // identification number
 
 #if BYTE_ORDER == BIG_ENDIAN
-        unsigned        qr: 1;          /* response flag */
-        unsigned        opcode: 4;      /* purpose of message */
-        unsigned        aa: 1;          /* authoritive answer */
-        unsigned        tc: 1;          /* truncated message */
-        unsigned        rd: 1;          /* recursion desired */
+    uint8_t qr: 1;          /* response flag */
+    uint8_t opcode: 4;      /* purpose of message */
+    uint8_t aa: 1;          /* authoritive answer */
+    uint8_t tc: 1;          /* truncated message */
+    uint8_t rd: 1;          /* recursion desired */
 
-        unsigned        ra: 1;          /* recursion available */
-        unsigned        unused :3;      /* unused bits (MBZ as of 4.9.3a3) */
-        unsigned        rcode :4;       /* response code */
+    uint8_t ra: 1;          /* recursion available */
+    uint8_t unused : 3;     /* unused bits (MBZ as of 4.9.3a3) */
+    uint8_t rcode : 4;      /* response code */
 #else
-        unsigned        rd :1;          /* recursion desired */
-        unsigned        tc :1;          /* truncated message */
-        unsigned        aa :1;          /* authoritive answer */
-        unsigned        opcode :4;      /* purpose of message */
-        unsigned        qr :1;          /* response flag */
+    uint8_t rd : 1;         /* recursion desired */
+    uint8_t tc : 1;         /* truncated message */
+    uint8_t aa : 1;         /* authoritive answer */
+    uint8_t opcode : 4;     /* purpose of message */
+    uint8_t qr : 1;         /* response flag */
 
-        unsigned        rcode :4;       /* response code */
-        unsigned        unused :3;      /* unused bits (MBZ as of 4.9.3a3) */
-        unsigned        ra :1;          /* recursion available */
+    uint8_t rcode : 4;      /* response code */
+    uint8_t unused : 3;     /* unused bits (MBZ as of 4.9.3a3) */
+    uint8_t ra : 1;         /* recursion available */
 #endif
 
-        unsigned short q_count; // number of question entries
-        unsigned short ans_count; // number of answer entries
-        unsigned short auth_count; // number of authority entries
-        unsigned short add_count; // number of resource entries
+    uint16_t q_count; // number of question entries
+    uint16_t ans_count; // number of answer entries
+    uint16_t auth_count; // number of authority entries
+    uint16_t add_count; // number of resource entries
 };
+#pragma pack(pop)
 
+static_assert(sizeof(struct dnshdr) == 12, "check struct");
 
-class DNSPacket : public PacketStructed<struct dnshdr> {
+class DNSPacket : public PacketStructed<struct dnshdr>
+{
     private:
         std::string id;
         unsigned size;

@@ -25,9 +25,13 @@
 #include <QLibrary>
 #include <QSettings>
 
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
+#if defined(Q_OS_WIN)
+
+#elif defined(Q_OS_UNIX)
+    #include <sys/time.h>
+    #include <sys/resource.h>
+    #include <unistd.h>
+#endif
 
 #include "EthernetPacket.h"
 #include "sniff_window.h"
@@ -85,7 +89,11 @@ int main(int argc, char *argv[])
     HungrySniffer_Core core(base);
     SniffWindow::core = &core;
 
-    QSettings settings("/home/arthur/QT/build-hungry-sniffer-Desktop-Debug/settings.conf", QSettings::NativeFormat);
+#ifdef QT_NO_DEBUG
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("hungrysniffer"));
+#else
+    QSettings settings(QStringLiteral("settings.conf"), QSettings::IniFormat);
+#endif
     Preferences::settings = &settings;
 
     addPrefs(*SniffWindow::core);
@@ -116,11 +124,13 @@ int main(int argc, char *argv[])
                 notEndCmdOption = false;
             else if(i + 1 < argc && strcmp(argv[i] + 1, "i") == 0)
                 w.runLivePcap(argv[++i], 0, QString());
+#if defined(Q_OS_UNIX)
             else if(strcmp(argv[i] + 1, "quiet") == 0)
             {
                 ::close(STDOUT_FILENO);
                 ::close(STDERR_FILENO);
             }
+#endif
         }
         else
         {

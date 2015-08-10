@@ -31,7 +31,10 @@
 #include <QPlainTextEdit>
 #include <QSettings>
 #include <QSortFilterProxyModel>
-#include <unistd.h>
+#if defined(Q_OS_WIN)
+#elif defined(Q_OS_UNIX)
+    #include <unistd.h>
+#endif
 
 #include "devicechoose.h"
 #include "widgets/history_line_edit.h"
@@ -203,7 +206,11 @@ void SniffWindow::updateRecentsMenu()
 
 bool SniffWindow::isRoot()
 {
+#if defined(Q_OS_WIN)
+    return false;
+#elif defined(Q_OS_UNIX)
     return !(getuid() && geteuid());
+#endif
 }
 
 void SniffWindow::setStatsFunctions(const hungry_sniffer::Protocol& protocol)
@@ -677,7 +684,7 @@ void SniffWindow::on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QT
     int row = ui->tree_packet->indexOfTopLevelItem(getRootOfItem(current));
     unsigned start = 0, end;
     const hungry_sniffer::Packet* layer = this->selected->decodedPacket;
-    if(layer->isGoodPacket())
+    if(layer->isLocalGood())
     {
         for(int i = 0; i < row; i++)
         {

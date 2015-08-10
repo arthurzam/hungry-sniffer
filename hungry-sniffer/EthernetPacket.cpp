@@ -21,8 +21,23 @@
 */
 
 #include "EthernetPacket.h"
-#include <net/ethernet.h>
-#include <netinet/in.h>
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+    char *ether_ntoa (const uint8_t* n)
+    {
+        int i;
+        static char a [18];
+
+        i = sprintf (a, "%02x:%02x:%02x:%02x:%02x:%02x", n[0], n[1], n[2], n[3], n[4], n[5]);
+        if (i <11)
+            return (NULL);
+        return ((char *) &a);
+    }
+    typedef uint8_t ether_addr;
+#elif defined(Q_OS_UNIX)
+    #include <net/ethernet.h>
+    #include <netinet/in.h>
+#endif
 
 using namespace std;
 using namespace hungry_sniffer;
@@ -31,8 +46,8 @@ EthernetPacket::EthernetPacket(const void* data, size_t len,
         const Protocol* protocol, const Packet* prev) :
         PacketStructed(data, len, protocol, prev)
 {
-    this->_realSource = ether_ntoa((struct ether_addr*) this->value->ether_shost);
-    this->_realDestination = ether_ntoa((struct ether_addr*) this->value->ether_dhost);
+    this->_realSource = ether_ntoa((ether_addr*) this->value->ether_shost);
+    this->_realDestination = ether_ntoa((ether_addr*) this->value->ether_dhost);
 
     this->updateNameAssociation();
 

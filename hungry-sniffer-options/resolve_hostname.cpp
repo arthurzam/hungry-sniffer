@@ -20,20 +20,30 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <netdb.h>
-#include <arpa/inet.h>
-
 #include "options.h"
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+    #include <Ws2tcpip.h>
+#elif defined(Q_OS_UNIX)
+    #include <netdb.h>
+    #include <arpa/inet.h>
+#endif
 
 static int resolve(const Packet* packet, const char* ipStr)
 {
     struct in_addr ip;
     struct hostent* hp;
 
+#if defined(Q_OS_WIN)
+    ip.S_un.S_addr = inet_addr(ipStr);
+    if(ip.S_un.S_addr == INADDR_NONE)
+        return 0;
+#elif defined(Q_OS_UNIX)
     if (!inet_aton(ipStr, &ip))
         return 0;
+#endif
 
-    if ((hp = gethostbyaddr((const void *)&ip, sizeof ip, AF_INET)) == nullptr)
+    if ((hp = gethostbyaddr((const char *)&ip, sizeof ip, AF_INET)) == nullptr)
         return 0;
 
     const_cast<Protocol*>(packet->getProtocol())->associateName(std::string(ipStr), std::string(hp->h_name));

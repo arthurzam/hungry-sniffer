@@ -2,7 +2,7 @@ TEMPLATE = lib
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11 link_pkgconfig
-PKGCONFIG += jsoncpp
+unix: PKGCONFIG += jsoncpp
 
 TARGET = hungry-sniffer-protocols
 TEMPLATE = lib
@@ -10,12 +10,13 @@ TEMPLATE = lib
 QMAKE_LFLAGS_RELEASE += -s -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 
+win32: DEFINES += Q_OS_WIN
+unix:  DEFINES += Q_OS_UNIX
+
 SOURCES += \
   ArpPacket.cpp \
   DNSPacket.cpp \
   ICMPPacket.cpp \
-  iptc.cpp \
-  PacketJson.cpp \
   UDPPacket.cpp \
   call.cpp \
   HTTPPacket.cpp \
@@ -33,9 +34,18 @@ HEADERS += \
   UDPPacket.h \
   DNSPacket.h \
   ICMPPacket.h \
-  iptc.h \
-  PacketJson.h \
   TCPPacket.h \
   VRRPPacket.h
 
 INCLUDEPATH += $$PWD/../util
+
+unix {
+    SOURCES += iptc.cpp \
+      PacketJson.cpp
+    HEADERS += iptc.h \
+      PacketJson.h
+}
+
+win32 {
+    LIBS += -lws2_32
+}

@@ -22,9 +22,58 @@
 
 #include "ArpPacket.h"
 
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+    #include <Ws2tcpip.h>
+
+    char *ether_ntoa (const uint8_t* n)
+    {
+        int i;
+        static char a [18];
+
+        i = sprintf (a, "%02x:%02x:%02x:%02x:%02x:%02x", n[0], n[1], n[2], n[3], n[4], n[5]);
+        if (i <11)
+            return (NULL);
+        return ((char *) &a);
+    }
+    typedef uint8_t ether_addr;
+
+    const char* inet_ntop(int af, const void* src, char* dst, int cnt)
+    {
+        union {
+            struct sockaddr_in ipv4;
+            struct sockaddr_in6 ipv6;
+        }data;
+        DWORD length;
+
+        memset(&data, 0, sizeof(struct sockaddr_in));
+        switch(af)
+        {
+            case AF_INET6:
+                memcpy(&(data.ipv6.sin6_addr), src, sizeof(data.ipv6.sin6_addr));
+                data.ipv6.sin6_family = AF_INET6;
+                length = sizeof(data.ipv6);
+                break;
+            case AF_INET:
+                memcpy(&(data.ipv4.sin_addr), src, sizeof(data.ipv4.sin_addr));
+                data.ipv4.sin_family = AF_INET;
+                length = sizeof(data.ipv4);
+                break;
+        }
+        if (WSAAddressToStringA((struct sockaddr*)&data, length, 0, dst, (LPDWORD) &cnt) != 0) {
+            return NULL;
+        }
+        return dst;
+    }
+#elif defined(Q_OS_UNIX)
+    #include <arpa/inet.h>
+    #include <netinet/ether.h>
+#endif
+
 ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
     : PacketStructed(data, len, protocol, prev)
 {
+    if(!value) return;
     uint16_t arp_protocol = ntohs(this->value->ar_pro);
     uint16_t arp_format = ntohs(this->value->ar_hrd);
     this->headers.push_back({"Hardware Type", std::to_string(arp_format), 0, 2});
@@ -32,7 +81,7 @@ ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, con
     this->headers.push_back({"Hardware Size", std::to_string(this->value->ar_hln), 4, 1});
     this->headers.push_back({"Protocol Size", std::to_string(this->value->ar_pln), 5, 1});
 
-    if(ntohs(this->value->ar_op) == ARPOP_REQUEST)
+    if(ntohs(this->value->ar_op) == 1)
     {
         this->headers.push_back({"Type", "Request", 6, 2});
         this->info = "ARP Request";
@@ -52,8 +101,8 @@ ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, con
         char str[INET6_ADDRSTRLEN];
         if(arp_protocol == 0x0800)
         {
-            this->headers.push_back({"Sender MAC Address", ether_ntoa((struct ether_addr*) this->data.eth_ip.arp_sha), 8, 6});
-            this->headers.push_back({"Target MAC Address", ether_ntoa((struct ether_addr*) this->data.eth_ip.arp_tha), 18, 6});
+            this->headers.push_back({"Sender MAC Address", ether_ntoa((ether_addr*) this->data.eth_ip.arp_sha), 8, 6});
+            this->headers.push_back({"Target MAC Address", ether_ntoa((ether_addr*) this->data.eth_ip.arp_tha), 18, 6});
 
             inet_ntop(AF_INET, &this->data.eth_ip.arp_sip, str, INET6_ADDRSTRLEN);
             this->headers.push_back({"Sender IP Address" , str, 14, 4});
@@ -62,8 +111,8 @@ ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, con
         }
         else
         {
-            this->headers.push_back({"Sender MAC Address", ether_ntoa((struct ether_addr*) this->data.eth_ipv6.arp_sha), 8, 6});
-            this->headers.push_back({"Target MAC Address", ether_ntoa((struct ether_addr*) this->data.eth_ipv6.arp_tha)});
+            this->headers.push_back({"Sender MAC Address", ether_ntoa((ether_addr*) this->data.eth_ipv6.arp_sha), 8, 6});
+            this->headers.push_back({"Target MAC Address", ether_ntoa((ether_addr*) this->data.eth_ipv6.arp_tha)});
 
             inet_ntop(AF_INET6, &this->data.eth_ipv6.arp_sip, str, INET6_ADDRSTRLEN);
             this->headers.push_back({"Sender IPv6 Address" , str, 14, 16});

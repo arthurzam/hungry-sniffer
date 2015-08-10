@@ -21,8 +21,12 @@
 */
 
 #include "DNSPacket.h"
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+#elif defined(Q_OS_UNIX)
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+#endif
 
 static std::string getTypeStr(uint16_t type)
 {
@@ -40,6 +44,7 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
         PacketStructed(_data, len, protocol, prev),
         id(std::to_string(ntohs(this->value->id)))
 {
+    if(!value) return;
     size = len;
 
     this->headers.push_back({"Transaction ID", id, 0, 2});
@@ -109,9 +114,9 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
         q.subHeaders.push_back({"Class", std::to_string(ntohs(answer->_class)), q.pos + 4, 2});
         q.subHeaders.push_back({"Time to Live", std::to_string(ntohl(answer->_ttl)), q.pos + 6, 4});
 
-        unsigned dataLen = ntohs(answer->_dataLen);
+        long dataLen = ntohs(answer->_dataLen);
         q.len += dataLen;
-        unsigned dataPos = q.pos + sizeof(answer_t);
+        long dataPos = q.pos + sizeof(answer_t);
 
         switch(ntohs(answer->_type))
         {

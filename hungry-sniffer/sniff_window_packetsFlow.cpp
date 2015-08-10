@@ -27,6 +27,11 @@
 
 #include <QMessageBox>
 #include <QThread>
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+    #include <windows.h>
+#elif defined(Q_OS_UNIX)
+#endif
 #include <pcap.h>
 
 using namespace DataStructure;
@@ -79,7 +84,7 @@ void SniffWindow::runLivePcap_p(const std::string& name, int maxNumber, QString 
     RawPacketData raw;
 
     struct bpf_program filter;
-    pcap_compile(pd, &filter, capture.toUtf8().constData(), 0, PCAP_NETMASK_UNKNOWN);
+    pcap_compile(pd, &filter, capture.toUtf8().constData(), 0, 0xffffffff);
     pcap_setfilter(pd, &filter);
 
     struct pcap_pkthdr* header;

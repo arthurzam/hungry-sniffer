@@ -37,7 +37,7 @@ class FilterTree;
 namespace DataStructure {
     struct RawPacketData {
         uint32_t len;
-        timeval time;
+        struct timeval time;
         char* data;
 
         constexpr RawPacketData() : len(0), time({0,0}), data(nullptr) {}

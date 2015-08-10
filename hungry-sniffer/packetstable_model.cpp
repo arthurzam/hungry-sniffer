@@ -27,9 +27,9 @@
 #include <QBrush>
 #include <QThread>
 
-inline double diffTimeval(const timeval& curr, const timeval& base)
+inline double diffTimeval(const struct timeval& curr, const struct timeval& base)
 {
-    static constexpr double DIVIDE_MILI = 0.000001; // 1 microsec in seconds
+    static Q_CONSTEXPR double DIVIDE_MILI = 0.000001; // 1 microsec in seconds
     return ((curr.tv_sec - base.tv_sec) + (curr.tv_usec - base.tv_usec) * DIVIDE_MILI);
 }
 

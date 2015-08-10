@@ -21,13 +21,18 @@
 */
 
 #include "UDPPacket.h"
-#include <netinet/in.h>
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+#elif defined(Q_OS_UNIX)
+    #include <netinet/in.h>
+#endif
 
 extern Protocol dataProtocol;
 
 UDPPacket::UDPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev) :
       PacketStructed(data, len, protocol, prev)
 {
+    if(!value) return;
     this->_realSource = std::to_string(ntohs(this->value->uh_sport));
     this->_realDestination = std::to_string(ntohs(this->value->uh_dport));
 

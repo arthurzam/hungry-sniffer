@@ -24,13 +24,16 @@
 #define OPTIONS_H
 
 #include "Protocol.h"
+#include <QtGlobal>
+
 using namespace hungry_sniffer;
 
 extern "C" {
+#ifdef Q_OS_UNIX
     int start_arpspoof(const Packet* packet, Option::disabled_options_t& options);
 
     int start_srcPortRedirect(const Packet* packet, Option::disabled_options_t& options);
-
+#endif
     int resolve_srcIP(const Packet* packet, Option::disabled_options_t&);
     int resolve_dstIP(const Packet* packet, Option::disabled_options_t&);
 }

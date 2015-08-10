@@ -24,11 +24,39 @@
 #define IPPACKET_H_
 
 #include "Protocol.h"
-#include <netinet/ip.h>
+
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+#elif defined(Q_OS_UNIX)
+    #include <netinet/in.h>
+#endif
+
+#pragma pack(push,1)
+struct ip_hdr
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    uint8_t  ip_hl:4;	/* header length */
+    uint8_t  ip_v:4;		/* version */
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    uint8_t  ip_v:4;		/* version */
+    uint8_t  ip_hl:4;	/* header length */
+#endif
+    uint8_t  ip_tos;		/* type of service */
+    uint16_t ip_len;	/* total length */
+    uint16_t ip_id;		/* identification */
+    uint16_t ip_off;	/* fragment offset field */
+    uint8_t  ip_ttl;		/* time to live */
+    uint8_t  ip_p;		/* protocol */
+    uint16_t ip_sum;	/* checksum */
+    struct in_addr ip_src, ip_dst;	/* source and dest address */
+};
+#pragma pack(pop)
+
+static_assert(sizeof(struct ip_hdr) == 20, "check struct");
 
 using namespace hungry_sniffer;
 
-class IPPacket : public PacketStructed<struct ip> {
+class IPPacket : public PacketStructed<struct ip_hdr> {
     public:
         IPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~IPPacket() {}
@@ -39,9 +67,11 @@ class IPPacket : public PacketStructed<struct ip> {
         static bool filter_srcIP(const Packet* packet, const std::vector<std::string>* res);
         static bool filter_follow(const Packet* packet, const std::vector<std::string>* res);
 
+#ifdef Q_OS_UNIX
         static int drop_srcIP(const Packet* packet, Option::disabled_options_t& options);
         static int drop_dstIP(const Packet* packet, Option::disabled_options_t& options);
         static bool undrop_IP(const void* data);
+#endif
 };
 
 #endif /* IPPACKET_H_ */

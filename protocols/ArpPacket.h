@@ -24,29 +24,41 @@
 #define ARPPACKET_H_
 
 #include "Protocol.h"
-#include <net/if_arp.h>
-#include <arpa/inet.h>
-#include <netinet/ether.h>
+
+#pragma pack(push,1)
+struct arp_hdr
+{
+    uint16_t ar_hrd;	/* Format of hardware address.  */
+    uint16_t ar_pro;	/* Format of protocol address.  */
+    uint8_t ar_hln;		/* Length of hardware address.  */
+    uint8_t ar_pln;		/* Length of protocol address.  */
+    uint16_t ar_op;		/* ARP opcode (command).  */
+};
+#pragma pack(pop)
+
+static_assert(sizeof(struct arp_hdr) == 8, "check struct");
 
 using namespace hungry_sniffer;
 
-class ArpPacket : public PacketStructed<struct arphdr> {
+class ArpPacket : public PacketStructed<struct arp_hdr> {
     private:
-        union __attribute__((packed)) {
-            struct __attribute__((packed)) {
-                uint8_t arp_sha[ETH_ALEN]; /* Sender hardware address.  */
-                uint8_t arp_sip[4];        /* Sender IP address.  */
-                uint8_t arp_tha[ETH_ALEN]; /* Target hardware address.  */
-                uint8_t arp_tip[4];        /* Target IP address.  */
+        #pragma pack(push,1)
+        union {
+            struct {
+                uint8_t arp_sha[6]; /* Sender hardware address.  */
+                uint8_t arp_sip[4]; /* Sender IP address.  */
+                uint8_t arp_tha[6]; /* Target hardware address.  */
+                uint8_t arp_tip[4]; /* Target IP address.  */
             } eth_ip;
 
-            struct __attribute__((packed)) {
-                uint8_t arp_sha[ETH_ALEN]; /* Sender hardware address.  */
-                struct in6_addr arp_sip;   /* Sender IP address.  */
-                uint8_t arp_tha[ETH_ALEN]; /* Target hardware address.  */
-                struct in6_addr arp_tip;   /* Target IP address.  */
+            struct {
+                uint8_t arp_sha[6]; /* Sender hardware address.  */
+                uint8_t arp_sip[16];/* Sender IP address.  */
+                uint8_t arp_tha[6]; /* Target hardware address.  */
+                uint8_t arp_tip[16];/* Target IP address.  */
             } eth_ipv6;
         } data;
+        #pragma pack(pop)
         unsigned size;
 
     public:

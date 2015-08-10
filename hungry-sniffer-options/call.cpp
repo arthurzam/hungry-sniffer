@@ -20,16 +20,16 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <netinet/ether.h>
-
 #include "options.h"
 #include "stats_ips.h"
 using namespace hungry_sniffer;
 
 extern "C" void add(HungrySniffer_Core& core)
 {
-    Protocol& ipv4 = core.base[ETHERTYPE_IP];
+    Protocol& ipv4 = core.base[0x0800];
+#ifdef Q_OS_UNIX
     ipv4.addOption("ARPspoof between IP-s", start_arpspoof, true);
+#endif
     ipv4.addOption("Find hostname of Source", resolve_srcIP, false);
     ipv4.addOption("Find hostname of Destination", resolve_dstIP, false);
     ipv4.addStatsWindow("&Stats", StatWindow::create<StatsIps>);
@@ -37,6 +37,8 @@ extern "C" void add(HungrySniffer_Core& core)
     Protocol& tcp = ipv4[6];
     //Protocol& udp = ipv4[17];
 
+#ifdef Q_OS_UNIX
     tcp.addOption("Redirect Source Port", start_srcPortRedirect, true);
+#endif
     //udp.addOption("Redirect Source Port", start_srcPortRedirect, true);
 }

@@ -729,6 +729,7 @@ namespace hungry_sniffer {
                 if (len < sizeof(*value))
                 {
                     this->isGood = false;
+                    value = nullptr;
                     return;
                 }
                 value = (const T*)data;
@@ -754,7 +755,7 @@ namespace hungry_sniffer {
 
             virtual void updateNameAssociation()
             {
-                static constexpr unsigned MAX_INFO_LEN = 1024;
+                static constexpr int MAX_INFO_LEN = 1024;
                 auto start = data.cbegin(), end = data.cend();
                 while(*start == ' ' && start != end)
                     ++start;

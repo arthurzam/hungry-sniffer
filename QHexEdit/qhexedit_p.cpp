@@ -8,10 +8,10 @@
 #include <QScrollArea>
 #include <QUndoStack>
 
-constexpr int HEXCHARS_IN_LINE = 47;
-constexpr int GAP_ADR_HEX = 10;
-constexpr int GAP_HEX_ASCII = 16;
-constexpr int BYTES_PER_LINE = 16;
+Q_CONSTEXPR int HEXCHARS_IN_LINE = 47;
+Q_CONSTEXPR int GAP_ADR_HEX = 10;
+Q_CONSTEXPR int GAP_HEX_ASCII = 16;
+Q_CONSTEXPR int BYTES_PER_LINE = 16;
 
 QHexEditPrivate::QHexEditPrivate(QScrollArea* parent) : QWidget(parent)
 {
@@ -656,7 +656,7 @@ void QHexEditPrivate::paintEvent(QPaintEvent* event)
     {
         QByteArray hex;
         int xPos = _xPosHex;
-        for (int colIdx = 0; ((lineIdx + colIdx) < _xData.size() and (colIdx < BYTES_PER_LINE)); colIdx++)
+        for (int colIdx = 0; ((lineIdx + colIdx) < _xData.size() && (colIdx < BYTES_PER_LINE)); colIdx++)
         {
             int posBa = lineIdx + colIdx;
             if ((getSelectionBegin() <= posBa) && (getSelectionEnd() > posBa))
@@ -709,7 +709,7 @@ void QHexEditPrivate::paintEvent(QPaintEvent* event)
         for (int lineIdx = firstLineIdx, yPos = yPosStart; lineIdx < lastLineIdx; lineIdx += BYTES_PER_LINE, yPos += _charHeight)
         {
             int xPosAscii = _xPosAscii;
-            for (int colIdx = 0; ((lineIdx + colIdx) < _xData.size() and (colIdx < BYTES_PER_LINE)); colIdx++)
+            for (int colIdx = 0; ((lineIdx + colIdx) < _xData.size() && (colIdx < BYTES_PER_LINE)); colIdx++)
             {
                 int posBa = lineIdx + colIdx;
 
@@ -784,7 +784,7 @@ int QHexEditPrivate::cursorPos(QPoint pos)
 {
     int result = -1;
     // find char under cursor
-    if ((pos.x() >= _xPosHex) and (pos.x() < (_xPosHex + (HEXCHARS_IN_LINE + 2) * _charWidth)))
+    if ((pos.x() >= _xPosHex) && (pos.x() < (_xPosHex + (HEXCHARS_IN_LINE + 2) * _charWidth)))
     {
         int x = (pos.x() - _xPosHex) / _charWidth;
         if ((x % 3) == 0)

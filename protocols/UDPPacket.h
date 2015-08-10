@@ -24,11 +24,21 @@
 #define UDPPACKET_H_
 
 #include "Protocol.h"
-#include <netinet/udp.h>
+
+#pragma pack(push,1)
+struct udp_hdr
+{
+    uint16_t uh_sport; /* source port */
+    uint16_t uh_dport; /* destination port */
+    uint16_t uh_ulen;  /* udp length */
+    uint16_t uh_sum;   /* udp checksum */
+};
+#pragma pack(pop)
+static_assert(sizeof(struct udp_hdr) == 8, "check struct");
 
 using namespace hungry_sniffer;
 
-class UDPPacket: public PacketStructed<struct udphdr> {
+class UDPPacket: public PacketStructed<struct udp_hdr> {
     public:
         UDPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         virtual ~UDPPacket() {}

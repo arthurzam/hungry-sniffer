@@ -29,35 +29,40 @@
 #include "UDPPacket.h"
 #include "DNSPacket.h"
 #include "VRRPPacket.h"
+#ifdef Q_OS_UNIX
 #include "PacketJson.h"
+#endif
 #include "HTTPPacket.h"
-#include <netinet/ether.h>
 
 Protocol dataProtocol(init<PacketText>, "Data");
 
 extern "C" void add(HungrySniffer_Core& core)
 {
-    Protocol& ipv4 = core.base.addProtocol(ETHERTYPE_IP, init<IPPacket>, "IP", Protocol::getFlags(true, true));
-    Protocol& ipv6 = core.base.addProtocol(ETHERTYPE_IPV6, ipv4, init<IPv6Packet>, "IPv6");
-    core.base.addProtocol(ETHERTYPE_ARP, init<ArpPacket>, "ARP");
+    Protocol& ipv4 = core.base.addProtocol(0x0800, init<IPPacket>, "IP", Protocol::getFlags(true, true));
+    Protocol& ipv6 = core.base.addProtocol(0x86dd, ipv4, init<IPv6Packet>, "IPv6");
+    core.base.addProtocol(0x0806, init<ArpPacket>, "ARP");
 
     ipv4.addFilter("^dst *== *([^ ]+)$", IPPacket::filter_dstIP);
     ipv4.addFilter("^src *== *([^ ]+)$", IPPacket::filter_srcIP);
     ipv4.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", IPPacket::filter_follow);
 
+#ifdef Q_OS_UNIX
     ipv4.addOption("Drop From Source", IPPacket::drop_srcIP, true);
     ipv4.addOption("Drop From Destination", IPPacket::drop_dstIP, true);
+#endif
 
     ipv6.addFilter("^dst *== *([^ ]+)$", IPv6Packet::filter_dstIP);
     ipv6.addFilter("^src *== *([^ ]+)$", IPv6Packet::filter_srcIP);
     ipv6.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", IPv6Packet::filter_follow);
 
+#ifdef Q_OS_UNIX
     ipv6.addOption("Drop From Source", IPv6Packet::drop_srcIP, true);
     ipv6.addOption("Drop From Destination", IPv6Packet::drop_dstIP, true);
+#endif
 
-    Protocol& tcp = ipv4.addProtocol(IPPROTO_TCP, init<TCPPacket>, "TCP", Protocol::getFlags(true, true));
-    Protocol& udp = ipv4.addProtocol(IPPROTO_UDP, init<UDPPacket>, "UDP", Protocol::getFlags(true, true));
-    ipv4.addProtocol(IPPROTO_ICMP, init<ICMPPacket>, "ICMP");
+    Protocol& tcp = ipv4.addProtocol(6, init<TCPPacket>, "TCP", Protocol::getFlags(true, true));
+    Protocol& udp = ipv4.addProtocol(17, init<UDPPacket>, "UDP", Protocol::getFlags(true, true));
+    ipv4.addProtocol(1, init<ICMPPacket>, "ICMP");
     ipv4.addProtocol(112, init<VRRPPacket>, "VRRP");
 
     tcp.addFilter("^dst *== *([^ ]+)$", TCPPacket::filter_dstPort);
@@ -78,5 +83,7 @@ extern "C" void add(HungrySniffer_Core& core)
         dns.addFilter("^id *== *([^ ]+)$", DNSPacket::filter_id);
     }
     udp.addProtocol(1900, init<HTTPPacket>, "SSDP");
+#ifdef Q_OS_UNIX
     udp.addProtocol(17500, init<PacketJson>, "Dropbox LAN sync");
+#endif
 }

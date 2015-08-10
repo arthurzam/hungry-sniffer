@@ -25,12 +25,44 @@
 #include "EthernetPacket.h"
 #include "packetstable_model.h"
 
+#if defined(Q_OS_WIN)
+    #include <winsock2.h>
+    #include <windows.h>
+#elif defined(Q_OS_UNIX)
+#endif
 #include <pcap.h>
-#include <netinet/in.h>
-
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QThread>
+#if defined(Q_OS_WIN)
+    #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+        #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+    #else
+        #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+    #endif
+    int gettimeofday(struct timeval *tv, struct timezone*)
+    {
+        FILETIME ft;
+        unsigned __int64 tmpres = 0;
+        if (NULL != tv)
+        {
+            GetSystemTimeAsFileTime(&ft);
+
+            tmpres |= ft.dwHighDateTime;
+            tmpres <<= 32;
+            tmpres |= ft.dwLowDateTime;
+
+            tmpres /= 10;  /*convert into microseconds*/
+            /*converting file time to unix epoch*/
+            tmpres -= DELTA_EPOCH_IN_MICROSECS;
+            tv->tv_sec = (long)(tmpres / 1000000UL);
+            tv->tv_usec = (long)(tmpres % 1000000UL);
+        }
+        return 0;
+    }
+#elif defined(Q_OS_UNIX)
+    #include <netinet/in.h>
+#endif
 
 using namespace DataStructure;
 

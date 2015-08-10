@@ -23,7 +23,18 @@
 #ifndef ETHERNETPACKET_H_
 #define ETHERNETPACKET_H_
 
-#include <netinet/ether.h>
+#include <QtGlobal>
+
+#if defined(Q_OS_WIN)
+struct __attribute__((packed)) ether_header
+{
+    char  ether_dhost[6];	/* destination eth addr	*/
+    char  ether_shost[6];	/* source ether addr	*/
+    uint16_t   ether_type;	/* packet type ID field	*/
+};
+#elif defined(Q_OS_UNIX)
+    #include <netinet/ether.h>
+#endif
 #include "Protocol.h"
 
 namespace hungry_sniffer {

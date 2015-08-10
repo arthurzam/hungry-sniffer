@@ -21,6 +21,9 @@
 */
 
 #ifdef PYTHON_CMD
+#ifdef WIN32
+    #include <cmath>
+#endif
 #include "Python.h"
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
@@ -47,6 +50,10 @@ typedef PyObject* initModuleReturn;
 
 #ifndef PYTHON_DIR
 #define PYTHON_DIR "/usr/share/hungry-sniffer/"
+#endif
+
+#ifdef Q_OS_WIN
+    int gettimeofday(struct timeval *tv, struct timezone*);
 #endif
 
 extern "C" {

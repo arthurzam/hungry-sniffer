@@ -21,16 +21,28 @@
 */
 
 #include "IPPacket.h"
-#include <arpa/inet.h>
-#include "iptc.h"
-
+#if defined(Q_OS_WIN)
+#elif defined(Q_OS_UNIX)
+    #include <arpa/inet.h>
+    #include "iptc.h"
+#endif
 using namespace std;
 
 IPPacket::IPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev) : PacketStructed(data, len, protocol, prev)
 {
+    if(!value) return;
     this->_realSource = inet_ntoa(this->value->ip_src);
     this->_realDestination = inet_ntoa(this->value->ip_dst);
 
+    this->headers.push_back({"Source IP", "", 12, 4});
+    this->headers.push_back({"Destination IP", "", 16, 4});
+    this->headers.push_back({"Type of Service", std::to_string(this->value->ip_tos), 1, 1});
+    this->headers.push_back({"Total Length", std::to_string(ntohs(this->value->ip_len)), 2, 2});
+    this->headers.push_back({"Identification", std::to_string(ntohs(this->value->ip_id)), 4, 2});
+    this->headers.push_back({"Fragment Offset Field", std::to_string(ntohs(this->value->ip_off)), 6, 2});
+    this->headers.push_back({"TTL", std::to_string(this->value->ip_ttl), 8, 1});
+    this->headers.push_back({"Protocol", std::to_string(this->value->ip_p), 9, 1});
+    this->headers.push_back({"Checksum", std::to_string(ntohs(this->value->ip_sum)), 10, 2});
     this->updateNameAssociation();
 
     this->setNext(this->value->ip_p, (const char*)data + sizeof(*value), len - sizeof(*value));
@@ -50,10 +62,8 @@ void IPPacket::updateNameAssociation()
     this->source = this->protocol->getNameAssociated(this->_realSource);
     this->destination = this->protocol->getNameAssociated(this->_realDestination);
 
-    this->headers.clear();
-    this->headers.push_back({"Source IP", this->source});
-    this->headers.push_back({"Destination IP", this->destination});
-    this->headers.push_back({"TTL", std::to_string(this->value->ip_ttl)});
+    this->headers[0].value = this->source;
+    this->headers[1].value = this->destination;
 
     if(this->next)
         this->next->updateNameAssociation();
@@ -81,6 +91,7 @@ bool IPPacket::filter_follow(const Packet* packet, const std::vector<std::string
     return false;
 }
 
+#ifdef Q_OS_UNIX
 int IPPacket::drop_srcIP(const Packet* packet, Option::disabled_options_t& options)
 {
     const IPPacket* ip = static_cast<const IPPacket*>(packet->getNext());
@@ -110,3 +121,4 @@ bool IPPacket::undrop_IP(const void* data)
 {
     return removeDropIP(static_cast<const char*>(data), true);
 }
+#endif

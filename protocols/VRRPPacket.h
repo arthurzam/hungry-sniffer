@@ -27,15 +27,15 @@
 
 using namespace hungry_sniffer;
 
-struct  __attribute__((packed)) vrrphdr {
+#pragma pack(push,1)
+struct vrrphdr {
 #if BYTE_ORDER == BIG_ENDIAN
-    unsigned char version :4; // type
-    unsigned char type    :4; // version
+    uint8_t version :4; // type
+    uint8_t type    :4; // version
 #else
-    unsigned char type    :4; // type
-    unsigned char version :4; // version
+    uint8_t type    :4; // type
+    uint8_t version :4; // version
 #endif
-
     uint8_t  vrid;       /* virtual router id */
     uint8_t  priority;   /* router priority */
     uint8_t  naddr;      /* address counter */
@@ -45,6 +45,8 @@ struct  __attribute__((packed)) vrrphdr {
     /* here <naddr> ip addresses */
     /* here authentification infos */
 };
+#pragma pack(pop)
+static_assert(sizeof(struct vrrphdr) == 8, "check struct");
 
 class VRRPPacket : public PacketStructed<struct vrrphdr> {
     public:
