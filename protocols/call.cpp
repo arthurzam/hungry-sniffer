@@ -20,7 +20,8 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "Protocol.h"
+#include <hs_core.h>
+
 #include "TCPPacket.h"
 #include "ArpPacket.h"
 #include "IPPacket.h"

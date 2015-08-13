@@ -23,7 +23,7 @@
 #ifndef DNSPACKET_H_
 #define DNSPACKET_H_
 
-#include "Protocol.h"
+#include <hs_advanced_packets.h>
 
 using namespace hungry_sniffer;
 

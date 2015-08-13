@@ -21,7 +21,7 @@
 */
 
 #include "packetstable_model.h"
-#include "Protocol.h"
+#include "hs_protocol.h"
 #include "filter_tree.h"
 
 #include <QBrush>

@@ -23,7 +23,7 @@
 #ifndef PACKETJSON_H_
 #define PACKETJSON_H_
 
-#include "Protocol.h"
+#include <hs_advanced_packets.h>
 
 using namespace hungry_sniffer;
 

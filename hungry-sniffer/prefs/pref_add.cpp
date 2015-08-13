@@ -20,9 +20,10 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "Protocol.h"
 #include "general_modules.h"
 #include "general_ui.h"
+
+#include <hs_core.h>
 
 void addPrefs(HungrySniffer_Core& core)
 {

@@ -23,7 +23,7 @@
 #ifndef UDPPACKET_H_
 #define UDPPACKET_H_
 
-#include "Protocol.h"
+#include <hs_advanced_packets.h>
 
 #pragma pack(push,1)
 struct udp_hdr

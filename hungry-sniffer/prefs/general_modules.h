@@ -24,13 +24,14 @@
 #define GENERAL_MODULES_H
 
 #include <QWidget>
-#include "Protocol.h"
+#include <hs_prefs.h>
 
 namespace Ui {
     class GeneralModules;
 }
 
 class StringListSelector;
+class HungrySniffer_Core;
 
 class GeneralModules : public QWidget, public hungry_sniffer::PreferencePanel
 {

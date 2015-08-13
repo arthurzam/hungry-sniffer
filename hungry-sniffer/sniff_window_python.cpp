@@ -33,6 +33,7 @@
 
 #include <QPlainTextEdit>
 #include <QSettings>
+#include <hs_core.h>
 
 #ifdef PYTHON2
 typedef void initModuleReturn;

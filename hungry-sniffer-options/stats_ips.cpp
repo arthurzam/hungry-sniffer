@@ -24,6 +24,8 @@
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QHeaderView>
+#include <hs_protocol.h>
+
 using namespace hungry_sniffer;
 
 StatsIps::StatsIps(QWidget *parent) :

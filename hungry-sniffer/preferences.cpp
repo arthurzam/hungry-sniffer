@@ -32,6 +32,8 @@
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
 
+#include <hs_core.h>
+
 std::vector<Preferences::reloadFunc_t> Preferences::reloadFunctions;
 
 static QTreeWidgetItem* getItem(const HungrySniffer_Core::Preference& pref, QStackedWidget* stack, std::vector<hungry_sniffer::PreferencePanel*>& panels)

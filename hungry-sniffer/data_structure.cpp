@@ -23,6 +23,7 @@
 #include "packetstable_model.h"
 #include "EthernetPacket.h"
 #include "sniff_window.h"
+#include <hs_core.h>
 
 DataStructure::RawPacketData::RawPacketData(const DataStructure::RawPacketData& other) :
     time(other.time)

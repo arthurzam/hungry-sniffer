@@ -20,43 +20,22 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef ICMPPACKET_H_
-#define ICMPPACKET_H_
+#ifndef HS_PREFS
+#define HS_PREFS
 
-#include <hs_advanced_packets.h>
+class QSettings;
+class QWidget;
 
-#pragma pack(push,1)
-struct icmp_hdr
-{
-    uint8_t type;		/* message type */
-    uint8_t code;		/* type sub-code */
-    uint16_t checksum;
-    union
-    {
-        struct
-        {
-            uint16_t	id;
-            uint16_t	sequence;
-        } echo;			/* echo datagram */
-        uint32_t	gateway;	/* gateway address */
-        struct
-        {
-            uint16_t	__glibc_reserved;
-            uint16_t	mtu;
-        } frag;			/* path mtu discovery */
-    } un;
-};
-#pragma pack(pop)
-static_assert(sizeof(struct icmp_hdr) == 8, "check struct");
+namespace hungry_sniffer {
+    class PreferencePanel {
 
-using namespace hungry_sniffer;
+        public:
+            virtual QWidget* get() = 0;
+            virtual void save(QSettings& settings) = 0;
 
-class ICMPPacket: public PacketStructed<struct icmp_hdr> {
-    private:
-        void setByTypes(int type, int code);
-    public:
-        ICMPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
-        virtual ~ICMPPacket() {}
-};
+            virtual ~PreferencePanel() {}
+    };
+}
 
-#endif /* ICMPPACKET_H_ */
+#endif // HS_PREFS
+

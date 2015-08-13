@@ -23,7 +23,7 @@
 #ifndef ADDITIONALHEADERSPACKET_H
 #define ADDITIONALHEADERSPACKET_H
 
-#include "Protocol.h"
+#include "hs_protocol.h"
 
 class AdditionalHeadersPacket : public hungry_sniffer::Packet {
     public:

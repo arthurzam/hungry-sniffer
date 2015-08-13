@@ -35,7 +35,7 @@ struct __attribute__((packed)) ether_header
 #elif defined(Q_OS_UNIX)
     #include <netinet/ether.h>
 #endif
-#include "Protocol.h"
+#include <hs_advanced_packets.h>
 
 namespace hungry_sniffer {
 

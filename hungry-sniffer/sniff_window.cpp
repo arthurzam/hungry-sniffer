@@ -44,6 +44,9 @@
 #include "additionalheaderspacket.h"
 #include "filter_tree.h"
 
+#include <hs_core.h>
+#include <hs_stats.h>
+
 SniffWindow* SniffWindow::window = nullptr;
 
 SniffWindow::SniffWindow(QWidget* parent) :

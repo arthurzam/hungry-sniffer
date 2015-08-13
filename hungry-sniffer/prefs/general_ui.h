@@ -24,11 +24,13 @@
 #define GENERAL_UI_H
 
 #include <QWidget>
-#include "Protocol.h"
+#include <hs_prefs.h>
 
 namespace Ui {
-class GeneralUI;
+    class GeneralUI;
 }
+
+class HungrySniffer_Core;
 
 class GeneralUI : public QWidget, public hungry_sniffer::PreferencePanel
 {

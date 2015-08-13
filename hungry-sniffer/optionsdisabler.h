@@ -24,7 +24,7 @@
 #define OPTIONSDISABLER_H
 
 #include <QDialog>
-#include "Protocol.h"
+#include "hs_protocol.h"
 
 class QGridLayout;
 

@@ -23,7 +23,7 @@
 #ifndef IPPACKET_H_
 #define IPPACKET_H_
 
-#include "Protocol.h"
+#include <hs_advanced_packets.h>
 
 #if defined(Q_OS_WIN)
     #include <winsock2.h>

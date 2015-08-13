@@ -23,7 +23,7 @@
 #ifndef HTTPPACKET_H_
 #define HTTPPACKET_H_
 
-#include "Protocol.h"
+#include <hs_advanced_packets.h>
 
 using namespace hungry_sniffer;
 

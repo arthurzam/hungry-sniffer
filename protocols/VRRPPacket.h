@@ -23,7 +23,7 @@
 #ifndef VRRPPACKET_H_
 #define VRRPPACKET_H_
 
-#include "Protocol.h"
+#include <hs_advanced_packets.h>
 
 using namespace hungry_sniffer;
 

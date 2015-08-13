@@ -28,7 +28,7 @@
 #include <QStandardItemModel>
 #include <QTreeView>
 #include <QVBoxLayout>
-#include "Protocol.h"
+#include <hs_core.h>
 
 using namespace hungry_sniffer;
 

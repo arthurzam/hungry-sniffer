@@ -23,7 +23,7 @@
 #ifndef IPV6PACKET_H_
 #define IPV6PACKET_H_
 
-#include "Protocol.h"
+#include <hs_advanced_packets.h>
 
 #if defined(Q_OS_WIN)
     #include <winsock2.h>

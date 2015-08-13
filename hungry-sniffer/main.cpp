@@ -34,8 +34,10 @@
 #endif
 
 #include "EthernetPacket.h"
-#include "sniff_window.h"
 #include "preferences.h"
+#include "sniff_window.h"
+
+#include <hs_core.h>
 
 #ifndef PLUGINS_DIR
 #define PLUGINS_DIR "/usr/share/hungry-sniffer/plugins/"

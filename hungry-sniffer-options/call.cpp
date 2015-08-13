@@ -24,6 +24,8 @@
 #include "stats_ips.h"
 using namespace hungry_sniffer;
 
+#include <hs_core.h>
+
 extern "C" void add(HungrySniffer_Core& core)
 {
     Protocol& ipv4 = core.base[0x0800];

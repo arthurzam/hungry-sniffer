@@ -25,7 +25,12 @@
 
 #include <QAbstractItemModel>
 #include <QDialog>
-#include "Protocol.h"
+
+#include <hs_stats.h>
+
+namespace hungry_sniffer {
+    class Packet;
+}
 
 class StatsIpsModel : public QAbstractTableModel
 {

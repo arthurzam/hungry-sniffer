@@ -23,7 +23,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-#include "Protocol.h"
+#include "hs_protocol.h"
 #include <QtGlobal>
 
 using namespace hungry_sniffer;

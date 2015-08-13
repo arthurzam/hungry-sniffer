@@ -41,6 +41,7 @@ class QSortFilterProxyModel;
 class QPlainTextEdit;
 class QTreeWidgetItem;
 
+class HungrySniffer_Core;
 
 class SniffWindow : public QMainWindow
 {

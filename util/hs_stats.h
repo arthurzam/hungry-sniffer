@@ -20,43 +20,29 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef ICMPPACKET_H_
-#define ICMPPACKET_H_
+#ifndef HS_STATS_H
+#define HS_STATS_H
 
-#include <hs_advanced_packets.h>
+#include <ctime>
 
-#pragma pack(push,1)
-struct icmp_hdr
-{
-    uint8_t type;		/* message type */
-    uint8_t code;		/* type sub-code */
-    uint16_t checksum;
-    union
+namespace hungry_sniffer {
+    class Packet;
+
+    class StatWindow
     {
-        struct
-        {
-            uint16_t	id;
-            uint16_t	sequence;
-        } echo;			/* echo datagram */
-        uint32_t	gateway;	/* gateway address */
-        struct
-        {
-            uint16_t	__glibc_reserved;
-            uint16_t	mtu;
-        } frag;			/* path mtu discovery */
-    } un;
-};
-#pragma pack(pop)
-static_assert(sizeof(struct icmp_hdr) == 8, "check struct");
+        public:
+            virtual void addPacket(const Packet* packet, const struct timeval& time) = 0;
+            virtual void showWindow() = 0;
 
-using namespace hungry_sniffer;
+            template<typename T>
+            static StatWindow* create()
+            {
+                return new T();
+            }
 
-class ICMPPacket: public PacketStructed<struct icmp_hdr> {
-    private:
-        void setByTypes(int type, int code);
-    public:
-        ICMPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
-        virtual ~ICMPPacket() {}
-};
+            virtual ~StatWindow() {}
+    };
+}
 
-#endif /* ICMPPACKET_H_ */
+#endif // HS_STATS_H
+

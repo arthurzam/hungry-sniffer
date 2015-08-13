@@ -23,7 +23,7 @@
 #ifndef FILTER_TREE_H
 #define FILTER_TREE_H
 
-#include "Protocol.h"
+#include "hs_protocol.h"
 
 /**
  * @brief The FilterTree class
