@@ -20,8 +20,8 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef STATS_IPS_H
-#define STATS_IPS_H
+#ifndef STATSLENGTH_H
+#define STATSLENGTH_H
 
 #include <QAbstractItemModel>
 #include <QDialog>
@@ -32,31 +32,37 @@ namespace hungry_sniffer {
     class Packet;
 }
 
-class StatsIpsModel : public QAbstractTableModel
+static uint32_t StatsLengthModel_lengths[] = {0, 20, 40, 80, 160, 320, 640, 1280, 2560, UINT32_MAX};
+
+class StatsLengthModel : public QAbstractTableModel
 {
     private:
         struct stat {
-            int src;
-            int dst;
+            uint32_t count = 0;
+            uint32_t min = UINT32_MAX;
+            uint32_t max = 0;
         };
-        std::map<std::string, struct stat> ips;
+        uint32_t totalCount = 0;
+
+        static constexpr unsigned LENGTH = sizeof(StatsLengthModel_lengths) / sizeof(uint32_t) - 1;
+        struct stat parts[LENGTH];
     public:
-        explicit StatsIpsModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
+        explicit StatsLengthModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
 
         int rowCount(const QModelIndex & = QModelIndex()) const
         {
-            return ips.size();
+            return LENGTH;
         }
 
         int columnCount(const QModelIndex & = QModelIndex()) const
         {
-            return 4;
+            return 5;
         }
 
         QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
         QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
-        void add(const std::string& ip, int role);
+        void add(uint32_t length);
         void update()
         {
             this->beginResetModel();
@@ -65,17 +71,17 @@ class StatsIpsModel : public QAbstractTableModel
 };
 
 class QTableView;
-class StatsIps : public QDialog, public hungry_sniffer::StatWindow
+class StatsLength : public QDialog, public hungry_sniffer::StatWindow
 {
     private:
         QTableView* tableView;
-        StatsIpsModel model;
+        StatsLengthModel model;
 
     public:
-        explicit StatsIps(QWidget *parent = 0);
-        ~StatsIps() {}
+        explicit StatsLength(QWidget *parent = 0);
+        ~StatsLength() {}
 
-        virtual void addPacket(const hungry_sniffer::Packet* packet, const timeval&, const uint8_t*, size_t);
+        virtual void addPacket(const hungry_sniffer::Packet*, const timeval&, const uint8_t*, size_t len);
         virtual void showWindow();
 };
 

@@ -22,6 +22,7 @@
 
 #include "options.h"
 #include "stats_ips.h"
+#include "stats_length.h"
 using namespace hungry_sniffer;
 
 #include <hs_core.h>
@@ -35,6 +36,7 @@ extern "C" void add(HungrySniffer_Core& core)
     ipv4.addOption("Find hostname of Source", resolve_srcIP, false);
     ipv4.addOption("Find hostname of Destination", resolve_dstIP, false);
     ipv4.addStatsWindow("&Stats", StatWindow::create<StatsIps>);
+    core.base.addStatsWindow("&Length", StatWindow::create<StatsLength>);
 
     Protocol& tcp = ipv4[6];
     //Protocol& udp = ipv4[17];

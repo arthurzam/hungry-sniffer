@@ -227,13 +227,13 @@ void SniffWindow::setStatsFunctions(const hungry_sniffer::Protocol& protocol)
         {
             QAction* temp = new QAction(QString::fromStdString(window.first), output);
             auto func = window.second;
-            connect(temp, &QAction::triggered, [this, func]()
+            connect(temp, &QAction::triggered, [this, func]() // TODO: create slot
             {
                 hungry_sniffer::StatWindow* w = func();
                 bool notOnlyShown = !ui->action_only_Shown->isChecked();
                 for(const DataStructure::localPacket& i : model.local)
                     if(i.isShown | notOnlyShown)
-                        w->addPacket(i.decodedPacket, i.rawPacket.time);
+                        w->addPacket(i.decodedPacket, i.rawPacket.time, (const uint8_t*)i.rawPacket.data, i.rawPacket.len);
                 w->showWindow();
             });
             output->addAction(temp);

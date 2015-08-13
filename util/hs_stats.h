@@ -31,7 +31,7 @@ namespace hungry_sniffer {
     class StatWindow
     {
         public:
-            virtual void addPacket(const Packet* packet, const struct timeval& time) = 0;
+            virtual void addPacket(const Packet* packet, const struct timeval& time, const uint8_t* data, size_t length) = 0;
             virtual void showWindow() = 0;
 
             template<typename T>

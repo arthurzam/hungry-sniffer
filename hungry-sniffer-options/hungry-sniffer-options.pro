@@ -10,7 +10,8 @@ QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 SOURCES += \
     call.cpp \
     resolve_hostname.cpp \
-    stats_ips.cpp
+    stats_ips.cpp \
+    stats_length.cpp
 
 unix: SOURCES += \
     arpspoof.cpp \
@@ -18,7 +19,8 @@ unix: SOURCES += \
 
 HEADERS +=\
     options.h \
-    stats_ips.h
+    stats_ips.h \
+    stats_length.h
 
 INCLUDEPATH += $$PWD/../util
 

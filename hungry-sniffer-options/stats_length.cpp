@@ -20,7 +20,7 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "stats_ips.h"
+#include "stats_length.h"
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QHeaderView>
@@ -28,13 +28,13 @@
 
 using namespace hungry_sniffer;
 
-StatsIps::StatsIps(QWidget *parent) :
+StatsLength::StatsLength(QWidget *parent) :
     QDialog(parent),
     model(nullptr)
 {
     this->resize(400, 300);
     this->setAttribute(Qt::WA_DeleteOnClose);
-    this->setWindowTitle(QStringLiteral("IP stats"));
+    this->setWindowTitle(QStringLiteral("packet length"));
 
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
     tableView = new QTableView(this);
@@ -47,54 +47,46 @@ StatsIps::StatsIps(QWidget *parent) :
     this->show();
 }
 
-void StatsIps::addPacket(const Packet* packet, const timeval&, const uint8_t*, size_t)
+void StatsLength::addPacket(const Packet*, const timeval&, const uint8_t*, size_t len)
 {
-    static const Protocol* IPv4 = nullptr;
-    static const Protocol* IPv6 = nullptr;
-
-    if(IPv4 == nullptr)
-    {
-        const Protocol* Ethernet = packet->getProtocol();
-        IPv4 = Ethernet->getProtocol(0x0800);
-        IPv6 = Ethernet->getProtocol(0x86dd);
-    }
-    const Packet* p = packet->hasProtocol(IPv4);
-    if(p == nullptr && (p = packet->hasProtocol(IPv6)) == nullptr)
-        return;
-    model.add(p->realSource(), 0);
-    model.add(p->realDestination(), 1);
+    model.add(len);
 }
 
-void StatsIps::showWindow()
+void StatsLength::showWindow()
 {
     model.update();
 }
 
-QVariant StatsIpsModel::data(const QModelIndex& index, int role) const
+QVariant StatsLengthModel::data(const QModelIndex& index, int role) const
 {
     if(role == Qt::ItemDataRole::DisplayRole)
     {
-        auto iter = this->ips.cbegin();
-        for(uint_fast32_t i = index.row(); i != 0; i--) iter++;
+        int row = index.row();
         switch(index.column())
         {
             case 0:
-                return QString::fromStdString(iter->first);
+                return QStringLiteral("%1-%2").arg(StatsLengthModel_lengths[row]).arg(StatsLengthModel_lengths[row]);
             case 1:
-                return QVariant(iter->second.src + iter->second.dst);
+                return QVariant(parts[row].count);
             case 2:
-                return QVariant(iter->second.src);
+                if(parts[row].count == 0)
+                    return QStringLiteral("-");
+                return QVariant(parts[row].min);
             case 3:
-                return QVariant(iter->second.dst);
+                if(parts[row].count == 0)
+                    return QStringLiteral("-");
+                return QVariant(parts[row].max);
+            case 4:
+                return QStringLiteral("%1%").arg((float)(parts[row].count * 100) / totalCount, 0, 'f', 2);
         }
     }
     return QVariant();
 }
 
-QVariant StatsIpsModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant StatsLengthModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    static const QString headers[] = {QStringLiteral("IP"), QStringLiteral("All"),
-                                      QStringLiteral("Source"), QStringLiteral("Destination")};
+    static const QString headers[] = {QStringLiteral("Range"), QStringLiteral("Count"), QStringLiteral("Min Val"),
+                                      QStringLiteral("Max Val"), QStringLiteral("Percent")};
     if ((role == Qt::DisplayRole) & (orientation == Qt::Horizontal)) {
         return headers[section];
     }
@@ -102,16 +94,15 @@ QVariant StatsIpsModel::headerData(int section, Qt::Orientation orientation, int
     return QVariant();
 }
 
-void StatsIpsModel::add(const std::string& ip, int role)
+void StatsLengthModel::add(uint32_t length)
 {
-    auto iter = this->ips.find(ip);
-    if(iter == this->ips.end())
-    {
-        this->ips.insert({ip, {1 - role, role}});
-    }
-    else
-    {
-        iter->second.src += (1 - role);
-        iter->second.dst += role;
-    }
+    int i = 0;
+    for(;StatsLengthModel_lengths[i] <= length; i++);
+    struct stat& part = this->parts[i-1];
+    totalCount++;
+    part.count++;
+    if(part.max < length)
+        part.max = length;
+    if(part.min > length)
+        part.min = length;
 }
