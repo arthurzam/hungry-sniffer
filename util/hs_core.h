@@ -25,6 +25,7 @@
 
 #include <hs_protocol.h>
 #include <hs_prefs.h>
+#include <hs_stats.h>
 
 struct HungrySniffer_Core {
     typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
@@ -53,7 +54,8 @@ struct HungrySniffer_Core {
         }
     };
 
-    std::vector<Preference> preferences;
+    std::vector<struct Preference> preferences;
+    std::vector<struct hungry_sniffer::Stats::StatsNode> stats;
 
     HungrySniffer_Core(hungry_sniffer::Protocol& base)
         : base(base) {}
@@ -61,7 +63,13 @@ struct HungrySniffer_Core {
     Preference& addProtocolPreference(Preference&& pref)
     {
         preferences.push_back(std::move(pref));
-        return preferences.at(preferences.size() - 1);
+        return preferences.back();
+    }
+
+    struct hungry_sniffer::Stats::StatsNode& addStatWindow(struct hungry_sniffer::Stats::StatsNode&& node)
+    {
+        stats.push_back(std::move(node));
+        return stats.back();
     }
 };
 

@@ -48,6 +48,8 @@
 
 SniffWindow* SniffWindow::window = nullptr;
 
+void loadStatsFunctions(const std::vector<hungry_sniffer::Stats::StatsNode>& nodes, QMenu& father);
+
 SniffWindow::SniffWindow(QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::SniffWindow),
@@ -75,7 +77,7 @@ SniffWindow::SniffWindow(QWidget* parent) :
 
     ui->tree_packet->setHeaderLabels(QStringList({QStringLiteral("Key"), QStringLiteral("Value")}));
     ui->tree_packet->setColumnCount(2);
-    this->setStatsFunctions(core->base);
+    loadStatsFunctions(core->stats, *ui->menuStats);
 #ifdef PYTHON_CMD
     initPython();
 
@@ -216,32 +218,23 @@ bool SniffWindow::isRoot()
 #endif
 }
 
-void SniffWindow::setStatsFunctions(const hungry_sniffer::Protocol& protocol)
+void loadStatsFunctions(const std::vector<hungry_sniffer::Stats::StatsNode>& nodes, QMenu& father)
 {
-    const auto& list = protocol.getStatsWindowDB();
-    if(list.size() != 0)
+    for(const hungry_sniffer::Stats::StatsNode& i : nodes)
     {
-        QMenu* output = new QMenu(QString::fromStdString(protocol.getName()), ui->menuStats);
-        for(const auto& window : list)
+        if(i.subNodes.size() == 0 && i.func)
         {
-            QAction* temp = new QAction(QString::fromStdString(window.first), output);
-            auto func = window.second;
-            connect(temp, &QAction::triggered, [this, func]() // TODO: create slot
-            {
-                hungry_sniffer::StatWindow* w = func();
-                bool notOnlyShown = !ui->action_only_Shown->isChecked();
-                for(const DataStructure::localPacket& i : model.local)
-                    if(i.isShown | notOnlyShown)
-                        w->addPacket(i.decodedPacket, i.rawPacket.time, (const uint8_t*)i.rawPacket.data, i.rawPacket.len);
-                w->showWindow();
-            });
-            output->addAction(temp);
+            QAction* action = new QAction(QString::fromStdString(i.name), SniffWindow::window);
+            action->setData(QVariant::fromValue<void*>((void*)i.func));
+            QObject::connect(action, SIGNAL(triggered()), SniffWindow::window, SLOT(open_stats_window()));
+            father.addAction(action);
         }
-        ui->menuStats->addMenu(output);
-    }
-    for(const auto& i : protocol.getProtocolsDB())
-    {
-        setStatsFunctions(i.second);
+        else
+        {
+            QMenu* menu = new QMenu(QString::fromStdString(i.name), SniffWindow::window);
+            loadStatsFunctions(i.subNodes, *menu);
+            father.addMenu(menu);
+        }
     }
 }
 
@@ -623,6 +616,19 @@ void SniffWindow::copy_to_clipboard()
     QAction* action = qobject_cast<QAction*>(sender());
     if (action)
         QApplication::clipboard()->setText(action->data().toString());
+}
+
+void SniffWindow::open_stats_window()
+{
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (!action) return;
+    hungry_sniffer::Stats::statInitFunction func = (hungry_sniffer::Stats::statInitFunction)action->data().value<void*>();
+    hungry_sniffer::Stats::StatWindow* w = func();
+    bool notOnlyShown = !ui->action_only_Shown->isChecked();
+    for(const DataStructure::localPacket& i : model.local)
+        if(i.isShown | notOnlyShown)
+            w->addPacket(i.decodedPacket, i.rawPacket.time, (const uint8_t*)i.rawPacket.data, i.rawPacket.len);
+    w->showWindow();
 }
 
 void SniffWindow::tree_add_info_header()

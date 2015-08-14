@@ -71,7 +71,7 @@ class StatsLengthModel : public QAbstractTableModel
 };
 
 class QTableView;
-class StatsLength : public QDialog, public hungry_sniffer::StatWindow
+class StatsLength : public QDialog, public hungry_sniffer::Stats::StatWindow
 {
     private:
         QTableView* tableView;

@@ -65,7 +65,7 @@ class StatsIpsModel : public QAbstractTableModel
 };
 
 class QTableView;
-class StatsIps : public QDialog, public hungry_sniffer::StatWindow
+class StatsIps : public QDialog, public hungry_sniffer::Stats::StatWindow
 {
     private:
         QTableView* tableView;

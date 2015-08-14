@@ -77,6 +77,8 @@ QVariant StatsLengthModel::data(const QModelIndex& index, int role) const
                     return QStringLiteral("-");
                 return QVariant(parts[row].max);
             case 4:
+                if(totalCount == 0)
+                    return QStringLiteral("-");
                 return QStringLiteral("%1%").arg((float)(parts[row].count * 100) / totalCount, 0, 'f', 2);
         }
     }

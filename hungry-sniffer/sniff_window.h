@@ -92,6 +92,7 @@ class SniffWindow : public QMainWindow
 
         void recentFile_triggered();
         void copy_to_clipboard();
+        void open_stats_window();
         void tree_add_info_header();
         void tree_remove_info_header();
 
@@ -140,7 +141,6 @@ class SniffWindow : public QMainWindow
 
         void associateName(const hungry_sniffer::Packet* localPacket, const std::string& origText);
 
-        void setStatsFunctions(const hungry_sniffer::Protocol& protocol);
         void updateRecentsMenu();
 
 #ifdef PYTHON_CMD

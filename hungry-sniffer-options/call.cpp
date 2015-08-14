@@ -35,14 +35,14 @@ extern "C" void add(HungrySniffer_Core& core)
 #endif
     ipv4.addOption("Find hostname of Source", resolve_srcIP, false);
     ipv4.addOption("Find hostname of Destination", resolve_dstIP, false);
-    ipv4.addStatsWindow("&Stats", StatWindow::create<StatsIps>);
-    core.base.addStatsWindow("&Length", StatWindow::create<StatsLength>);
 
     Protocol& tcp = ipv4[6];
-    //Protocol& udp = ipv4[17];
 
 #ifdef Q_OS_UNIX
     tcp.addOption("Redirect Source Port", start_srcPortRedirect, true);
 #endif
-    //udp.addOption("Redirect Source Port", start_srcPortRedirect, true);
+
+    core.addStatWindow({"Packet &Length", Stats::create<StatsLength>});
+    auto& ip = core.addStatWindow({"IP"});
+    ip.add({"&Address Distribution", Stats::create<StatsIps>});
 }

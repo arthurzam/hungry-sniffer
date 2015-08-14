@@ -24,24 +24,46 @@
 #define HS_STATS_H
 
 #include <ctime>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 namespace hungry_sniffer {
     class Packet;
 
-    class StatWindow
-    {
-        public:
-            virtual void addPacket(const Packet* packet, const struct timeval& time, const uint8_t* data, size_t length) = 0;
-            virtual void showWindow() = 0;
+    namespace Stats {
+        class StatWindow
+        {
+            public:
+                virtual void addPacket(const Packet* packet, const struct timeval& time, const uint8_t* data, size_t length) = 0;
+                virtual void showWindow() = 0;
 
-            template<typename T>
-            static StatWindow* create()
+                virtual ~StatWindow() {}
+        };
+        typedef StatWindow* (*statInitFunction)();
+
+        struct StatsNode {
+            std::string name;
+            statInitFunction func;
+
+            std::vector<struct StatsNode> subNodes;
+
+            StatsNode(const char* name) : name(name), func(nullptr) {}
+            StatsNode(const std::string& name, statInitFunction func) : name(name), func(func) {}
+
+            struct StatsNode& add(struct StatsNode&& node)
             {
-                return new T();
+                subNodes.push_back(std::move(node));
+                return subNodes.back();
             }
+        };
 
-            virtual ~StatWindow() {}
-    };
+        template<typename T>
+        static StatWindow* create()
+        {
+            return new T();
+        }
+    }
 }
 
 #endif // HS_STATS_H
