@@ -29,14 +29,17 @@ DataStructure::RawPacketData::RawPacketData(const DataStructure::RawPacketData& 
     time(other.time)
 {
     setData(other.data, other.len);
+    this->additionalHeaders = new std::vector<std::pair<QString, QString>>(*other.additionalHeaders);
 }
 
 DataStructure::RawPacketData::RawPacketData(DataStructure::RawPacketData&& other) :
     len(other.len),
     time(other.time),
-    data(other.data)
+    data(other.data),
+    additionalHeaders(other.additionalHeaders)
 {
     other.data = nullptr;
+    other.additionalHeaders = nullptr;
 }
 
 DataStructure::RawPacketData& DataStructure::RawPacketData::operator=(const RawPacketData& other)
@@ -45,6 +48,7 @@ DataStructure::RawPacketData& DataStructure::RawPacketData::operator=(const RawP
     {
         this->time = other.time;
         setData(other.data, other.len);
+        this->additionalHeaders = new std::vector<std::pair<QString, QString>>(*other.additionalHeaders);
     }
     return *this;
 }
@@ -57,6 +61,8 @@ DataStructure::RawPacketData& DataStructure::RawPacketData::operator=(RawPacketD
         this->time = other.time;
         this->data = other.data;
         other.data = nullptr;
+        this->additionalHeaders = other.additionalHeaders;
+        other.additionalHeaders = nullptr;
     }
     return *this;
 }
@@ -65,6 +71,8 @@ DataStructure::RawPacketData::~RawPacketData()
 {
     if(this->data)
         free(this->data);
+    if(additionalHeaders)
+        delete additionalHeaders;
 }
 
 void DataStructure::RawPacketData::setData(const void* data, uint32_t len)

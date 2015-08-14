@@ -151,8 +151,9 @@ namespace HspcapFile {
 
     enum ObjectType
     {
-        PACKET = 0,
-        PROTOCOL
+        PROTOCOL = 0,
+        PACKET,
+        PACKET_HEADERS
     };
 
     class Save
@@ -189,11 +190,21 @@ namespace HspcapFile {
 
             void operator <<(const localPacket& packet)
             {
-                uint8_t type = ObjectType::PACKET;
+                auto headers = packet.rawPacket.additionalHeaders;
+                uint8_t type = (headers ? ObjectType::PACKET_HEADERS : ObjectType::PACKET);
                 ::fwrite(&type, 1, 1, file);
                 ::fwrite(&packet.rawPacket.time, sizeof(packet.rawPacket.time), 1, file);
                 writeBuffer(packet.rawPacket.len, packet.rawPacket.data);
-                // TODO: write Own Headers
+                if(headers && headers->size() != 0)
+                {
+                    uint16_t count = htons(headers->size());
+                    ::fwrite(&count, sizeof(count), 1, file);
+                    for(auto& i : *headers)
+                    {
+                        writeString(i.first.toStdString());
+                        writeString(i.second.toStdString());
+                    }
+                }
             }
 
             void operator <<(const hungry_sniffer::Protocol& protocol)
@@ -269,7 +280,7 @@ namespace HspcapFile {
             void readAll()
             {
                 uint32_t packetsCount = 0;
-                if(::fread(&packetsCount, sizeof(packetsCount), 1, file) != sizeof(packetsCount))
+                if(::fread(&packetsCount, sizeof(packetsCount), 1, file) != 1)
                     return;
                 packetsCount = ntohl(packetsCount);
                 uint8_t type;
@@ -283,14 +294,28 @@ namespace HspcapFile {
                     switch(type)
                     {
                         case ObjectType::PACKET:
+                        case ObjectType::PACKET_HEADERS:
                         {
                             RawPacketData raw;
-                            if(::fread(&raw.time, sizeof(raw.time), 1, file) != sizeof(raw.time))
+                            if(::fread(&raw.time, sizeof(raw.time), 1, file) != 1)
                                 return;
                             raw.data = readBuffer(raw.len);
                             if((start.tv_sec | start.tv_usec) == 0)
                                 start = raw.time;
                             raw.time = calcDiffTimeval(raw.time, start, base);
+                            if(type == ObjectType::PACKET_HEADERS)
+                            {
+                                uint16_t count;
+                                ::fread(&count, sizeof(count), 1, file);
+                                auto headers = raw.additionalHeaders = new std::vector<std::pair<QString, QString>>();
+                                std::string key, value;
+                                for(int i = ntohs(count); i != 0; i--)
+                                {
+                                    readString(key);
+                                    readString(value);
+                                    headers->push_back({QString::fromStdString(key), QString::fromStdString(value)});
+                                }
+                            }
                             if(packetsCount > 0)
                             {
                                 SniffWindow::window->toAdd.push(std::move(raw));
@@ -301,7 +326,7 @@ namespace HspcapFile {
                         case ObjectType::PROTOCOL:
                         {
                             uint16_t size;
-                            if(::fread(&size, sizeof(size), 1, file) != sizeof(size))
+                            if(::fread(&size, sizeof(size), 1, file) != 1)
                                 return;
                             size = ntohs(size);
                             std::string name, key, value;
@@ -376,6 +401,18 @@ void SniffWindow::runOfflineOpen_p(const std::string& filename)
     }
 }
 
+QString saveFileDialog(QString& filter)
+{
+    QFileDialog open;
+    open.setFileMode(QFileDialog::AnyFile);
+    open.setViewMode(QFileDialog::Detail);
+    open.setNameFilters(QStringList({QStringLiteral("hspcap (*.hspcap)"), QStringLiteral("Pcap (*.pcap)"), QStringLiteral("All files (*.*)")}));
+    if(!open.exec())
+        return QStringLiteral("");
+    filter = open.selectedNameFilter();
+    return open.selectedFiles().first();
+}
+
 void SniffWindow::on_action_save_all_triggered()
 {
     if(model.local.size() == 0)
@@ -383,16 +420,15 @@ void SniffWindow::on_action_save_all_triggered()
         QMessageBox::warning(nullptr, QStringLiteral("Empty Table"), QStringLiteral("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
         return;
     }
-    QString filename = QFileDialog::getSaveFileName(this, QStringLiteral("Save File"), QStringLiteral(""),
-                       QStringLiteral("hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
-
-    if(filename.endsWith(QStringLiteral(".pcap")))
+    QString fil;
+    QString filename = saveFileDialog(fil);
+    if(fil == QStringLiteral("Pcap (*.pcap)"))
     {
         PcapFile::Save file(filename.toUtf8().constData());
         for(const auto& i : model.local)
             file << i;
     }
-    else if(filename.endsWith(QStringLiteral(".hspcap")))
+    else if(fil == QStringLiteral("hspcap (*.hspcap)"))
     {
         HspcapFile::Save file(filename.toUtf8().constData(), model.local.size());
         file << core->base;
@@ -403,21 +439,20 @@ void SniffWindow::on_action_save_all_triggered()
 
 void SniffWindow::on_action_save_shown_triggered()
 {
-    if(model.local.size() == 0)
+    if(model.shownPerRow.size() == 0)
     {
         QMessageBox::warning(nullptr, QStringLiteral("Empty Table"), QStringLiteral("Packets Table is Empty"), QMessageBox::StandardButton::Ok);
         return;
     }
-    QString filename = QFileDialog::getSaveFileName(this, QStringLiteral("Save File"), QStringLiteral(""),
-                       QStringLiteral("hspcap (*.hspcap);;Pcap (*.pcap);;All files (*.*)"));
-
-    if(filename.endsWith(QStringLiteral(".pcap")))
+    QString fil;
+    QString filename = saveFileDialog(fil);
+    if(fil == QStringLiteral("Pcap (*.pcap)"))
     {
         PcapFile::Save file(filename.toUtf8().constData());
         for(int& num : model.shownPerRow)
             file << model.local[num];
     }
-    else if(filename.endsWith(QStringLiteral(".hspcap")))
+    else if(fil == QStringLiteral("hspcap (*.hspcap)"))
     {
         HspcapFile::Save file(filename.toUtf8().constData(), model.shownPerRow.size());
         file << core->base;

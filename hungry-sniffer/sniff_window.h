@@ -93,6 +93,7 @@ class SniffWindow : public QMainWindow
         void recentFile_triggered();
         void copy_to_clipboard();
         void tree_add_info_header();
+        void tree_remove_info_header();
 
     protected:
         void dragEnterEvent(QDragEnterEvent* event);

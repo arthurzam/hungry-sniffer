@@ -46,7 +46,6 @@ HEADERS += \
     packetstats.h \
     filter_tree.h \
     optionsdisabler.h \
-    additionalheaderspacket.h \
     packetstable_model.h \
     statusbar.h \
     preferences.h \

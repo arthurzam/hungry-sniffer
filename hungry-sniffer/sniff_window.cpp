@@ -41,7 +41,6 @@
 #include "widgets/history_line_edit.h"
 #include "packetstats.h"
 #include "preferences.h"
-#include "additionalheaderspacket.h"
 #include "filter_tree.h"
 
 #include <hs_core.h>
@@ -505,8 +504,6 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
     qDeleteAll(list);
 }
 
-hungry_sniffer::Protocol SniffWindow::infoProtocol(nullptr, "Own Headers");
-
 static QTreeWidgetItem* getRootOfItem(QTreeWidgetItem* item)
 {
     QTreeWidgetItem* prev = nullptr;
@@ -536,15 +533,8 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     QAction action_remove(QStringLiteral("&Remove"), nullptr);
     if(item != firstLevel && firstLevel->text(0) == QStringLiteral("Own Headers"))
     {
-        connect(&action_remove, &QAction::triggered, [this, item, firstLevel]()
-        {
-            AdditionalHeadersPacket& pack = (AdditionalHeadersPacket&)this->selected->decodedPacket->getLast();
-            pack.removeHeader(item->text(0).toStdString());
-
-            delete item;
-            if(firstLevel->childCount() == 0)
-                delete firstLevel;
-        });
+        action_copy.setData(QVariant::fromValue<void*>(item));
+        connect(&action_remove, SIGNAL(triggered()), this, SLOT(tree_remove_info_header()));
         menu.addAction(&action_remove);
     }
     menu.exec(ui->tree_packet->mapToGlobal(pos));
@@ -637,17 +627,16 @@ void SniffWindow::copy_to_clipboard()
 
 void SniffWindow::tree_add_info_header()
 {
-    hungry_sniffer::Packet& last = const_cast<hungry_sniffer::Packet&>(this->selected->decodedPacket->getLast());
-    AdditionalHeadersPacket* pack = static_cast<AdditionalHeadersPacket*>(&last);
+    auto addHeaders = this->selected->rawPacket.additionalHeaders;
     QTreeWidgetItem* info = nullptr;
-    if(last.getProtocol() != &infoProtocol)
+    if(addHeaders && addHeaders->size() != 0)
     {
-        last.setNext(pack = new AdditionalHeadersPacket(&infoProtocol));
-        info = new QTreeWidgetItem(QStringList(QStringLiteral("Own Headers")));
+        info = this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
     }
     else
     {
-        info = this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
+        addHeaders = this->selected->rawPacket.additionalHeaders = new std::vector<std::pair<QString, QString>>();
+        info = new QTreeWidgetItem(QStringList(QStringLiteral("Own Headers")));
     }
     bool ok;
     QString key = QInputDialog::getText(this, QStringLiteral("Header Name"), QStringLiteral("Enter the header name"), QLineEdit::Normal, QStringLiteral(""), &ok);
@@ -656,11 +645,27 @@ void SniffWindow::tree_add_info_header()
     QString value = QInputDialog::getText(this, QStringLiteral("Header Value"), QStringLiteral("Enter the header value"), QLineEdit::Normal, QStringLiteral(""), &ok);
     if(!ok)
         return;
-    pack->addHeader(key.toStdString(), value.toStdString());
+    addHeaders->push_back({key, value});
 
     info->addChild(new QTreeWidgetItem(QStringList({key, value})));
-    if(pack != &last)
+    if(addHeaders->size() == 1)
         ui->tree_packet->addTopLevelItem(info);
+}
+
+void SniffWindow::tree_remove_info_header()
+{
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (!action) return;
+    QTreeWidgetItem* item = (QTreeWidgetItem*)action->data().value<void*>();
+
+    QTreeWidgetItem* root = this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
+    auto headers = this->selected->rawPacket.additionalHeaders;
+    headers->erase(headers->begin() + root->indexOfChild(item));
+    delete item;
+    if(headers->size() == 0)
+    {
+        delete this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
+    }
 }
 
 void SniffWindow::dropEvent(QDropEvent* event)
@@ -691,6 +696,8 @@ void SniffWindow::on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QT
         return;
 
     int row = ui->tree_packet->indexOfTopLevelItem(getRootOfItem(current));
+    if(this->selected->rawPacket.additionalHeaders && row == ui->tree_packet->topLevelItemCount() - 1)
+        return;
     unsigned start = 0, end;
     const hungry_sniffer::Packet* layer = this->selected->decodedPacket;
     if(layer->isLocalGood())

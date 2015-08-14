@@ -39,8 +39,9 @@ namespace DataStructure {
         uint32_t len;
         struct timeval time;
         char* data;
+        std::vector<std::pair<QString, QString>>* additionalHeaders;
 
-        constexpr RawPacketData() : len(0), time({0,0}), data(nullptr) {}
+        constexpr RawPacketData() : len(0), time({0,0}), data(nullptr), additionalHeaders(nullptr) {}
         RawPacketData(const RawPacketData& other);
         RawPacketData(RawPacketData&& other);
         RawPacketData& operator=(const RawPacketData& other);

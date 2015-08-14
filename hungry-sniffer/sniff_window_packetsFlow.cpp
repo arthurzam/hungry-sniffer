@@ -150,6 +150,13 @@ void SniffWindow::setCurrentPacket(const struct localPacket& pack)
             ui->tree_packet->addTopLevelItem(head);
         }
     }
+    if(pack.rawPacket.additionalHeaders && pack.rawPacket.additionalHeaders->size())
+    {
+        QTreeWidgetItem* head = new QTreeWidgetItem(QStringList(QStringLiteral("Own Headers")));
+        for(auto& i : *pack.rawPacket.additionalHeaders)
+            head->addChild(new QTreeWidgetItem(QStringList({i.first, i.second})));
+        ui->tree_packet->addTopLevelItem(head);
+    }
     ui->tree_packet->expandAll();
     ui->tree_packet->resizeColumnToContents(0);
     ui->tree_packet->collapseAll();
