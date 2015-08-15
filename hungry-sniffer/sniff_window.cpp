@@ -79,8 +79,6 @@ SniffWindow::SniffWindow(QWidget* parent) :
     ui->tree_packet->setColumnCount(2);
     loadStatsFunctions(core->stats, *ui->menuStats);
 #ifdef PYTHON_CMD
-    initPython();
-
     QWidget* verticalLayoutWidget = new QWidget(ui->splitter);
     QVBoxLayout* panel_python = new QVBoxLayout(verticalLayoutWidget);
     panel_python->setContentsMargins(0, 0, 0, 0);
@@ -95,17 +93,13 @@ SniffWindow::SniffWindow(QWidget* parent) :
     img_python->setSizePolicy(sizePolicy);
     img_python->setMaximumSize(QSize(32, 32));
     img_python->setPixmap(QPixmap(QStringLiteral(":/icons/python.png")));
-#ifdef PYTHON2
-    img_python->setToolTip(QStringLiteral("Python 2"));
-#else
-    img_python->setToolTip(QStringLiteral("Python 3"));
-#endif
     horizontalLayout->addWidget(img_python);
     tb_command = new History_Line_Edit(verticalLayoutWidget);
     connect(tb_command, SIGNAL(returnPressed()), this, SLOT(tb_command_returnPressed()));
     horizontalLayout->addWidget(tb_command);
     panel_python->addLayout(horizontalLayout);
     ui->splitter->addWidget(verticalLayoutWidget);
+    initPython(img_python);
 #else
     ui->action_Python->setVisible(false);
 #endif

@@ -37,6 +37,7 @@ namespace Ui {
 class History_Line_Edit;
 class PacketStats;
 class QAction;
+class QLabel;
 class QSortFilterProxyModel;
 class QPlainTextEdit;
 class QTreeWidgetItem;
@@ -148,11 +149,10 @@ class SniffWindow : public QMainWindow
         QPlainTextEdit* lb_cmd;
         History_Line_Edit* tb_command;
     private:
-        void initPython();
+        void initPython(QLabel* img_python);
         void stopPython();
 
         void addPyCommand(const char* pyCommand);
-        void execPyCommand();
         bool checkPyCommand(const char* pyCommand);
 
     private:

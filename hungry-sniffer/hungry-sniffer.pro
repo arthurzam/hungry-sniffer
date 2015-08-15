@@ -61,19 +61,14 @@ unix: OTHER_FILES += hungry-sniffer.desktop
     unix {
         CONFIG(python2) {
             PKGCONFIG += python2
-            DEFINES += PYTHON2
         } else {
             PKGCONFIG += python3
         }
     }
 
-    win32{
+    win32 {
         isEmpty(PYTHON_VERSION) {
             PYTHON_VERSION=34
-        }
-        RESULT = $$find(PYTHON_VERSION, "^2.*")
-        count(RESULT, 1){
-            DEFINES += PYTHON2
         }
         isEmpty(PYTHON_PATH) {
             PYTHON_PATH = C:/Python$$PYTHON_VERSION

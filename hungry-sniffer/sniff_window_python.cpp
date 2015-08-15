@@ -35,7 +35,7 @@
 #include <QSettings>
 #include <hs_core.h>
 
-#ifdef PYTHON2
+#if PY_MAJOR_VERSION < 3
 typedef void initModuleReturn;
 #define PyUnicode_AsUTF8 PyString_AsString
 #define GetPyString PyString_FromString
@@ -242,7 +242,7 @@ static PyMethodDef hs_methods[] = {
     { NULL, NULL, 0, NULL }
 };
 
-#ifndef PYTHON2
+#if PY_MAJOR_VERSION >= 3
 static PyModuleDef hsModule = {
     PyModuleDef_HEAD_INIT, "_hs_private", NULL, -1, hs_methods, NULL, NULL, NULL, NULL
 };
@@ -250,7 +250,7 @@ static PyModuleDef hsModule = {
 
 static initModuleReturn PyInit_hs(void)
 {
-#ifdef PYTHON2
+#if PY_MAJOR_VERSION < 3
     Py_InitModule("_hs_private", hs_methods);
 #else
     return PyModule_Create(&hsModule);
@@ -266,7 +266,7 @@ static PyMethodDef ui_methods[] = {
     { NULL, NULL, 0, NULL }
 };
 
-#ifndef PYTHON2
+#if PY_MAJOR_VERSION >= 3
 static PyModuleDef uiModule = {
     PyModuleDef_HEAD_INIT, "_hs_ui", NULL, -1, ui_methods, NULL, NULL, NULL, NULL
 };
@@ -274,7 +274,7 @@ static PyModuleDef uiModule = {
 
 static initModuleReturn PyInit_hs_ui(void)
 {
-#ifdef PYTHON2
+#if PY_MAJOR_VERSION < 3
     Py_InitModule("_hs_ui", ui_methods);
 #else
     return PyModule_Create(&uiModule);
@@ -327,8 +327,10 @@ void SniffWindow::stopPython()
     Py_Finalize();
 }
 
-void SniffWindow::initPython()
+void SniffWindow::initPython(QLabel* img_python)
 {
+    img_python->setToolTip(QStringLiteral("Python " PY_VERSION));
+
     PyImport_AppendInittab("_hs_private",&PyInit_hs);
     PyImport_AppendInittab("_hs_ui",&PyInit_hs_ui);
     Py_Initialize();
@@ -367,22 +369,17 @@ void SniffWindow::addPyCommand(const char* command)
 
     if(this->checkPyCommand(command))
     {
-        this->execPyCommand();
-    }
-}
+        PyRun_String(this->pyCommand.c_str(), Py_single_input, (PyObject*)pyGlobals, (PyObject*)pyGlobals);
+        bool error = PyErr_Occurred();
+        if (error)
+        {
+            PyErr_Print();
+            PyErr_Clear();
+        }
 
-void SniffWindow::execPyCommand()
-{
-    PyRun_String(this->pyCommand.c_str(), Py_single_input, (PyObject*)pyGlobals, (PyObject*)pyGlobals);
-    bool error = PyErr_Occurred();
-    if (error)
-    {
-        PyErr_Print();
-        PyErr_Clear();
+        this->py_checkCommand.reset();
+        this->pyCommand.clear();
     }
-
-    this->py_checkCommand.reset();
-    this->pyCommand.clear();
 }
 
 bool SniffWindow::checkPyCommand(const char* command)
