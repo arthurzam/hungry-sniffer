@@ -13,7 +13,7 @@ win32: DEFINES += WIN32
 QMAKE_LFLAGS_RELEASE += -flto -fno-rtti
 QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
 
-INCLUDEPATH += $$PWD/../util
+INCLUDEPATH += $$PWD/../sdk
 
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 

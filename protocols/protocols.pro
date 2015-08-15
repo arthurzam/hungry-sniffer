@@ -37,7 +37,7 @@ HEADERS += \
   TCPPacket.h \
   VRRPPacket.h
 
-INCLUDEPATH += $$PWD/../util
+INCLUDEPATH += $$PWD/../sdk
 
 unix {
     SOURCES += iptc.cpp \

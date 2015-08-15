@@ -22,7 +22,7 @@ HEADERS +=\
     stats_ips.h \
     stats_length.h
 
-INCLUDEPATH += $$PWD/../util
+INCLUDEPATH += $$PWD/../sdk
 
 FORMS +=
 
