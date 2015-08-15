@@ -21,6 +21,7 @@
 */
 
 #include "EthernetPacket.h"
+#include <QtGlobal>
 #if defined(Q_OS_WIN)
     #include <winsock2.h>
     char *ether_ntoa (const uint8_t* n)
@@ -35,7 +36,7 @@
     }
     typedef uint8_t ether_addr;
 #elif defined(Q_OS_UNIX)
-    #include <net/ethernet.h>
+    #include <netinet/ether.h>
     #include <netinet/in.h>
 #endif
 
