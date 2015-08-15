@@ -25,6 +25,7 @@
 
 #include <QStatusBar>
 #include <QLabel>
+#include <QPixmap>
 
 class StatusBar : public QStatusBar
 {
@@ -38,6 +39,8 @@ class StatusBar : public QStatusBar
         QLabel lb_info;
         QLabel lb_liveSniffing;
         int selectedRow = 0;
+
+        QPixmap capture_off, capture_on;
 };
 
 #endif // STATUSBAR_H

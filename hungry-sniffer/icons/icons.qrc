@@ -8,5 +8,7 @@
         <file>capture_start.png</file>
         <file>python.png</file>
         <file>preferences.png</file>
+        <file>capture_off.png</file>
+        <file>capture_on.png</file>
     </qresource>
 </RCC>

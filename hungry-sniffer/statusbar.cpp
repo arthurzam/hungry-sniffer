@@ -23,19 +23,22 @@
 #include "statusbar.h"
 #include "sniff_window.h"
 
-#include <QGridLayout>
+#include <QHBoxLayout>
 
 StatusBar::StatusBar(QWidget* parent) :
     QStatusBar(parent),
     lb_info(this),
-    lb_liveSniffing(this)
+    lb_liveSniffing(this),
+    capture_off(QStringLiteral(":/icons/capture_off.png")),
+    capture_on(QStringLiteral(":/icons/capture_on.png"))
 {
-    this->setStyleSheet(QStringLiteral("QStatusBar::item{border: none;}"));
+    setLiveSniffing(false);
 
     QWidget* widget = new QWidget();
-    QGridLayout* layout = new QGridLayout(widget);
-    layout->addWidget(&lb_liveSniffing, 0, 0, 1, 1, Qt::AlignVCenter | Qt::AlignLeft);
-    layout->addWidget(&lb_info, 0, 1, 1, 1, Qt::AlignVCenter | Qt::AlignRight);
+    QHBoxLayout* layout = new QHBoxLayout(widget);
+    layout->addWidget(&lb_liveSniffing);
+    layout->addItem(new QSpacerItem(20, 5, QSizePolicy::Expanding, QSizePolicy::Minimum));
+    layout->addWidget(&lb_info);
     this->addWidget(widget, 1);
 
     updateText();
@@ -52,6 +55,7 @@ void StatusBar::updateText(int selectedRow)
 
 void StatusBar::setLiveSniffing(bool state)
 {
-    this->lb_liveSniffing.setText(state ? QStringLiteral("Live Sniffing") : QStringLiteral(""));
+    lb_liveSniffing.setPixmap(state ? capture_on : capture_off);
+    lb_liveSniffing.setToolTip(state ? QStringLiteral("Live Capturing") : QStringLiteral("Not Capturing"));
 }
 
