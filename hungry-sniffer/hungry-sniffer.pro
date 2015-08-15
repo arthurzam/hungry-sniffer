@@ -3,7 +3,6 @@ QT     += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = hungry-sniffer
-VERSION = 1.0
 TEMPLATE = app
 
 win32: LIBS += -lwpcap -lws2_32
@@ -82,9 +81,6 @@ unix: OTHER_FILES += hungry-sniffer.desktop
 }
 
 unix {
-    isEmpty(PREFIX) {
-        PREFIX = /usr
-    }
     target.path = $$PREFIX/bin/
 
     data.path = $$PREFIX/share/hungry-sniffer/
@@ -94,8 +90,6 @@ unix {
     desktop.files = hungry-sniffer.desktop
 
     INSTALLS += target data desktop
-    QMAKE_INSTALL_FILE    = install -m 644 -p
-    QMAKE_INSTALL_PROGRAM = install -m 755 -p
 }
 
 unix|win32: LIBS += -L$$OUT_PWD/../QHexEdit/ -lQHexEdit
