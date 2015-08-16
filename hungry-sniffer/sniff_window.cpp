@@ -392,10 +392,26 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
     QMenu follow(QStringLiteral("&Follow")), nameSrc(QStringLiteral("Associate Name For &Source")),
           nameDst(QStringLiteral("Associate Name For &Destination")), optionsMenu(QStringLiteral("Special &Options"));
 
-    QAction copyValAction(QStringLiteral("&Copy Value"), nullptr);
-    copyValAction.setData(model.data(item, Qt::DisplayRole).toString());
-    connect(&copyValAction, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
-    menu.addAction(&copyValAction);
+    QMenu menu_copy(QStringLiteral("&Copy"));
+
+    QAction copyCellAction(QStringLiteral("&Cell"));
+    copyCellAction.setData(model.data(item, Qt::DisplayRole).toString());
+    connect(&copyCellAction, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
+    menu_copy.addAction(&copyCellAction);
+
+    menu_copy.addSeparator();
+
+    QAction copyBase64Action(QStringLiteral("Data as &Base64"));
+    copyBase64Action.setData(QByteArray(this->selected->rawPacket.data, this->selected->rawPacket.len).toBase64());
+    connect(&copyBase64Action, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
+    menu_copy.addAction(&copyBase64Action);
+
+    QAction copyHexAction(QStringLiteral("Data as &Hex"));
+    copyHexAction.setData(QByteArray(this->selected->rawPacket.data, this->selected->rawPacket.len).toHex());
+    connect(&copyHexAction, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
+    menu_copy.addAction(&copyHexAction);
+
+    menu.addMenu(&menu_copy);
 
     QAction removeRowAction(QStringLiteral("&Remove Packet"), nullptr);
     connect(&removeRowAction, &QAction::triggered, [this, row] ()
@@ -411,9 +427,10 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
 
     for(const hungry_sniffer::Packet* localPacket = packet; localPacket; localPacket = localPacket->getNext())
     {
+        QString protocolName = QString::fromStdString(localPacket->getProtocol()->getName());
         if(localPacket->getProtocol()->getIsConversationEnabeled())
         {
-            QAction* action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+            QAction* action = new QAction(protocolName, nullptr);
             connect(action, &QAction::triggered, [this, localPacket]()
             {
                 ui->tb_filter->setText(QString::fromStdString(localPacket->getConversationFilterText()));
@@ -425,7 +442,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
         }
         if(localPacket->getProtocol()->getIsNameService())
         {
-            QAction* action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+            QAction* action = new QAction(protocolName, nullptr);
             connect(action, &QAction::triggered, [this, localPacket]()
             {
                 this->associateName(localPacket, localPacket->realSource());
@@ -433,7 +450,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
             list.push_back(action);
             nameSrc.addAction(action);
 
-            action = new QAction(QString::fromStdString(localPacket->getProtocol()->getName()), nullptr);
+            action = new QAction(protocolName, nullptr);
             connect(action, &QAction::triggered, [this, localPacket]()
             {
                 this->associateName(localPacket, localPacket->realDestination());
@@ -446,7 +463,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
         if(options.size() > 0)
         {
             bool _isNotRoot = !isRoot();
-            QMenu* subMenu = new QMenu(QString::fromStdString(localPacket->getProtocol()->getName()), &optionsMenu);
+            QMenu* subMenu = new QMenu(protocolName, &optionsMenu);
             for(const auto& i : options)
             {
                 if(i.isRootRequired & _isNotRoot)
