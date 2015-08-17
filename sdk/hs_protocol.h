@@ -33,6 +33,10 @@ namespace hungry_sniffer {
 
     class Packet;
 
+    namespace Preference {
+        class Preference;
+    }
+
     namespace Option {
         typedef bool (*optionDisableFunction)(const void* data);
 
@@ -97,6 +101,8 @@ namespace hungry_sniffer {
 
             uint8_t flags;
         public:
+            const Preference::Preference* preferencePanel = nullptr;
+
             static constexpr uint8_t getFlags(bool isNameService, bool isConversationEnabeled)
             {
                 return (isNameService ? FLAGS::FLAG_NAME_SERVICE : 0) |
@@ -685,5 +691,4 @@ namespace hungry_sniffer {
         return new T(data, len, protocol, prev);
     }
 }
-
 #endif /* PROTOCOL_H_ */

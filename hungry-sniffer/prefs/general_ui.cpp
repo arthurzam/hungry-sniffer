@@ -55,7 +55,7 @@ void GeneralUI::save(QSettings& settings)
     settings.endGroup();
 }
 
-hungry_sniffer::PreferencePanel* GeneralUI::init(const HungrySniffer_Core&, QSettings& settings)
+hungry_sniffer::Preference::Panel* GeneralUI::init(const HungrySniffer_Core&, QSettings& settings)
 {
     GeneralUI* res = new GeneralUI();
 

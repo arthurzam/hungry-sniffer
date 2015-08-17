@@ -25,9 +25,11 @@
 
 #include <hs_core.h>
 
+using namespace hungry_sniffer::Preference;
+
 void addPrefs(HungrySniffer_Core& core)
 {
-    HungrySniffer_Core::Preference& pref = core.addProtocolPreference({"General"});
+    Preference& pref = core.addProtocolPreference({"General"});
     pref.add({"Modules", GeneralModules::init});
     pref.add({"UI", GeneralUI::init});
 }

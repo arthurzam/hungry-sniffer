@@ -36,16 +36,20 @@
 
 std::vector<Preferences::reloadFunc_t> Preferences::reloadFunctions;
 
-static QTreeWidgetItem* getItem(const HungrySniffer_Core::Preference& pref, QStackedWidget* stack, std::vector<hungry_sniffer::PreferencePanel*>& panels)
+using namespace hungry_sniffer::Preference;
+
+static QTreeWidgetItem* getItem(const Preference& pref, QStackedWidget* stack, std::vector<Panel*>& panels, const Preference* show_pref)
 {
     QTreeWidgetItem* item = new QTreeWidgetItem(QStringList(QString::fromStdString(pref.name)));
     if(pref.func)
     {
-        hungry_sniffer::PreferencePanel* panel = pref.func(*SniffWindow::core, *Preferences::settings);
+        Panel* panel = pref.func(*SniffWindow::core, *Preferences::settings);
         QWidget* widget = panel->get();
         stack->addWidget(widget);
         item->setData(0, Qt::UserRole, QVariant::fromValue<QWidget*>(widget));
         panels.push_back(panel);
+        if(&pref == show_pref)
+            stack->setCurrentWidget(widget);
     }
     else
     {
@@ -54,7 +58,7 @@ static QTreeWidgetItem* getItem(const HungrySniffer_Core::Preference& pref, QSta
         item->setFlags(flags);
     }
     for(const auto& i : pref.subPreferences)
-        item->addChild(getItem(i, stack, panels));
+        item->addChild(getItem(i, stack, panels, show_pref));
     return item;
 }
 
@@ -69,7 +73,7 @@ static QWidget* extractData(QTreeWidgetItem* item)
     return nullptr;
 }
 
-Preferences::Preferences(QWidget* parent) :
+Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
     QDialog(parent)
 {
     this->resize(800, 600);
@@ -99,7 +103,7 @@ Preferences::Preferences(QWidget* parent) :
     stackedWidget->addWidget(new QWidget());
     for(const auto& i : SniffWindow::core->preferences)
     {
-        tree_select->addTopLevelItem(getItem(i, stackedWidget, this->panels));
+        tree_select->addTopLevelItem(getItem(i, stackedWidget, this->panels, show_pref));
     }
     tree_select->expandAll();
 
@@ -117,7 +121,7 @@ Preferences::~Preferences()
 
 void Preferences::accept()
 {
-    for(hungry_sniffer::PreferencePanel* panel : this->panels)
+    for(Panel* panel : this->panels)
     {
         panel->save(*settings);
     }

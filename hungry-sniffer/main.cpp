@@ -98,8 +98,6 @@ int main(int argc, char *argv[])
 #endif
     Preferences::settings = &settings;
 
-    addPrefs(*SniffWindow::core);
-
     { // plugins load
         loadLibs(QStringLiteral(PLUGINS_DIR));
         settings.beginGroup(QStringLiteral("General"));
@@ -113,6 +111,7 @@ int main(int argc, char *argv[])
         settings.endGroup();
         settings.endGroup();
     }
+    addPrefs(*SniffWindow::core);
 
     QApplication a(argc, argv);
     a.setApplicationVersion(APP_VERSION);

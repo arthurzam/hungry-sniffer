@@ -33,7 +33,7 @@ namespace Ui {
 class StringListSelector;
 class HungrySniffer_Core;
 
-class GeneralModules : public QWidget, public hungry_sniffer::PreferencePanel
+class GeneralModules : public QWidget, public hungry_sniffer::Preference::Panel
 {
         Q_OBJECT
 
@@ -47,7 +47,7 @@ class GeneralModules : public QWidget, public hungry_sniffer::PreferencePanel
 
         virtual void save(QSettings& settings);
 
-        static hungry_sniffer::PreferencePanel* init(const HungrySniffer_Core& core, QSettings& settings);
+        static hungry_sniffer::Preference::Panel* init(const HungrySniffer_Core& core, QSettings& settings);
 
     private:
         Ui::GeneralModules* ui;

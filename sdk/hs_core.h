@@ -31,36 +31,13 @@ struct HungrySniffer_Core {
     typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
     hungry_sniffer::Protocol& base;
 
-    typedef hungry_sniffer::PreferencePanel* (*preferencesFunction_t)(const HungrySniffer_Core& core, QSettings& settings);
-
-    struct Preference {
-        std::string name;
-        preferencesFunction_t func;
-        std::vector<Preference> subPreferences;
-
-        Preference(const std::string& name, preferencesFunction_t func) :
-            name(name), func(func) {}
-
-        Preference(const std::string& name) :
-            name(name), func(nullptr) {}
-
-        Preference(const char* name) :
-            name(name), func(nullptr) {}
-
-        Preference& add(Preference&& pref)
-        {
-            subPreferences.push_back(std::move(pref));
-            return subPreferences.at(subPreferences.size() - 1);
-        }
-    };
-
-    std::vector<struct Preference> preferences;
-    std::vector<struct hungry_sniffer::Stats::StatsNode> stats;
+    std::list<hungry_sniffer::Preference::Preference> preferences;
+    std::list<struct hungry_sniffer::Stats::StatsNode> stats;
 
     HungrySniffer_Core(hungry_sniffer::Protocol& base)
         : base(base) {}
 
-    Preference& addProtocolPreference(Preference&& pref)
+    hungry_sniffer::Preference::Preference& addProtocolPreference(hungry_sniffer::Preference::Preference&& pref)
     {
         preferences.push_back(std::move(pref));
         return preferences.back();

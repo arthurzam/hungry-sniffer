@@ -30,9 +30,7 @@ namespace Ui {
     class GeneralUI;
 }
 
-class HungrySniffer_Core;
-
-class GeneralUI : public QWidget, public hungry_sniffer::PreferencePanel
+class GeneralUI : public QWidget, public hungry_sniffer::Preference::Panel
 {
         Q_OBJECT
 
@@ -46,7 +44,7 @@ class GeneralUI : public QWidget, public hungry_sniffer::PreferencePanel
 
         virtual void save(QSettings& settings);
 
-        static hungry_sniffer::PreferencePanel* init(const HungrySniffer_Core&, QSettings& settings);
+        static hungry_sniffer::Preference::Panel* init(const HungrySniffer_Core&, QSettings& settings);
 
     private slots:
         void on_bt_default_dir_clicked();

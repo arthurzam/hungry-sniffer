@@ -48,7 +48,7 @@
 
 SniffWindow* SniffWindow::window = nullptr;
 
-void loadStatsFunctions(const std::vector<hungry_sniffer::Stats::StatsNode>& nodes, QMenu& father);
+void loadStatsFunctions(const std::list<hungry_sniffer::Stats::StatsNode>& nodes, QMenu& father);
 
 SniffWindow::SniffWindow(QWidget* parent) :
     QMainWindow(parent),
@@ -74,6 +74,7 @@ SniffWindow::SniffWindow(QWidget* parent) :
     connect(ui->table_packets->selectionModel(), SIGNAL(currentRowChanged(QModelIndex, QModelIndex)),
             this, SLOT(model_currentRowChanged(QModelIndex, QModelIndex)));
     connect(this, SIGNAL(sig_showMessageBox(QString, QString)), this, SLOT(showMessageBox(QString, QString)));
+    connect(ui->action_preferences, SIGNAL(triggered()), this, SLOT(open_preference_window()));
 
     ui->tree_packet->setHeaderLabels(QStringList({QStringLiteral("Key"), QStringLiteral("Value")}));
     ui->tree_packet->setColumnCount(2);
@@ -212,7 +213,7 @@ bool SniffWindow::isRoot()
 #endif
 }
 
-void loadStatsFunctions(const std::vector<hungry_sniffer::Stats::StatsNode>& nodes, QMenu& father)
+void loadStatsFunctions(const std::list<hungry_sniffer::Stats::StatsNode>& nodes, QMenu& father)
 {
     for(const hungry_sniffer::Stats::StatsNode& i : nodes)
     {
@@ -320,11 +321,6 @@ void SniffWindow::on_actionSniff_triggered()
     }
 }
 
-void SniffWindow::on_action_preferences_triggered()
-{
-    Preferences().exec();
-}
-
 void SniffWindow::on_actionTable_triggered()
 {
     this->statsTable->show();
@@ -394,19 +390,19 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
 
     QMenu menu_copy(QStringLiteral("&Copy"));
 
-    QAction copyCellAction(QStringLiteral("&Cell"));
+    QAction copyCellAction(QStringLiteral("&Cell"), nullptr);
     copyCellAction.setData(model.data(item, Qt::DisplayRole).toString());
     connect(&copyCellAction, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
     menu_copy.addAction(&copyCellAction);
 
     menu_copy.addSeparator();
 
-    QAction copyBase64Action(QStringLiteral("Data as &Base64"));
+    QAction copyBase64Action(QStringLiteral("Data as &Base64"), nullptr);
     copyBase64Action.setData(QByteArray(this->selected->rawPacket.data, this->selected->rawPacket.len).toBase64());
     connect(&copyBase64Action, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
     menu_copy.addAction(&copyBase64Action);
 
-    QAction copyHexAction(QStringLiteral("Data as &Hex"));
+    QAction copyHexAction(QStringLiteral("Data as &Hex"), nullptr);
     copyHexAction.setData(QByteArray(this->selected->rawPacket.data, this->selected->rawPacket.len).toHex());
     connect(&copyHexAction, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
     menu_copy.addAction(&copyHexAction);
@@ -427,7 +423,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
 
     for(const hungry_sniffer::Packet* localPacket = packet; localPacket; localPacket = localPacket->getNext())
     {
-        QString protocolName = QString::fromStdString(localPacket->getProtocol()->getName());
+        QString protocolName = QString::fromStdString(localPacket->getProtocol()->getName()).prepend('&');
         if(localPacket->getProtocol()->getIsConversationEnabeled())
         {
             QAction* action = new QAction(protocolName, nullptr);
@@ -504,6 +500,18 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
     }
     if(optionsMenu.actions().size() > 0)
         menu.addMenu(&optionsMenu);
+
+    menu.addSeparator();
+
+    QAction action_prefs(QStringLiteral("&Protocol Preferences"), nullptr);
+    const hungry_sniffer::Preference::Preference* pr = packet->getLast().getProtocol()->preferencePanel;
+    if(pr && pr->func)
+    {
+        action_prefs.setData(QVariant::fromValue<void*>((void*)pr));
+        connect(&action_prefs, SIGNAL(triggered()), this, SLOT(open_preference_window()));
+        menu.addAction(&action_prefs);
+    }
+
     menu.exec(ui->table_packets->mapToGlobal(pos));
     qDeleteAll(list);
 }
@@ -524,7 +532,18 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
     QTreeWidgetItem* firstLevel = getRootOfItem(item);
     QMenu menu;
     QAction action_copy(QStringLiteral("&Copy Value"), nullptr);
-    if(firstLevel != item)
+    QAction action_prefs(QStringLiteral("&Protocol Preferences"), nullptr);
+    if(firstLevel == item)
+    {
+        const hungry_sniffer::Preference::Preference* pr = this->selected->decodedPacket->getNext(ui->tree_packet->indexOfTopLevelItem(firstLevel))->getProtocol()->preferencePanel;
+        if(pr && pr->func)
+        {
+            action_prefs.setData(QVariant::fromValue<void*>((void*)pr));
+            connect(&action_prefs, SIGNAL(triggered()), this, SLOT(open_preference_window()));
+            menu.addAction(&action_prefs);
+        }
+    }
+    else
     {
         action_copy.setData(item->text(1));
         connect(&action_copy, SIGNAL(triggered()), this, SLOT(copy_to_clipboard()));
@@ -683,6 +702,19 @@ void SniffWindow::tree_remove_info_header()
     {
         delete this->ui->tree_packet->topLevelItem(this->ui->tree_packet->topLevelItemCount() - 1);
     }
+}
+
+void SniffWindow::open_preference_window()
+{
+    hungry_sniffer::Preference::Preference* pref = nullptr;
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action)
+    {
+        QVariant var = action->data();
+        if(!var.isNull())
+            pref = (hungry_sniffer::Preference::Preference*)var.value<void*>();
+    }
+    (new Preferences(this, pref))->show();
 }
 
 void SniffWindow::dropEvent(QDropEvent* event)

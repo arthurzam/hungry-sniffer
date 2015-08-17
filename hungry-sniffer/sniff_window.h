@@ -63,7 +63,6 @@ class SniffWindow : public QMainWindow
         void sig_showMessageBox(const QString& title, const QString& text);
     public slots:
         void on_actionOpen_triggered();
-        void on_action_preferences_triggered();
         void on_tb_filter_textEdited(const QString &arg1);
         void on_bt_filter_clear_clicked();
         void on_action_about_triggered();
@@ -96,6 +95,7 @@ class SniffWindow : public QMainWindow
         void open_stats_window();
         void tree_add_info_header();
         void tree_remove_info_header();
+        void open_preference_window();
 
     protected:
         void dragEnterEvent(QDragEnterEvent* event);

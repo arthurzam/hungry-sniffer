@@ -47,7 +47,6 @@ class PacketStats : public QDialog
     private:
         QTreeView* treeView;
 
-
         int timerId;
         QStandardItemModel* model;
 

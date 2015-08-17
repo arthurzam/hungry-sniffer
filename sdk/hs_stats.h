@@ -26,7 +26,7 @@
 #include <ctime>
 #include <cstdint>
 #include <string>
-#include <vector>
+#include <list>
 
 namespace hungry_sniffer {
     class Packet;
@@ -46,7 +46,7 @@ namespace hungry_sniffer {
             std::string name;
             statInitFunction func;
 
-            std::vector<struct StatsNode> subNodes;
+            std::list<struct StatsNode> subNodes;
 
             StatsNode(const char* name) : name(name), func(nullptr) {}
             StatsNode(const std::string& name, statInitFunction func) : name(name), func(func) {}

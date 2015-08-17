@@ -31,7 +31,10 @@ namespace Ui {
 }
 
 namespace hungry_sniffer {
-    class PreferencePanel;
+    namespace Preference {
+        class Panel;
+        struct Preference;
+    }
 }
 
 class QTreeWidgetItem;
@@ -51,7 +54,7 @@ class Preferences : public QDialog
 
         static QSettings* settings;
 
-        explicit Preferences(QWidget* parent = 0);
+        explicit Preferences(QWidget* parent = 0, const hungry_sniffer::Preference::Preference* show_pref = nullptr);
         ~Preferences();
 
     protected:
@@ -67,7 +70,7 @@ class Preferences : public QDialog
         QTreeWidget* tree_select;
         QStackedWidget* stackedWidget;
 
-        std::vector<hungry_sniffer::PreferencePanel*> panels;
+        std::vector<hungry_sniffer::Preference::Panel*> panels;
 };
 
 #endif // PREFERENCES_H

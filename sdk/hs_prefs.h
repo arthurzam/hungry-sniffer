@@ -23,18 +23,48 @@
 #ifndef HS_PREFS
 #define HS_PREFS
 
+#include <list>
+
 class QSettings;
 class QWidget;
 
+class HungrySniffer_Core;
+
 namespace hungry_sniffer {
-    class PreferencePanel {
+    namespace Preference {
+        class Panel
+        {
+            public:
+                virtual QWidget* get() = 0;
+                virtual void save(QSettings& settings) = 0;
 
-        public:
-            virtual QWidget* get() = 0;
-            virtual void save(QSettings& settings) = 0;
+                virtual ~Panel() {}
+        };
 
-            virtual ~PreferencePanel() {}
-    };
+        typedef Panel* (*preferencesFunction_t)(const HungrySniffer_Core& core, QSettings& settings);
+
+        struct Preference
+        {
+            std::string name;
+            preferencesFunction_t func;
+            std::list<Preference> subPreferences;
+
+            Preference(const std::string& name, preferencesFunction_t func) :
+                name(name), func(func) {}
+
+            Preference(const std::string& name) :
+                name(name), func(nullptr) {}
+
+            Preference(const char* name) :
+                name(name), func(nullptr) {}
+
+            Preference& add(Preference&& pref)
+            {
+                subPreferences.push_back(std::move(pref));
+                return subPreferences.back();
+            }
+        };
+    }
 }
 
 #endif // HS_PREFS
