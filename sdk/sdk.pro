@@ -7,6 +7,8 @@ HEADERS  += \
     hs_protocol.h \
     hs_stats.h
 
+include(../common.pri)
+
 unix {
     OTHER_FILES += HungrySniffer.pc
 

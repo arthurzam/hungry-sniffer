@@ -4,6 +4,8 @@ QT       += widgets
 TARGET = hungry-sniffer-options
 TEMPLATE = lib
 
+include(../common.pri)
+
 QMAKE_LFLAGS_RELEASE += -s -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 
