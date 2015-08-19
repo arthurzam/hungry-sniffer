@@ -5,6 +5,7 @@ HEADERS  += \
     hs_advanced_packets.h \
     hs_prefs.h \
     hs_protocol.h \
+    hs_plugin.h \
     hs_stats.h
 
 include(../common.pri)
