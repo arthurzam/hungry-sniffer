@@ -20,33 +20,24 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "options.h"
-#include "stats_ips.h"
-#include "stats_length.h"
-using namespace hungry_sniffer;
+#ifndef ABOUTPLUGINS_H
+#define ABOUTPLUGINS_H
 
-#include <hs_plugin.h>
+#include <QDialog>
 
-extern "C" void add(HungrySniffer_Core& core)
+class PluginsModel;
+class QLibrary;
+
+class AboutPlugins : public QDialog
 {
-    Protocol& ipv4 = core.base[0x0800];
-#ifdef Q_OS_UNIX
-    ipv4.addOption("ARPspoof between IP-s", start_arpspoof, true);
-#endif
-    ipv4.addOption("Find hostname of Source", resolve_srcIP, false);
-    ipv4.addOption("Find hostname of Destination", resolve_dstIP, false);
+    private:
+        PluginsModel* model;
+        AboutPlugins();
+    public:
+        static AboutPlugins* window;
+        static void init();
 
-    Protocol& tcp = ipv4[6];
+        void addPlugin(QLibrary& lib);
+};
 
-#ifdef Q_OS_UNIX
-    tcp.addOption("Redirect Source Port", start_srcPortRedirect, true);
-#endif
-
-    core.addStatWindow({"Packet &Length", Stats::create<StatsLength>});
-    auto& ip = core.addStatWindow({"IP"});
-    ip.add({"&Address Distribution", Stats::create<StatsIps>});
-}
-
-EXPORT_COPYRIGHT("Arthur Zamarin")
-EXPORT_VERSION
-EXPORT_WEBSITE("https://github.com/arthurzam/hungry-sniffer")
+#endif // ABOUTPLUGINS_H

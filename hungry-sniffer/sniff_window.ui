@@ -141,6 +141,7 @@
     </property>
     <addaction name="action_about"/>
     <addaction name="actionAbout_Qt"/>
+    <addaction name="action_about_plugins"/>
    </widget>
    <widget class="QMenu" name="menu_Sniff">
     <property name="title">
@@ -363,6 +364,11 @@
    </property>
    <property name="menuRole">
     <enum>QAction::AboutRole</enum>
+   </property>
+  </action>
+  <action name="action_about_plugins">
+   <property name="text">
+    <string>About &amp;Plugins</string>
    </property>
   </action>
  </widget>

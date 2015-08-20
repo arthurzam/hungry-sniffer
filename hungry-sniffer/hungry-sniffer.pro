@@ -37,7 +37,8 @@ SOURCES += main.cpp\
     filter_tree.cpp \
     statusbar.cpp \
     preferences.cpp \
-    about.cpp
+    about.cpp \
+    about_plugins.cpp
 
 HEADERS += \
     devicechoose.h \
@@ -50,7 +51,8 @@ HEADERS += \
     packetstable_model.h \
     statusbar.h \
     preferences.h \
-    about.h
+    about.h \
+    about_plugins.h
 
 FORMS += sniff_window.ui
 

@@ -20,7 +20,7 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <hs_core.h>
+#include <hs_plugin.h>
 
 #include "TCPPacket.h"
 #include "ArpPacket.h"
@@ -88,3 +88,7 @@ extern "C" void add(HungrySniffer_Core& core)
     udp.addProtocol(17500, init<PacketJson>, "Dropbox LAN sync");
 #endif
 }
+
+EXPORT_COPYRIGHT("Arthur Zamarin")
+EXPORT_VERSION
+EXPORT_WEBSITE("https://github.com/arthurzam/hungry-sniffer")

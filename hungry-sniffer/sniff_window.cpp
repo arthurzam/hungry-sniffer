@@ -37,6 +37,7 @@
 #endif
 
 #include "about.h"
+#include "about_plugins.h"
 #include "devicechoose.h"
 #include "widgets/history_line_edit.h"
 #include "packetstats.h"
@@ -293,6 +294,11 @@ void SniffWindow::on_bt_filter_clear_clicked()
 void SniffWindow::on_action_about_triggered()
 {
     (new About(this))->show();
+}
+
+void SniffWindow::on_action_about_plugins_triggered()
+{
+    AboutPlugins::window->show();
 }
 
 void SniffWindow::on_actionStop_triggered()

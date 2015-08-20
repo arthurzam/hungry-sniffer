@@ -33,11 +33,12 @@
     #include <unistd.h>
 #endif
 
+#include "about_plugins.h"
 #include "EthernetPacket.h"
 #include "preferences.h"
 #include "sniff_window.h"
 
-#include <hs_core.h>
+#include <hs_plugin.h>
 
 #ifndef PLUGINS_DIR
 #define PLUGINS_DIR "/usr/share/hungry-sniffer/plugins/"
@@ -49,7 +50,8 @@ using namespace hungry_sniffer;
 
 inline void loadLibs(const QString& path)
 {
-    typedef void (*function_t)(HungrySniffer_Core&);
+    typedef void (*add_function_t)(HungrySniffer_Core&);
+    typedef uint32_t (*info_uint32_t)();
 
     QDir dir(path);
     QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
@@ -57,7 +59,15 @@ inline void loadLibs(const QString& path)
     for(const auto& iter : allFiles)
     {
         QLibrary lib(dir.absoluteFilePath(iter));
-        function_t foo = (function_t)lib.resolve("add");
+        info_uint32_t info_version = (info_uint32_t)lib.resolve("PLUGIN_VERSION");
+        if(info_version && info_version() != API_VERSION)
+        {
+#ifndef QT_NO_DEBUG
+            qDebug("plugin %s version isn't matching", iter.toLatin1().constData());
+#endif
+            continue;
+        }
+        add_function_t foo = (add_function_t)lib.resolve("add");
         if(foo)
         {
             try {
@@ -73,10 +83,11 @@ inline void loadLibs(const QString& path)
 #endif
                 continue;
             }
-            Preferences::reloadFunc_t reload = (Preferences::reloadFunc_t)lib.resolve("reload");
-            if(reload)
-                Preferences::reloadFunctions.push_back(reload);
         }
+        Preferences::reloadFunc_t reload = (Preferences::reloadFunc_t)lib.resolve("reload");
+        if(reload)
+            Preferences::reloadFunctions.push_back(reload);
+        AboutPlugins::window->addPlugin(lib);
     }
 }
 
@@ -85,6 +96,10 @@ QSettings* Preferences::settings = nullptr;
 
 int main(int argc, char *argv[])
 {
+    QApplication a(argc, argv);
+    a.setApplicationVersion(APP_VERSION);
+    AboutPlugins::init();
+
     Protocol base(init<EthernetPacket>, "Ethernet", Protocol::getFlags(true, true));
     base.addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     base.addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
@@ -112,9 +127,6 @@ int main(int argc, char *argv[])
         settings.endGroup();
     }
     addPrefs(*SniffWindow::core);
-
-    QApplication a(argc, argv);
-    a.setApplicationVersion(APP_VERSION);
     SniffWindow w;
 
     bool notEndCmdOption = true;
