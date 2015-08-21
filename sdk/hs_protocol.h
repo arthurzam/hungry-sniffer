@@ -95,13 +95,15 @@ namespace hungry_sniffer {
 
             mutable int countPackets = 0; /*!<The amount of packets sniffed of this Protocol*/
 
-            names_t names;
+            names_t names; /*!<Name convertion*/
             filterFunctions_t filters;
-            options_t options;
+            options_t options; /*!<Special Options*/
 
             uint8_t flags;
         public:
             const Preference::Preference* preferencePanel = nullptr;
+
+            std::string websiteUrl;
 
             static constexpr uint8_t getFlags(bool isNameService, bool isConversationEnabeled)
             {

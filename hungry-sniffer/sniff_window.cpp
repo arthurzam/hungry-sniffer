@@ -24,6 +24,7 @@
 #include "ui_sniff_window.h"
 
 #include <QClipboard>
+#include <QDesktopServices>
 #include <QFileInfo>
 #include <QInputDialog>
 #include <QMessageBox>
@@ -550,14 +551,23 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
 
     QAction action_copy(QStringLiteral("&Copy Value"), nullptr);
     QAction action_prefs(QStringLiteral("&Protocol Preferences"), nullptr);
+    QAction action_website(QStringLiteral("Protocol Help &Website"), nullptr);
     if(firstLevel == item)
     {
-        const hungry_sniffer::Preference::Preference* pr = this->selected->decodedPacket->getNext(ui->tree_packet->indexOfTopLevelItem(firstLevel))->getProtocol()->preferencePanel;
+        const hungry_sniffer::Packet* selectedPacket = this->selected->decodedPacket->getNext(ui->tree_packet->indexOfTopLevelItem(firstLevel));
+        const hungry_sniffer::Protocol* selectedProtocol = selectedPacket->getProtocol();
+        const hungry_sniffer::Preference::Preference* pr = selectedProtocol->preferencePanel;
         if(pr && pr->func)
         {
             action_prefs.setData(QVariant::fromValue<void*>((void*)pr));
             connect(&action_prefs, SIGNAL(triggered()), this, SLOT(open_preference_window()));
             menu.addAction(&action_prefs);
+        }
+        if(!selectedProtocol->websiteUrl.empty())
+        {
+            action_website.setData(QString::fromStdString(selectedProtocol->websiteUrl));
+            connect(&action_website, SIGNAL(triggered()), this, SLOT(open_url()));
+            menu.addAction(&action_website);
         }
     }
     else
@@ -732,6 +742,13 @@ void SniffWindow::open_preference_window()
             pref = (hungry_sniffer::Preference::Preference*)var.value<void*>();
     }
     (new Preferences(this, pref))->show();
+}
+
+void SniffWindow::open_url()
+{
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action)
+        QDesktopServices::openUrl(QUrl(action->data().toString()));
 }
 
 void SniffWindow::dropEvent(QDropEvent* event)

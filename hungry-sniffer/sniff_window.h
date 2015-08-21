@@ -97,6 +97,7 @@ class SniffWindow : public QMainWindow
         void tree_add_info_header();
         void tree_remove_info_header();
         void open_preference_window();
+        void open_url();
 
     protected:
         void dragEnterEvent(QDragEnterEvent* event);
