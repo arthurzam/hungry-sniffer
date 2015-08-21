@@ -537,6 +537,17 @@ void SniffWindow::on_tree_packet_customContextMenuRequested(const QPoint& pos)
         return;
     QTreeWidgetItem* firstLevel = getRootOfItem(item);
     QMenu menu;
+
+    QAction action_collapse(QStringLiteral("C&ollapse All"), nullptr);
+    connect(&action_collapse, SIGNAL(triggered()), ui->tree_packet, SLOT(collapseAll()));
+    menu.addAction(&action_collapse);
+
+    QAction action_expand(QStringLiteral("&Expand All"), nullptr);
+    connect(&action_expand, SIGNAL(triggered()), ui->tree_packet, SLOT(expandAll()));
+    menu.addAction(&action_expand);
+
+    menu.addSeparator();
+
     QAction action_copy(QStringLiteral("&Copy Value"), nullptr);
     QAction action_prefs(QStringLiteral("&Protocol Preferences"), nullptr);
     if(firstLevel == item)
