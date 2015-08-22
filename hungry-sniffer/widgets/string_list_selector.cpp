@@ -22,8 +22,7 @@
 
 #include "string_list_selector.h"
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
+#include <QBoxLayout>
 #include <QListWidget>
 #include <QPushButton>
 

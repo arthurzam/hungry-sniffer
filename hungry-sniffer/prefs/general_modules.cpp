@@ -21,40 +21,46 @@
 */
 
 #include "general_modules.h"
-#include "ui_general_modules.h"
 #include "widgets/string_list_selector.h"
+
 #include <QFileDialog>
+#include <QGroupBox>
 #include <QSettings>
+#include <QBoxLayout>
 
 QString getDir()
 {
     return QFileDialog::getExistingDirectory(nullptr, QStringLiteral("Select default open folder"));
 }
 
-GeneralModules::GeneralModules(QWidget* parent) :
-    QWidget(parent),
-    ui(new Ui::GeneralModules)
+GeneralModules::GeneralModules() :
+    QWidget(nullptr)
 {
-    ui->setupUi(this);
-
-    QVBoxLayout* plugins = new QVBoxLayout(ui->groupBox);
+    this->resize(452, 341);
+    QVBoxLayout* verticalLayout = new QVBoxLayout(this);
+    QGroupBox* panel_plugins = new QGroupBox(this);
+    panel_plugins->setTitle(QStringLiteral("Plugins"));
+    QVBoxLayout* plugins = new QVBoxLayout(panel_plugins);
     this->list_plugins = new StringListSelector(&getDir, this);
     plugins->addWidget(this->list_plugins);
+    verticalLayout->addWidget(panel_plugins);
 
-    QVBoxLayout* python = new QVBoxLayout(ui->groupBox_2);
+    QGroupBox* panel_python = new QGroupBox(this);
+    panel_python->setTitle(QStringLiteral("Python Modules"));
+    QVBoxLayout* python = new QVBoxLayout(panel_python);
     this->list_python = new StringListSelector(&getDir, this);
     python->addWidget(this->list_python);
+    verticalLayout->addWidget(panel_python);
 }
 
 GeneralModules::~GeneralModules()
 {
-    delete ui;
 }
 
 void GeneralModules::save(QSettings& settings)
 {
     settings.beginGroup(QStringLiteral("General"));
-    settings.beginGroup(("Modules"));
+    settings.beginGroup(QStringLiteral("Modules"));
     settings.setValue(QStringLiteral("plugins_dir"), this->list_plugins->getItems());
     settings.setValue(QStringLiteral("python_dir"), this->list_python->getItems());
     settings.endGroup();

@@ -26,16 +26,16 @@
 #include <QWidget>
 #include <hs_prefs.h>
 
-namespace Ui {
-    class GeneralUI;
-}
+class QCheckBox;
+class QLineEdit;
+class QSpinBox;
 
 class GeneralUI : public QWidget, public hungry_sniffer::Preference::Panel
 {
         Q_OBJECT
 
     public:
-        explicit GeneralUI(QWidget *parent = 0);
+        GeneralUI();
         ~GeneralUI();
         virtual QWidget* get()
         {
@@ -50,7 +50,10 @@ class GeneralUI : public QWidget, public hungry_sniffer::Preference::Panel
         void on_bt_default_dir_clicked();
 
     private:
-        Ui::GeneralUI *ui;
+        QCheckBox* cb_splitter_sizes;
+        QCheckBox* cb_colored;
+        QLineEdit* tb_default_dir;
+        QSpinBox* tb_recents_num;
 };
 
 #endif // GENERAL_UI_H

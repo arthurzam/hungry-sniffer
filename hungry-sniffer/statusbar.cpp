@@ -23,7 +23,7 @@
 #include "statusbar.h"
 #include "sniff_window.h"
 
-#include <QHBoxLayout>
+#include <QBoxLayout>
 
 StatusBar::StatusBar(QWidget* parent) :
     QStatusBar(parent),

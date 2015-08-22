@@ -27,7 +27,7 @@
 #include <QHeaderView>
 #include <QLibrary>
 #include <QTableView>
-#include <QVBoxLayout>
+#include <QBoxLayout>
 
 AboutPlugins* AboutPlugins::window = nullptr;
 

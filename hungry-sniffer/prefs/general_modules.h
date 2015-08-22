@@ -26,19 +26,13 @@
 #include <QWidget>
 #include <hs_prefs.h>
 
-namespace Ui {
-    class GeneralModules;
-}
-
 class StringListSelector;
 class HungrySniffer_Core;
 
 class GeneralModules : public QWidget, public hungry_sniffer::Preference::Panel
 {
-        Q_OBJECT
-
     public:
-        explicit GeneralModules(QWidget* parent = 0);
+        GeneralModules();
         ~GeneralModules();
         virtual QWidget* get()
         {
@@ -50,7 +44,6 @@ class GeneralModules : public QWidget, public hungry_sniffer::Preference::Panel
         static hungry_sniffer::Preference::Panel* init(const HungrySniffer_Core& core, QSettings& settings);
 
     private:
-        Ui::GeneralModules* ui;
         StringListSelector* list_plugins;
         StringListSelector* list_python;
 };

@@ -23,7 +23,7 @@
 #include "about.h"
 
 #include <QCoreApplication>
-#include <QVBoxLayout>
+#include <QBoxLayout>
 #include <QTextBrowser>
 #include <QLabel>
 #include <QFont>

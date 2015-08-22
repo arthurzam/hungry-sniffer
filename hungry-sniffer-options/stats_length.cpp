@@ -22,7 +22,7 @@
 
 #include "stats_length.h"
 #include <QTableView>
-#include <QVBoxLayout>
+#include <QBoxLayout>
 #include <QHeaderView>
 #include <hs_protocol.h>
 

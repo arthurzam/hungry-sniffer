@@ -26,8 +26,7 @@
 
 #include <QPushButton>
 #include <QLabel>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+#include <QBoxLayout>
 #include <QDialogButtonBox>
 #include <QLineEdit>
 #include <QSpinBox>

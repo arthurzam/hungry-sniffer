@@ -30,7 +30,7 @@
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QTreeWidgetItem>
-#include <QVBoxLayout>
+#include <QBoxLayout>
 
 #include <hs_core.h>
 

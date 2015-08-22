@@ -24,7 +24,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QGridLayout>
-#include <QVBoxLayout>
+#include <QBoxLayout>
 
 OptionsDisabler::OptionsDisabler(QWidget *parent) :
     QDialog(parent)
@@ -39,10 +39,6 @@ OptionsDisabler::OptionsDisabler(QWidget *parent) :
 
 OptionsDisabler::~OptionsDisabler()
 {
-//    for(auto& i : this->enabledOptions)
-//    {
-//        free(const_cast<void*>(i.data));
-//    }
 }
 
 void OptionsDisabler::refreshOptions()

@@ -8,7 +8,3 @@ HEADERS += \
     $$PWD/general_modules.h \
     $$PWD/general_ui.h \
     $$PWD/hidden_interfaces.h
-
-FORMS += \
-    $$PWD/general_modules.ui \
-    $$PWD/general_ui.ui
