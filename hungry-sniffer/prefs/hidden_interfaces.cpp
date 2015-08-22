@@ -20,18 +20,24 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "general_modules.h"
-#include "general_ui.h"
 #include "hidden_interfaces.h"
 
-#include <hs_core.h>
+#include <QSettings>
 
 using namespace hungry_sniffer::Preference;
 
-void addPrefs(HungrySniffer_Core& core)
+hidden_interfaces::hidden_interfaces() : InterfaceSelector(QStringList())
 {
-    core.addProtocolPreference({"Hidden Interfaces", hidden_interfaces::init});
-    Preference& pref = core.addProtocolPreference({"General"});
-    pref.add({"Modules", GeneralModules::init});
-    pref.add({"UI", GeneralUI::init});
+}
+
+void hidden_interfaces::save(QSettings& settings)
+{
+    settings.setValue(QStringLiteral("HiddenInf"), this->getSelected());
+}
+
+Panel* hidden_interfaces::init(const HungrySniffer_Core&, QSettings& settings)
+{
+    hidden_interfaces* hid = new hidden_interfaces();
+    hid->select(settings.value(QStringLiteral("HiddenInf")).toStringList());
+    return hid;
 }

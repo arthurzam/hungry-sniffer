@@ -20,58 +20,29 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef DEVICECHOOSE_H
-#define DEVICECHOOSE_H
+#ifndef INTERFACESELECTOR_H
+#define INTERFACESELECTOR_H
 
-#include <QDialog>
-#include <QAbstractTableModel>
+#include <QTableView>
 
-#if defined(Q_OS_WIN)
-    #include <winsock2.h>
-    #include <windows.h>
-#endif
-#include <pcap.h>
-
-class InterfaceSelector;
+class InterfaceModel;
 class QSortFilterProxyModel;
-class QLineEdit;
-class QSpinBox;
 
-/**
- * @brief Choosing Device for Sniffing Dialog
- */
-class DeviceChoose : public QDialog
+class InterfaceSelector : public QTableView
 {
         Q_OBJECT
-    private:
-        InterfaceSelector* tableView;
-        QStringList results;
-        QSortFilterProxyModel* m_sortFilterProxy;
-        QLineEdit* tb_filter;
-        QSpinBox* tb_number;
     public:
-        explicit DeviceChoose(QWidget* parent = 0);
-        ~DeviceChoose() {}
+        explicit InterfaceSelector(QStringList hidden, QWidget* parent = nullptr);
 
-        QStringList::const_iterator end() const
-        {
-            return results.cend();
-        }
+        QStringList getSelected();
+        void select(QStringList selected);
 
-        QStringList::const_iterator begin() const
-        {
-            return results.cbegin();
-        }
+    public slots:
+        void refresh();
 
-        QString getCaptureFilter() const;
-        int getMaxCaptureNumber() const;
-
-    private slots:
-
-        /**
-         * @brief on_buttonBox_accepted in case OK was clicked, save the chosen in results
-         */
-        void on_buttonBox_accepted();
+    private:
+        InterfaceModel* model;
+        QSortFilterProxyModel* m_sortFilterProxy;
 };
 
-#endif // DEVICECHOOSE_H
+#endif // INTERFACESELECTOR_H

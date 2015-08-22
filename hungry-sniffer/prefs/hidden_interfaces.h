@@ -20,58 +20,26 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef DEVICECHOOSE_H
-#define DEVICECHOOSE_H
+#ifndef HIDDEN_INTERFACES_H
+#define HIDDEN_INTERFACES_H
 
-#include <QDialog>
-#include <QAbstractTableModel>
+#include "widgets/interface_selector.h"
 
-#if defined(Q_OS_WIN)
-    #include <winsock2.h>
-    #include <windows.h>
-#endif
-#include <pcap.h>
+#include <hs_prefs.h>
 
-class InterfaceSelector;
-class QSortFilterProxyModel;
-class QLineEdit;
-class QSpinBox;
-
-/**
- * @brief Choosing Device for Sniffing Dialog
- */
-class DeviceChoose : public QDialog
+class hidden_interfaces : public InterfaceSelector, public hungry_sniffer::Preference::Panel
 {
-        Q_OBJECT
-    private:
-        InterfaceSelector* tableView;
-        QStringList results;
-        QSortFilterProxyModel* m_sortFilterProxy;
-        QLineEdit* tb_filter;
-        QSpinBox* tb_number;
     public:
-        explicit DeviceChoose(QWidget* parent = 0);
-        ~DeviceChoose() {}
+        hidden_interfaces();
 
-        QStringList::const_iterator end() const
+        virtual QWidget* get()
         {
-            return results.cend();
+            return this;
         }
 
-        QStringList::const_iterator begin() const
-        {
-            return results.cbegin();
-        }
+        virtual void save(QSettings& settings);
 
-        QString getCaptureFilter() const;
-        int getMaxCaptureNumber() const;
-
-    private slots:
-
-        /**
-         * @brief on_buttonBox_accepted in case OK was clicked, save the chosen in results
-         */
-        void on_buttonBox_accepted();
+        static hungry_sniffer::Preference::Panel* init(const HungrySniffer_Core&, QSettings& settings);
 };
 
-#endif // DEVICECHOOSE_H
+#endif // HIDDEN_INTERFACES_H
