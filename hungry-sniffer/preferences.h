@@ -26,10 +26,6 @@
 #include <QDialog>
 #include <vector>
 
-namespace Ui {
-    class Preferences;
-}
-
 namespace hungry_sniffer {
     namespace Preference {
         class Panel;
@@ -57,6 +53,15 @@ class Preferences : public QDialog
         explicit Preferences(QWidget* parent = 0, const hungry_sniffer::Preference::Preference* show_pref = nullptr);
         ~Preferences();
 
+        struct node_t {
+            const hungry_sniffer::Preference::Preference& pref;
+            hungry_sniffer::Preference::Panel* panel;
+
+            node_t(const hungry_sniffer::Preference::Preference& pref) : pref(pref), panel(nullptr) {}
+
+            QWidget* getWidget(QStackedWidget* stack);
+        };
+
     protected:
         void accept();
 
@@ -70,7 +75,7 @@ class Preferences : public QDialog
         QTreeWidget* tree_select;
         QStackedWidget* stackedWidget;
 
-        std::vector<hungry_sniffer::Preference::Panel*> panels;
+        std::vector<struct node_t> nodes;
 };
 
 #endif // PREFERENCES_H

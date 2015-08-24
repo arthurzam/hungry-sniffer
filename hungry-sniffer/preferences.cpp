@@ -38,18 +38,19 @@ std::vector<Preferences::reloadFunc_t> Preferences::reloadFunctions;
 
 using namespace hungry_sniffer::Preference;
 
-static QTreeWidgetItem* getItem(const Preference& pref, QStackedWidget* stack, std::vector<Panel*>& panels, const Preference* show_pref)
+static QTreeWidgetItem* getItem(const Preference& pref, QStackedWidget* stack, std::vector<struct Preferences::node_t>& panels, const Preference* show_pref)
 {
     QTreeWidgetItem* item = new QTreeWidgetItem(QStringList(QString::fromStdString(pref.name)));
     if(pref.func)
     {
-        Panel* panel = pref.func(*SniffWindow::core, *Preferences::settings);
-        QWidget* widget = panel->get();
-        stack->addWidget(widget);
-        item->setData(0, Qt::UserRole, QVariant::fromValue<QWidget*>(widget));
-        panels.push_back(panel);
+        panels.push_back({pref});
+        item->setData(0, Qt::UserRole, (int)(panels.size() - 1));
+
         if(&pref == show_pref)
+        {
+            QWidget* widget = panels.back().getWidget(stack);
             stack->setCurrentWidget(widget);
+        }
     }
     else
     {
@@ -60,17 +61,6 @@ static QTreeWidgetItem* getItem(const Preference& pref, QStackedWidget* stack, s
     for(const auto& i : pref.subPreferences)
         item->addChild(getItem(i, stack, panels, show_pref));
     return item;
-}
-
-static QWidget* extractData(QTreeWidgetItem* item)
-{
-    if(item)
-    {
-        QVariant var = item->data(0, Qt::UserRole);
-        if(!var.isNull())
-            return var.value<QWidget*>();
-    }
-    return nullptr;
 }
 
 Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
@@ -103,7 +93,7 @@ Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
     stackedWidget->addWidget(new QWidget());
     for(const auto& i : SniffWindow::core->preferences)
     {
-        tree_select->addTopLevelItem(getItem(i, stackedWidget, this->panels, show_pref));
+        tree_select->addTopLevelItem(getItem(i, stackedWidget, this->nodes, show_pref));
     }
     tree_select->expandAll();
 
@@ -121,10 +111,9 @@ Preferences::~Preferences()
 
 void Preferences::accept()
 {
-    for(Panel* panel : this->panels)
-    {
-        panel->save(*settings);
-    }
+    for(struct node_t& node : this->nodes)
+        if(node.panel)
+            node.panel->save(*settings);
     settings->sync();
     for(reloadFunc_t func : reloadFunctions)
         func(*settings);
@@ -133,10 +122,12 @@ void Preferences::accept()
 
 void Preferences::on_tree_select_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
-    if(current == previous) return;
-    QWidget* item = extractData(current);
-    if(item)
-        stackedWidget->setCurrentWidget(item);
+    if(current && current != previous)
+    {
+        QVariant var = current->data(0, Qt::UserRole);
+        if(!var.isNull())
+            stackedWidget->setCurrentWidget(this->nodes[var.toInt()].getWidget(stackedWidget));
+    }
 }
 
 bool filterEntries(QTreeWidgetItem* item, const QString& str)
@@ -162,4 +153,14 @@ void Preferences::on_tb_search_textEdited(const QString& arg1)
     {
         filterEntries(tree_select->topLevelItem(i), arg1);
     }
+}
+
+QWidget* Preferences::node_t::getWidget(QStackedWidget* stack)
+{
+    if(!panel)
+    {
+        panel = pref.func(*SniffWindow::core, *Preferences::settings);
+        stack->addWidget(panel->get());
+    }
+    return panel->get();
 }
