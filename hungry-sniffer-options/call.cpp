@@ -42,9 +42,9 @@ extern "C" void add(HungrySniffer_Core& core)
     tcp.addOption("Redirect Source Port", start_srcPortRedirect, true);
 #endif
 
-    core.addStatWindow({"Packet &Length", Stats::create<StatsLength>});
+    core.addStatWindow({"Packet &Length", StatsLength::init});
     auto& ip = core.addStatWindow({"IP"});
-    ip.add({"&Address Distribution", Stats::create<StatsIps>});
+    ip.add({"&Address Distribution", StatsIps::init});
 }
 
 EXPORT_COPYRIGHT("Arthur Zamarin")

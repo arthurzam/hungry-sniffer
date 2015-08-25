@@ -28,6 +28,8 @@
 #include <string>
 #include <list>
 
+struct HungrySniffer_Core;
+
 namespace hungry_sniffer {
     class Packet;
 
@@ -40,7 +42,7 @@ namespace hungry_sniffer {
 
                 virtual ~StatWindow() {}
         };
-        typedef StatWindow* (*statInitFunction)();
+        typedef StatWindow* (*statInitFunction)(const HungrySniffer_Core& core);
 
         struct StatsNode {
             std::string name;
@@ -59,7 +61,7 @@ namespace hungry_sniffer {
         };
 
         template<typename T>
-        static StatWindow* create()
+        StatWindow* create(const HungrySniffer_Core& core)
         {
             return new T();
         }

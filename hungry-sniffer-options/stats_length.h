@@ -36,8 +36,10 @@ static uint32_t StatsLengthModel_lengths[] = {0, 20, 40, 80, 160, 320, 640, 1280
 
 class StatsLengthModel : public QAbstractTableModel
 {
+        friend class StatsLength;
     private:
-        struct stat {
+        struct stat
+        {
             uint32_t count = 0;
             uint32_t min = UINT32_MAX;
             uint32_t max = 0;
@@ -46,43 +48,40 @@ class StatsLengthModel : public QAbstractTableModel
 
         static constexpr unsigned LENGTH = sizeof(StatsLengthModel_lengths) / sizeof(uint32_t) - 1;
         struct stat parts[LENGTH];
-    public:
-        explicit StatsLengthModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
 
-        int rowCount(const QModelIndex & = QModelIndex()) const
+    public:
+        StatsLengthModel() {}
+
+        int rowCount(const QModelIndex& = QModelIndex()) const
         {
             return LENGTH;
         }
 
-        int columnCount(const QModelIndex & = QModelIndex()) const
+        int columnCount(const QModelIndex& = QModelIndex()) const
         {
             return 5;
         }
 
-        QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+        QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
         QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-
-        void add(uint32_t length);
-        void update()
-        {
-            this->beginResetModel();
-            this->endResetModel();
-        }
 };
 
-class QTableView;
 class StatsLength : public QDialog, public hungry_sniffer::Stats::StatWindow
 {
     private:
-        QTableView* tableView;
         StatsLengthModel model;
 
     public:
-        explicit StatsLength(QWidget *parent = 0);
+        StatsLength();
         ~StatsLength() {}
 
         virtual void addPacket(const hungry_sniffer::Packet*, const timeval&, const uint8_t*, size_t len);
         virtual void showWindow();
+
+        static StatWindow* init(const HungrySniffer_Core&)
+        {
+            return new StatsLength();
+        }
 };
 
 #endif // STATS_IPS_H

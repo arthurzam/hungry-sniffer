@@ -28,33 +28,39 @@
 
 using namespace hungry_sniffer;
 
-StatsLength::StatsLength(QWidget *parent) :
-    QDialog(parent),
-    model(nullptr)
+StatsLength::StatsLength()
 {
-    this->resize(400, 300);
+    this->resize(400, 250);
     this->setAttribute(Qt::WA_DeleteOnClose);
     this->setWindowTitle(QStringLiteral("packet length"));
 
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
-    tableView = new QTableView(this);
+    QTableView* tableView = new QTableView(this);
     tableView->setModel(&model);
     tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     verticalLayout->addWidget(tableView);
-
-    this->show();
 }
 
 void StatsLength::addPacket(const Packet*, const timeval&, const uint8_t*, size_t len)
 {
-    model.add(len);
+    int i = 0;
+    for(; StatsLengthModel_lengths[i] <= len; i++);
+    struct StatsLengthModel::stat& part = model.parts[i - 1];
+    model.totalCount++;
+    part.count++;
+    if(part.max < len)
+        part.max = len;
+    if(part.min > len)
+        part.min = len;
 }
 
 void StatsLength::showWindow()
 {
-    model.update();
+    model.beginResetModel();
+    model.endResetModel();
+    this->show();
 }
 
 QVariant StatsLengthModel::data(const QModelIndex& index, int role) const
@@ -65,7 +71,7 @@ QVariant StatsLengthModel::data(const QModelIndex& index, int role) const
         switch(index.column())
         {
             case 0:
-                return QStringLiteral("%1-%2").arg(StatsLengthModel_lengths[row]).arg(StatsLengthModel_lengths[row]);
+                return QStringLiteral("%1-%2").arg(StatsLengthModel_lengths[row]).arg(StatsLengthModel_lengths[row + 1]);
             case 1:
                 return QVariant(parts[row].count);
             case 2:
@@ -89,22 +95,10 @@ QVariant StatsLengthModel::headerData(int section, Qt::Orientation orientation, 
 {
     static const QString headers[] = {QStringLiteral("Range"), QStringLiteral("Count"), QStringLiteral("Min Val"),
                                       QStringLiteral("Max Val"), QStringLiteral("Percent")};
-    if ((role == Qt::DisplayRole) & (orientation == Qt::Horizontal)) {
+    if ((role == Qt::DisplayRole) & (orientation == Qt::Horizontal))
+    {
         return headers[section];
     }
 
     return QVariant();
-}
-
-void StatsLengthModel::add(uint32_t length)
-{
-    int i = 0;
-    for(;StatsLengthModel_lengths[i] <= length; i++);
-    struct stat& part = this->parts[i-1];
-    totalCount++;
-    part.count++;
-    if(part.max < length)
-        part.max = length;
-    if(part.min > length)
-        part.min = length;
 }

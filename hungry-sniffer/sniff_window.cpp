@@ -680,7 +680,7 @@ void SniffWindow::open_stats_window()
     QAction* action = qobject_cast<QAction*>(sender());
     if (!action) return;
     hungry_sniffer::Stats::statInitFunction func = (hungry_sniffer::Stats::statInitFunction)action->data().value<void*>();
-    hungry_sniffer::Stats::StatWindow* w = func();
+    hungry_sniffer::Stats::StatWindow* w = func(*core);
     bool notOnlyShown = !ui->action_only_Shown->isChecked();
     for(const DataStructure::localPacket& i : model.local)
         if(i.isShown | notOnlyShown)

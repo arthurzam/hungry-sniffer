@@ -34,49 +34,46 @@ namespace hungry_sniffer {
 
 class StatsIpsModel : public QAbstractTableModel
 {
+        friend class StatsIps;
     private:
-        struct stat {
+        struct stat
+        {
             int src;
             int dst;
         };
         std::map<std::string, struct stat> ips;
     public:
-        explicit StatsIpsModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
+        StatsIpsModel() {}
 
-        int rowCount(const QModelIndex & = QModelIndex()) const
+        int rowCount(const QModelIndex& = QModelIndex()) const
         {
             return ips.size();
         }
 
-        int columnCount(const QModelIndex & = QModelIndex()) const
+        int columnCount(const QModelIndex& = QModelIndex()) const
         {
             return 4;
         }
 
-        QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+        QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
         QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
         void add(const std::string& ip, int role);
-        void update()
-        {
-            this->beginResetModel();
-            this->endResetModel();
-        }
 };
 
-class QTableView;
 class StatsIps : public QDialog, public hungry_sniffer::Stats::StatWindow
 {
     private:
-        QTableView* tableView;
         StatsIpsModel model;
 
     public:
-        explicit StatsIps(QWidget *parent = 0);
+        StatsIps();
         ~StatsIps() {}
 
         virtual void addPacket(const hungry_sniffer::Packet* packet, const timeval&, const uint8_t*, size_t);
         virtual void showWindow();
+
+        static StatWindow* init(const HungrySniffer_Core& core);
 };
 
 #endif // STATS_IPS_H

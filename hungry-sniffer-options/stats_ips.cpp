@@ -24,20 +24,21 @@
 #include <QTableView>
 #include <QBoxLayout>
 #include <QHeaderView>
-#include <hs_protocol.h>
+#include <hs_core.h>
 
 using namespace hungry_sniffer;
 
-StatsIps::StatsIps(QWidget *parent) :
-    QDialog(parent),
-    model(nullptr)
+static const Protocol* IPv4 = nullptr;
+static const Protocol* IPv6 = nullptr;
+
+StatsIps::StatsIps()
 {
     this->resize(400, 300);
     this->setAttribute(Qt::WA_DeleteOnClose);
-    this->setWindowTitle(QStringLiteral("IP stats"));
+    this->setWindowTitle(QStringLiteral("Address Distribution"));
 
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
-    tableView = new QTableView(this);
+    QTableView* tableView = new QTableView(this);
     tableView->setModel(&model);
     tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -49,15 +50,6 @@ StatsIps::StatsIps(QWidget *parent) :
 
 void StatsIps::addPacket(const Packet* packet, const timeval&, const uint8_t*, size_t)
 {
-    static const Protocol* IPv4 = nullptr;
-    static const Protocol* IPv6 = nullptr;
-
-    if(IPv4 == nullptr)
-    {
-        const Protocol* Ethernet = packet->getProtocol();
-        IPv4 = Ethernet->getProtocol(0x0800);
-        IPv6 = Ethernet->getProtocol(0x86dd);
-    }
     const Packet* p = packet->hasProtocol(IPv4);
     if(p == nullptr && (p = packet->hasProtocol(IPv6)) == nullptr)
         return;
@@ -67,7 +59,15 @@ void StatsIps::addPacket(const Packet* packet, const timeval&, const uint8_t*, s
 
 void StatsIps::showWindow()
 {
-    model.update();
+    model.beginResetModel();
+    model.endResetModel();
+}
+
+Stats::StatWindow* StatsIps::init(const HungrySniffer_Core& core)
+{
+    IPv4 = core.base.getProtocol(0x0800);
+    IPv6 = core.base.getProtocol(0x86dd);
+    return new StatsIps();
 }
 
 QVariant StatsIpsModel::data(const QModelIndex& index, int role) const
@@ -95,7 +95,8 @@ QVariant StatsIpsModel::headerData(int section, Qt::Orientation orientation, int
 {
     static const QString headers[] = {QStringLiteral("IP"), QStringLiteral("All"),
                                       QStringLiteral("Source"), QStringLiteral("Destination")};
-    if ((role == Qt::DisplayRole) & (orientation == Qt::Horizontal)) {
+    if ((role == Qt::DisplayRole) & (orientation == Qt::Horizontal))
+    {
         return headers[section];
     }
 
