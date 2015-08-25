@@ -28,8 +28,6 @@
 #if defined(Q_OS_WIN)
 
 #elif defined(Q_OS_UNIX)
-    #include <sys/time.h>
-    #include <sys/resource.h>
     #include <unistd.h>
 #endif
 
@@ -75,8 +73,8 @@ inline void loadLibs(const QString& path)
 #ifndef QT_NO_DEBUG
             } catch (const std::exception& e) {
                 qDebug("error with %s: %s", iter.toLatin1().constData(), e.what());
-#endif
                 continue;
+#endif
             } catch (...) {
 #ifndef QT_NO_DEBUG
                 qDebug("error with %s:", iter.toLatin1().constData());
