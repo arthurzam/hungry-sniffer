@@ -71,10 +71,6 @@ class TCPPacket: public PacketStructed<struct tcp_hdr> {
         virtual std::string getConversationFilterText() const;
         virtual void updateNameAssociation();
         virtual unsigned getLength() const;
-
-        static bool filter_dstPort(const Packet* packet, const std::vector<std::string>* res);
-        static bool filter_srcPort(const Packet* packet, const std::vector<std::string>* res);
-        static bool filter_follow(const Packet* packet, const std::vector<std::string>* res);
 };
 
 #endif /* TCPPACKET_H_ */

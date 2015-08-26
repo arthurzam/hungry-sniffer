@@ -95,25 +95,3 @@ unsigned TCPPacket::getLength() const
 {
     return (this->value->th_off * 4);
 }
-
-bool TCPPacket::filter_dstPort(const Packet* packet, const std::vector<std::string>* res)
-{
-    const TCPPacket* tcp = static_cast<const TCPPacket*>(packet);
-    return res->at(1) == tcp->_realDestination || res->at(1) == tcp->destination;
-}
-
-bool TCPPacket::filter_srcPort(const Packet* packet, const std::vector<std::string>* res)
-{
-    const TCPPacket* tcp = static_cast<const TCPPacket*>(packet);
-    return res->at(1) == tcp->_realSource || res->at(1) == tcp->source;
-}
-
-bool TCPPacket::filter_follow(const Packet* packet, const std::vector<std::string>* res)
-{
-    const TCPPacket* tcp = static_cast<const TCPPacket*>(packet);
-    if(res->at(1) == tcp->_realSource || res->at(1) == tcp->source)
-        return res->at(2) == tcp->_realDestination || res->at(2) == tcp->destination;
-    if(res->at(1) == tcp->_realDestination || res->at(1) == tcp->destination)
-        return res->at(2) == tcp->_realSource || res->at(2) == tcp->source;
-    return false;
-}

@@ -37,24 +37,43 @@
 
 Protocol dataProtocol(init<PacketText>, "Data");
 
+bool filter_dst(const Packet* packet, const std::vector<std::string>* res)
+{
+    return res->at(1) == packet->realDestination() || res->at(1) == packet->localDestination();
+}
+
+bool filter_src(const Packet* packet, const std::vector<std::string>* res)
+{
+    return res->at(1) == packet->realSource() || res->at(1) == packet->localSource();
+}
+
+bool filter_follow(const Packet* packet, const std::vector<std::string>* res)
+{
+    if(res->at(1) == packet->realSource() || res->at(1) == packet->localSource())
+        return res->at(2) == packet->realDestination() || res->at(2) == packet->localDestination();
+    if(res->at(1) == packet->realDestination() || res->at(1) == packet->localDestination())
+        return res->at(2) == packet->realSource() || res->at(2) == packet->localSource();
+    return false;
+}
+
 EXPORT_FUNCTION void add(HungrySniffer_Core& core)
 {
     Protocol& ipv4 = core.base.addProtocol(0x0800, init<IPPacket>, "IP", Protocol::getFlags(true, true));
     Protocol& ipv6 = core.base.addProtocol(0x86dd, ipv4, init<IPv6Packet>, "IPv6");
     core.base.addProtocol(0x0806, init<ArpPacket>, "ARP");
 
-    ipv4.addFilter("^dst *== *([^ ]+)$", IPPacket::filter_dstIP);
-    ipv4.addFilter("^src *== *([^ ]+)$", IPPacket::filter_srcIP);
-    ipv4.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", IPPacket::filter_follow);
+    ipv4.addFilter("^dst *== *([^ ]+)$", filter_dst);
+    ipv4.addFilter("^src *== *([^ ]+)$", filter_src);
+    ipv4.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", filter_follow);
 
 #ifdef Q_OS_UNIX
     ipv4.addOption("Drop From Source", IPPacket::drop_srcIP, true);
     ipv4.addOption("Drop From Destination", IPPacket::drop_dstIP, true);
 #endif
 
-    ipv6.addFilter("^dst *== *([^ ]+)$", IPv6Packet::filter_dstIP);
-    ipv6.addFilter("^src *== *([^ ]+)$", IPv6Packet::filter_srcIP);
-    ipv6.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", IPv6Packet::filter_follow);
+    ipv6.addFilter("^dst *== *([^ ]+)$", filter_dst);
+    ipv6.addFilter("^src *== *([^ ]+)$", filter_src);
+    ipv6.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", filter_follow);
 
 #ifdef Q_OS_UNIX
     ipv6.addOption("Drop From Source", IPv6Packet::drop_srcIP, true);
@@ -66,18 +85,18 @@ EXPORT_FUNCTION void add(HungrySniffer_Core& core)
     ipv4.addProtocol(1, init<ICMPPacket>, "ICMP");
     ipv4.addProtocol(112, init<VRRPPacket>, "VRRP");
 
-    tcp.addFilter("^dst *== *([^ ]+)$", TCPPacket::filter_dstPort);
-    tcp.addFilter("^src *== *([^ ]+)$", TCPPacket::filter_srcPort);
-    tcp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", TCPPacket::filter_follow);
+    tcp.addFilter("^dst *== *([^ ]+)$", filter_dst);
+    tcp.addFilter("^src *== *([^ ]+)$", filter_src);
+    tcp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", filter_follow);
 
     tcp.addProtocol(80, init<HTTPPacket>, "HTTP");
     tcp.addProtocol(443, init<PacketEmpty>, "HTTPS");
     tcp.addProtocol(25, init<PacketText>, "SMTP");
     tcp.addProtocol(587, init<PacketText>, "SMTP");
 
-    udp.addFilter("^dst *== *([^ ]+)$", UDPPacket::filter_dstPort);
-    udp.addFilter("^src *== *([^ ]+)$", UDPPacket::filter_srcPort);
-    udp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", UDPPacket::filter_follow);
+    udp.addFilter("^dst *== *([^ ]+)$", filter_dst);
+    udp.addFilter("^src *== *([^ ]+)$", filter_src);
+    udp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", filter_follow);
 
     {
         Protocol& dns = udp.addProtocol(53, init<DNSPacket>, "DNS", Protocol::getFlags(false, true));

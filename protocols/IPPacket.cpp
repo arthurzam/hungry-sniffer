@@ -69,28 +69,6 @@ void IPPacket::updateNameAssociation()
         this->next->updateNameAssociation();
 }
 
-bool IPPacket::filter_dstIP(const Packet* packet, const std::vector<std::string>* res)
-{
-    const IPPacket* ip = static_cast<const IPPacket*>(packet);
-    return res->at(1) == ip->_realDestination || res->at(1) == ip->destination;
-}
-
-bool IPPacket::filter_srcIP(const Packet* packet, const std::vector<std::string>* res)
-{
-    const IPPacket* ip = static_cast<const IPPacket*>(packet);
-    return res->at(1) == ip->_realSource || res->at(1) == ip->source;
-}
-
-bool IPPacket::filter_follow(const Packet* packet, const std::vector<std::string>* res)
-{
-    const IPPacket* ip = static_cast<const IPPacket*>(packet);
-    if(res->at(1) == ip->_realSource || res->at(1) == ip->source)
-        return res->at(2) == ip->_realDestination || res->at(2) == ip->destination;
-    if(res->at(1) == ip->_realDestination || res->at(1) == ip->destination)
-        return res->at(2) == ip->_realSource || res->at(2) == ip->source;
-    return false;
-}
-
 #ifdef Q_OS_UNIX
 int IPPacket::drop_srcIP(const Packet* packet, Option::disabled_options_t& options)
 {
