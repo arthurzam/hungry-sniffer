@@ -86,7 +86,7 @@ inline void loadLibs(const QString& path)
 #endif
             } catch (...) {
 #ifndef QT_NO_DEBUG
-                qDebug("error with %s:", iter.toLatin1().constData());
+                qDebug("error with %s", iter.toLatin1().constData());
 #endif
                 continue;
             }
