@@ -39,7 +39,23 @@ using namespace DataStructure;
 void SniffWindow::runLivePcap(const std::string &name, int maxNumber, QString capture)
 {
     this->toNotStop = true;
-    this->threads.push_back(new std::thread(&SniffWindow::runLivePcap_p, this, name, maxNumber, capture));
+    static constexpr unsigned LIVE_TIMEOUT = 1000; // milliseconds
+    char errbuf[PCAP_ERRBUF_SIZE];
+
+    pcap_t* pd = pcap_open_live(name.c_str(), 65535, 1, LIVE_TIMEOUT, errbuf);
+    if(!pd)
+    {
+        QMessageBox::warning(nullptr, QStringLiteral("Live Sniffing error"), QString(errbuf), QMessageBox::Ok);
+        return;
+    }
+    ui->statusBar->setLiveSniffing(true);
+
+
+    struct bpf_program filter;
+    pcap_compile(pd, &filter, capture.toUtf8().constData(), 0, 0xffffffff);
+    pcap_setfilter(pd, &filter);
+
+    this->threads.push_back(new std::thread(&SniffWindow::runLivePcap_p, this, pd, maxNumber));
 }
 
 void SniffWindow::runOfflineFile(const std::string &filename)
@@ -68,25 +84,9 @@ void SniffWindow::managePacketsList()
     }
 }
 
-void SniffWindow::runLivePcap_p(const std::string& name, int maxNumber, QString capture)
+void SniffWindow::runLivePcap_p(pcap* pd, int maxNumber)
 {
-    static constexpr unsigned LIVE_TIMEOUT = 1000; // milliseconds
-    char errbuf[PCAP_ERRBUF_SIZE];
-
-    pcap_t* pd = pcap_open_live(name.c_str(), 65535, 1, LIVE_TIMEOUT, errbuf);
-    if(!pd)
-    {
-        emit sig_showMessageBox(QStringLiteral("Live Sniffing error"), QString(errbuf));
-        return;
-    }
-    ui->statusBar->setLiveSniffing(true);
-
     RawPacketData raw;
-
-    struct bpf_program filter;
-    pcap_compile(pd, &filter, capture.toUtf8().constData(), 0, 0xffffffff);
-    pcap_setfilter(pd, &filter);
-
     struct pcap_pkthdr* header;
     const u_char* data;
 

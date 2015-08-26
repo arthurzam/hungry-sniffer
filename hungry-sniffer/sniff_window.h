@@ -44,6 +44,8 @@ class QTreeWidgetItem;
 
 class HungrySniffer_Core;
 
+struct pcap;
+
 class SniffWindow : public QMainWindow
 {
         Q_OBJECT
@@ -59,8 +61,6 @@ class SniffWindow : public QMainWindow
         static bool isRoot();
         QString default_open_location;
         int max_recent_files;
-    signals:
-        void sig_showMessageBox(const QString& title, const QString& text);
     public slots:
         void on_actionOpen_triggered();
         void on_tb_filter_textEdited(const QString &arg1);
@@ -89,7 +89,6 @@ class SniffWindow : public QMainWindow
         void on_splitter_splitterMoved(int, int);
 
         void model_currentRowChanged(QModelIndex newSelection,QModelIndex oldSelection);
-        void showMessageBox(const QString& title, const QString& text);
 
         void recentFile_triggered();
         void copy_to_clipboard();
@@ -130,7 +129,7 @@ class SniffWindow : public QMainWindow
         void runOfflineFile(const std::string& filename);
 
     private:
-        void runLivePcap_p(const std::string& name, int maxNumber, QString capture);
+        void runLivePcap_p(struct pcap* pd, int maxNumber);
         void runOfflineOpen_p(const std::string& filename);
         void managePacketsList();
 

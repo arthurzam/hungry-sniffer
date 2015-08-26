@@ -75,7 +75,6 @@ SniffWindow::SniffWindow(QWidget* parent) :
 
     connect(ui->table_packets->selectionModel(), SIGNAL(currentRowChanged(QModelIndex, QModelIndex)),
             this, SLOT(model_currentRowChanged(QModelIndex, QModelIndex)));
-    connect(this, SIGNAL(sig_showMessageBox(QString, QString)), this, SLOT(showMessageBox(QString, QString)));
     connect(ui->action_preferences, SIGNAL(triggered()), this, SLOT(open_preference_window()));
 
     ui->tree_packet->setHeaderLabels(QStringList({QStringLiteral("Key"), QStringLiteral("Value")}));
@@ -654,11 +653,6 @@ void SniffWindow::model_currentRowChanged(QModelIndex newSelection, QModelIndex 
         this->setCurrentPacket(this->model.local[loc]);
         ui->statusBar->updateText(loc);
     }
-}
-
-void SniffWindow::showMessageBox(const QString& title, const QString& text)
-{
-    QMessageBox::warning(nullptr, title, text, QMessageBox::Ok);
 }
 
 void SniffWindow::recentFile_triggered()
