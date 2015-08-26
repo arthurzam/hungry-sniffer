@@ -21,11 +21,28 @@
 */
 
 #include "options.h"
-#include "stats_ips.h"
+#include "stats_endpoints.h"
 #include "stats_length.h"
+
 using namespace hungry_sniffer;
+using hungry_sniffer::Stats::StatWindow;
 
 #include <hs_plugin.h>
+
+static StatWindow* initEndpointIPv4(const HungrySniffer_Core& core)
+{
+    return new StatsEndpoints(&core.base[0x0800]);
+}
+
+static StatWindow* initEndpointIPv6(const HungrySniffer_Core& core)
+{
+    return new StatsEndpoints(&core.base[0x86dd]);
+}
+
+static StatWindow* initEndpointEthernet(const HungrySniffer_Core& core)
+{
+    return new StatsEndpoints(&core.base);
+}
 
 EXPORT_FUNCTION void add(HungrySniffer_Core& core)
 {
@@ -42,8 +59,10 @@ EXPORT_FUNCTION void add(HungrySniffer_Core& core)
 #endif
 
     core.addStatWindow({"Packet &Length", StatsLength::init});
-    auto& ip = core.addStatWindow({"IP"});
-    ip.add({"&Address Distribution", StatsIps::init});
+    auto& endpoints = core.addStatWindow({"&Endpoints List"});
+    endpoints.add({"&Ethernet", initEndpointEthernet});
+    endpoints.add({"&IP", initEndpointIPv4});
+    endpoints.add({"&IPv6", initEndpointIPv6});
 }
 
 EXPORT_COPYRIGHT("Arthur Zamarin")

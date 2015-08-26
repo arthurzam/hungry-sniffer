@@ -19,8 +19,8 @@ include(../common.pri)
 SOURCES += \
     call.cpp \
     resolve_hostname.cpp \
-    stats_ips.cpp \
-    stats_length.cpp
+    stats_length.cpp \
+    stats_endpoints.cpp
 
 unix: SOURCES += \
     arpspoof.cpp \
@@ -28,8 +28,8 @@ unix: SOURCES += \
 
 HEADERS +=\
     options.h \
-    stats_ips.h \
-    stats_length.h
+    stats_length.h \
+    stats_endpoints.h
 
 INCLUDEPATH += $$PWD/../sdk
 

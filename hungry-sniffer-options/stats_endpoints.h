@@ -30,24 +30,25 @@
 
 namespace hungry_sniffer {
     class Packet;
+    class Protocol;
 }
 
-class StatsIpsModel : public QAbstractTableModel
+class StatsEndpointsModel : public QAbstractTableModel
 {
-        friend class StatsIps;
+        friend class StatsEndpoints;
     private:
         struct stat
         {
             int src;
             int dst;
         };
-        std::map<std::string, struct stat> ips;
+        std::map<std::string, struct stat> endpoints;
     public:
-        StatsIpsModel() {}
+        StatsEndpointsModel() {}
 
         int rowCount(const QModelIndex& = QModelIndex()) const
         {
-            return (int)ips.size();
+            return (int)endpoints.size();
         }
 
         int columnCount(const QModelIndex& = QModelIndex()) const
@@ -58,17 +59,18 @@ class StatsIpsModel : public QAbstractTableModel
         QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
         QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
-        void add(const std::string& ip, int role);
+        void add(const std::string& addr, int role);
 };
 
-class StatsIps : public QDialog, public hungry_sniffer::Stats::StatWindow
+class StatsEndpoints : public QDialog, public hungry_sniffer::Stats::StatWindow
 {
     private:
-        StatsIpsModel model;
+        StatsEndpointsModel model;
+        const hungry_sniffer::Protocol* protocol;
 
     public:
-        StatsIps();
-        ~StatsIps() {}
+        StatsEndpoints(const hungry_sniffer::Protocol* protocol);
+        ~StatsEndpoints() {}
 
         virtual void addPacket(const hungry_sniffer::Packet* packet, const struct timeval&, const uint8_t*, size_t);
         virtual void showWindow();
