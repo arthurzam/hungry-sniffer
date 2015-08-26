@@ -20,6 +20,10 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef Q_COMPILER_INITIALIZER_LISTS
+#define Q_COMPILER_INITIALIZER_LISTS
+#endif
+
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
 #include "EthernetPacket.h"
@@ -197,7 +201,7 @@ namespace HspcapFile {
                 writeBuffer(packet.rawPacket.len, packet.rawPacket.data);
                 if(headers && headers->size() != 0)
                 {
-                    uint16_t count = htons(headers->size());
+                    uint16_t count = htons((uint16_t)headers->size());
                     ::fwrite(&count, sizeof(count), 1, file);
                     for(auto& i : *headers)
                     {
@@ -214,7 +218,7 @@ namespace HspcapFile {
                 if(names.size() > 0)
                 {
                     ::fwrite(&type, 1, 1, file);
-                    uint16_t size = htons(names.size());
+                    uint16_t size = htons((uint16_t)names.size());
                     ::fwrite(&size, sizeof(size), 1, file);
                     writeString(protocol.getName());
                     for(auto& i : names)
@@ -248,7 +252,7 @@ namespace HspcapFile {
                     return NULL;
                 len = ntohs(len);
                 char* buffer = (char*)malloc(len);
-                len = ::fread(buffer, 1, len, file);
+                len = (uint16_t)::fread(buffer, 1, len, file);
                 return buffer;
             }
 
@@ -258,7 +262,7 @@ namespace HspcapFile {
                     return NULL;
                 len = ntohl(len);
                 char* buffer = (char*)malloc(len);
-                len = ::fread(buffer, 1, len, file);
+                len = (uint16_t)::fread(buffer, 1, len, file);
                 return buffer;
             }
 
@@ -430,7 +434,7 @@ void SniffWindow::on_action_save_all_triggered()
     }
     else if(fil == QStringLiteral("hspcap (*.hspcap)"))
     {
-        HspcapFile::Save file(filename.toUtf8().constData(), model.local.size());
+        HspcapFile::Save file(filename.toUtf8().constData(), (uint32_t)model.local.size());
         file << core->base;
         for(const auto& i : model.local)
             file << i;
@@ -454,7 +458,7 @@ void SniffWindow::on_action_save_shown_triggered()
     }
     else if(fil == QStringLiteral("hspcap (*.hspcap)"))
     {
-        HspcapFile::Save file(filename.toUtf8().constData(), model.shownPerRow.size());
+        HspcapFile::Save file(filename.toUtf8().constData(), (uint32_t)model.shownPerRow.size());
         file << core->base;
         for(int& num : model.shownPerRow)
             file << model.local[num];

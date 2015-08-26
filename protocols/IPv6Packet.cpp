@@ -21,9 +21,7 @@
 */
 
 #include "IPv6Packet.h"
-#if defined(Q_OS_WIN)
-    const char* inet_ntop(int af, const void* src, char* dst, int cnt);
-#elif defined(Q_OS_UNIX)
+#if defined(Q_OS_UNIX)
     #include <arpa/inet.h>
     #include "iptc.h"
 #endif
@@ -33,9 +31,9 @@ IPv6Packet::IPv6Packet(const void* data, size_t len, const Protocol* protocol,
 {
     if(!value) return;
     char str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &this->value->ip6_src, str, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, (void*)&this->value->ip6_src, str, INET6_ADDRSTRLEN);
     this->_realSource = str;
-    inet_ntop(AF_INET6, &this->value->ip6_dst, str, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, (void*)&this->value->ip6_dst, str, INET6_ADDRSTRLEN);
     this->_realDestination = str;
 
     this->headers.push_back({"Source ipv6", "", 8, 16});

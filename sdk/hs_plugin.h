@@ -25,12 +25,18 @@
 
 #include "hs_core.h"
 
-constexpr uint32_t API_VERSION = 0;
+CONSTEXPR uint32_t API_VERSION = 0;
 
-#define EXPORT_DESCRIPTION(str) extern "C" const char* PLUGIN_DESCRIPTION() { return (const char*)str; }
-#define EXPORT_COPYRIGHT(str) extern "C" const char* PLUGIN_COPYRIGHT() { return (const char*)str; }
-#define EXPORT_WEBSITE(str) extern "C" const char* PLUGIN_WEBSITE() { return (const char*)str; }
-#define EXPORT_VERSION extern "C" uint32_t PLUGIN_VERSION() { return API_VERSION; }
+#ifdef WIN32
+    #define EXPORT_FUNCTION extern "C" __declspec(dllexport)
+#else
+    #define EXPORT_FUNCTION extern "C"
+#endif
+
+#define EXPORT_DESCRIPTION(str) EXPORT_FUNCTION const char* PLUGIN_DESCRIPTION() { return (const char*)str; }
+#define EXPORT_COPYRIGHT(str) EXPORT_FUNCTION const char* PLUGIN_COPYRIGHT() { return (const char*)str; }
+#define EXPORT_WEBSITE(str) EXPORT_FUNCTION const char* PLUGIN_WEBSITE() { return (const char*)str; }
+#define EXPORT_VERSION EXPORT_FUNCTION uint32_t PLUGIN_VERSION() { return API_VERSION; }
 
 #endif // HS_PLUGIN_H
 

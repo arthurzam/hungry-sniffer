@@ -23,7 +23,6 @@
 #include "VRRPPacket.h"
 #if defined(Q_OS_WIN)
     #include <Ws2tcpip.h>
-    const char* inet_ntop(int af, const void* src, char* dst, int cnt);
 #elif defined(Q_OS_UNIX)
     #include <arpa/inet.h>
 #endif
@@ -44,7 +43,7 @@ VRRPPacket::VRRPPacket(const void* data, size_t len, const Protocol* protocol, c
     char str[INET_ADDRSTRLEN];
     for(int i = 0; i < this->value->naddr; i++)
     {
-        inet_ntop(AF_INET, ip, str, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, (void*)ip, str, INET_ADDRSTRLEN);
         this->headers.push_back({"IP Address", str});
         ip += 4;
     }

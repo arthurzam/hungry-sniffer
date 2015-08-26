@@ -51,9 +51,9 @@ void StatsLength::addPacket(const Packet*, const timeval&, const uint8_t*, size_
     model.totalCount++;
     part.count++;
     if(part.max < len)
-        part.max = len;
+        part.max = (uint32_t)len;
     if(part.min > len)
-        part.min = len;
+        part.min = (uint32_t)len;
 }
 
 void StatsLength::showWindow()

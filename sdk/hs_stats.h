@@ -23,7 +23,11 @@
 #ifndef HS_STATS_H
 #define HS_STATS_H
 
-#include <ctime>
+#ifdef _MSC_VER
+    #include <WinSock2.h>
+#else
+    #include <ctime>
+#endif
 #include <cstdint>
 #include <string>
 #include <list>

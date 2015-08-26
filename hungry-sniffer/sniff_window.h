@@ -42,7 +42,7 @@ class QSortFilterProxyModel;
 class QPlainTextEdit;
 class QTreeWidgetItem;
 
-class HungrySniffer_Core;
+struct HungrySniffer_Core;
 
 struct pcap;
 
@@ -161,9 +161,9 @@ class SniffWindow : public QMainWindow
 
         std::string pyCommand;
         struct {
-            int_fast16_t bracketsC = 0; // '(' ')'
-            int_fast16_t bracketsS = 0; // '[' ']'
-            int_fast16_t bracketsM = 0; // '{' '}'
+            int_fast16_t bracketsC; // '(' ')'
+            int_fast16_t bracketsS; // '[' ']'
+            int_fast16_t bracketsM; // '{' '}'
 
             bool block = false;         // :
 

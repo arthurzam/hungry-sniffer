@@ -62,7 +62,7 @@ DeviceChoose::DeviceChoose(QWidget* parent) :
     tb_number = new QSpinBox(this);
     tb_number->setValue(0);
     tb_number->setRange(0, INT_MAX);
-    tb_number->setToolTip(QStringLiteral("Maximum number of packets to\n""capture from those interfaces"));
+    tb_number->setToolTip(QStringLiteral("Maximum number of packets to\ncapture from those interfaces"));
     hbox_num->addWidget(tb_number);
     vbox->addLayout(hbox_num);
 

@@ -20,6 +20,10 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef Q_COMPILER_INITIALIZER_LISTS
+#define Q_COMPILER_INITIALIZER_LISTS
+#endif
+
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
 
@@ -116,7 +120,7 @@ SniffWindow::SniffWindow(QWidget* parent) :
         settings.beginGroup(QStringLiteral("General"));
         settings.beginGroup(QStringLiteral("UI"));
         bool flag = settings.value(QStringLiteral("splitter_sizes"), false).toBool();
-        default_open_location = settings.value(QStringLiteral("default_dir"), QStringLiteral()).toString();
+        default_open_location = settings.value(QStringLiteral("default_dir")).toString();
         max_recent_files = settings.value(QStringLiteral("max_recent_files"), 10).toInt();
         settings.endGroup();
         settings.endGroup();
@@ -164,19 +168,19 @@ SniffWindow::~SniffWindow()
 #endif
     this->on_actionStop_triggered();
     this->manageThread.join();
-    delete this->filterTree;
+    delete &*this->filterTree;
     delete ui;
 }
 
 void SniffWindow::updateRecentsMenu()
 {
     int numRecentFiles = qMin(recentFiles_paths.size(), max_recent_files);
-    int diff = max_recent_files - recentFiles_actions.size();
+    int diff = max_recent_files - (int)recentFiles_actions.size();
     if(diff != 0)
     {
         if(diff > 0)
         {
-            int i = recentFiles_actions.size();
+            int i = (int)recentFiles_actions.size();
             recentFiles_actions.resize(max_recent_files);
             for(; i < max_recent_files; i++)
             {
@@ -240,7 +244,7 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
     {
         if(QMessageBox::StandardButton::Yes == QMessageBox::question(nullptr,
                 QStringLiteral("Background Options"),
-                QStringLiteral("There are still background options.\n""Do you want to disable them?"),
+                QStringLiteral("There are still background options.\nDo you want to disable them?"),
                 QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No))
         {
             this->optionsDisablerWin.exec();
@@ -274,7 +278,7 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
 
 void SniffWindow::on_tb_filter_textEdited(const QString& arg1)
 {
-    bool isEnables = !arg1.isEmpty() || (bool)this->filterTree;
+    bool isEnables = !arg1.isEmpty() || &*this->filterTree;
     ui->bt_filter_clear->setEnabled(isEnables);
     ui->bt_filter_apply->setEnabled(isEnables);
 }
@@ -365,7 +369,7 @@ void SniffWindow::associateName(const hungry_sniffer::Packet* localPacket, const
 {
     bool ok;
     QString text = QInputDialog::getText(this, QStringLiteral("Name Assication"),
-                                         QStringLiteral("Associated Name for\n""(%1)").arg(QString::fromStdString(origText)),
+                                         QStringLiteral("Associated Name for\n(%1)").arg(QString::fromStdString(origText)),
                                          QLineEdit::Normal,
                                          QString::fromStdString(localPacket->getProtocol()->getNameAssociated(origText)),
                                          &ok);
@@ -634,14 +638,16 @@ void SniffWindow::on_action_Python_toggled(bool arg1)
 
 void SniffWindow::on_splitter_splitterMoved(int, int)
 {
+#define BOOL_TO_SIZE(flag, size) size = (flag ? (size | 1) : 0)
     QList<int> sizes = ui->splitter->sizes();
-    sizes[0] &= -(ui->action_Table->isChecked());
-    sizes[1] &= -(ui->action_Tree->isChecked());
-    sizes[2] &= -(ui->action_Hex->isChecked());
+    BOOL_TO_SIZE(ui->action_Table->isChecked(), sizes[0]);
+    BOOL_TO_SIZE(ui->action_Tree->isChecked(), sizes[1]);
+    BOOL_TO_SIZE(ui->action_Hex->isChecked(), sizes[2]);
 #ifdef PYTHON_CMD
-    sizes[3] &= -(ui->action_Python->isChecked());
+    BOOL_TO_SIZE(ui->action_Python->isChecked(), sizes[3]);
 #endif
     ui->splitter->setSizes(sizes);
+#undef BOOL_TO_SIZE
 }
 
 void SniffWindow::model_currentRowChanged(QModelIndex newSelection, QModelIndex oldSelection)

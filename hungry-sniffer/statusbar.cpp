@@ -48,8 +48,8 @@ void StatusBar::updateText(int selectedRow)
 {
     if(selectedRow != -1)
         this->selectedRow = selectedRow;
-    int all = SniffWindow::window->model.local.size();
-    int displayed = SniffWindow::window->model.shownPerRow.size();
+    auto all = SniffWindow::window->model.local.size();
+    auto displayed = SniffWindow::window->model.shownPerRow.size();
     this->lb_info.setText(QStringLiteral("Packets:%1 * Displayed:%2 * Selected:%3").arg(all).arg(displayed).arg(this->selectedRow));
 }
 

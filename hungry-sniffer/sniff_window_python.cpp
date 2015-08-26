@@ -24,6 +24,8 @@
 #ifdef WIN32
     #include <cmath>
 #endif
+
+#undef _DEBUG
 #include "Python.h"
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
@@ -49,9 +51,18 @@ typedef PyObject* initModuleReturn;
 #define HS_PYDICT_ADD_STRING(dict, k, v) HS_PYDICT_ADD_OBJECT(dict, k, GetPyString(v.c_str()))
 #define HS_PYDICT_ADD_STRINGS(dict, k, v) HS_PYDICT_ADD_STRING(dict, k.c_str(), v)
 
-#ifndef PYTHON_DIR
-#define PYTHON_DIR "/usr/share/hungry-sniffer/"
+static const char* getPythonPath()
+{
+#ifdef PYTHON_DIR
+    return PYTHON_DIR;
+#elif defined(Q_OS_WIN)
+    return ".";
+#elif defined(Q_OS_UNIX)
+    return "/usr/share/hungry-sniffer";
+#else
+    return ".";
 #endif
+}
 
 #ifdef Q_OS_WIN
     int gettimeofday(struct timeval *tv, struct timezone*);
@@ -122,12 +133,12 @@ PyObject* hs_getNextShown(PyObject*, PyObject* args)
 
 PyObject* hs_getCountAll(PyObject*)
 {
-    return PyLong_FromLong(SniffWindow::window->model.local.size());
+    return PyLong_FromLong((long)SniffWindow::window->model.local.size());
 }
 
 PyObject* hs_getCountShown(PyObject*)
 {
-    return PyLong_FromLong(SniffWindow::window->model.shownPerRow.size());
+    return PyLong_FromLong((long)SniffWindow::window->model.shownPerRow.size());
 }
 
 PyObject* hs_savePacket(PyObject*, PyObject* args)
@@ -179,7 +190,7 @@ PyObject* hs_setFilter(PyObject*, PyObject* args)
     if (!PyArg_ParseTuple(args, "z", &str)) {
         return NULL;
     }
-    SniffWindow::window->ui->tb_filter->setText(str ? QString(str) : QStringLiteral(""));
+    SniffWindow::window->ui->tb_filter->setText(QString(str));
     SniffWindow::window->on_bt_filter_apply_clicked();
     return Py_None;
 }
@@ -329,13 +340,17 @@ void SniffWindow::stopPython()
 
 void SniffWindow::initPython(QLabel* img_python)
 {
+#ifdef _MSC_VER
+    img_python->setToolTip(QStringLiteral("Python ").append(PY_VERSION));
+#else
     img_python->setToolTip(QStringLiteral("Python " PY_VERSION));
+#endif
 
     PyImport_AppendInittab("_hs_private",&PyInit_hs);
     PyImport_AppendInittab("_hs_ui",&PyInit_hs_ui);
     Py_Initialize();
 
-    addDirToPath(PYTHON_DIR);
+    addDirToPath(getPythonPath());
 
     PyObject* mainModule = PyImport_AddModule("__main__");
     PyObject* hsModule = PyImport_ImportModule("hs");
@@ -344,6 +359,8 @@ void SniffWindow::initPython(QLabel* img_python)
     this->pyGlobals = PyModule_GetDict(mainModule);
     PyRun_String("from _hs_ui import *", Py_single_input, (PyObject*)pyGlobals, (PyObject*)pyGlobals);
     redirect((PyObject*)this->pyGlobals);
+
+    this->py_checkCommand.reset();
 }
 
 void SniffWindow::addPyCommand(const char* command)
@@ -385,7 +402,7 @@ void SniffWindow::addPyCommand(const char* command)
 bool SniffWindow::checkPyCommand(const char* command)
 {
     bool lineDelimeter = true;
-    bool posibleBlock = !this->py_checkCommand.block;
+    bool posibleBlock = !py_checkCommand.block;
     bool isFinished = true;
 
     const char* c = strrchr(command, '#');
@@ -403,22 +420,22 @@ bool SniffWindow::checkPyCommand(const char* command)
         switch (*c)
         {
             case ')':
-                this->py_checkCommand.bracketsC++;
+                py_checkCommand.bracketsC++;
                 break;
             case '(':
-                this->py_checkCommand.bracketsC--;
+                py_checkCommand.bracketsC--;
                 break;
             case ']':
-                this->py_checkCommand.bracketsS++;
+                py_checkCommand.bracketsS++;
                 break;
             case '[':
-                this->py_checkCommand.bracketsS--;
+                py_checkCommand.bracketsS--;
                 break;
             case '}':
-                this->py_checkCommand.bracketsM++;
+                py_checkCommand.bracketsM++;
                 break;
             case '{':
-                this->py_checkCommand.bracketsM--;
+                py_checkCommand.bracketsM--;
                 break;
             case '\"':
                 for (c -= 1; c >= command; --c)
@@ -434,12 +451,12 @@ bool SniffWindow::checkPyCommand(const char* command)
                 isFinished &= !lineDelimeter;
                 break;
             case ':':
-                this->py_checkCommand.block |= posibleBlock;
+                py_checkCommand.block |= posibleBlock;
                 break;
         }
     }
-    isFinished &= (this->py_checkCommand.bracketsC >= 0) & (this->py_checkCommand.bracketsS >= 0) & (this->py_checkCommand.bracketsM >= 0);
-    isFinished &= !(this->py_checkCommand.block & (*command != '\0'));
+    isFinished &= (py_checkCommand.bracketsC >= 0) & (py_checkCommand.bracketsS >= 0) & (py_checkCommand.bracketsM >= 0);
+    isFinished &= !(py_checkCommand.block & (*command != '\0'));
 
     return isFinished;
 }

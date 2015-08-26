@@ -20,6 +20,10 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef Q_COMPILER_INITIALIZER_LISTS
+#define Q_COMPILER_INITIALIZER_LISTS
+#endif
+
 #include "packetstats.h"
 #include "sniff_window.h"
 

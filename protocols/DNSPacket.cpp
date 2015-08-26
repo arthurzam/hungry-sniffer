@@ -45,7 +45,7 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
         id(std::to_string(ntohs(this->value->id)))
 {
     if(!value) return;
-    size = len;
+    size = (unsigned)len;
 
     this->headers.push_back({"Transaction ID", id, 0, 2});
 
@@ -64,7 +64,7 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
     for(int i = 0; i < questionsCount; ++i)
     {
         header_t q("Query " + std::to_string(i + 1), "");
-        q.pos = data - (const char*)_data;
+        q.pos = (long)(data - (const char*)_data);
 
         uint8_t len;
         std::string name;
@@ -91,19 +91,21 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
         q.len = (unsigned)name.length() + 5;
         this->headers.push_back(std::move(q));
     }
-
-    const struct __attribute__((packed)) answer_t{
+#pragma pack(push,1)
+    const struct answer_t{
         uint16_t _magicNumber;
         uint16_t _type;
         uint16_t _class;
         uint32_t _ttl;
         uint16_t _dataLen;
     }* answer;
+    static_assert(sizeof(struct answer_t) == 12, "check struct");
+#pragma pack(pop)
 
     for(int i = 0; i < answersCount; ++i)
     {
         header_t q("Answer " + std::to_string(i + 1), "");
-        q.pos = data - (const char*)_data;
+        q.pos = (long)(data - (const char*)_data);
         q.len = sizeof(answer_t);
 
         answer = (const answer_t*)data;

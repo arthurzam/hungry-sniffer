@@ -115,9 +115,9 @@ void PacketsTableModel::append(DataStructure::localPacket&& obj)
     if(this->local.back().isShown)
     {
         mutex_shownPerRow.lock();
-        int row = this->shownPerRow.size();
+        int row = (int)this->shownPerRow.size();
         beginInsertRows(QModelIndex(), row, row);
-        this->shownPerRow.push_back(this->local.size() - 1);
+        this->shownPerRow.push_back((int)this->local.size() - 1);
         mutex_shownPerRow.unlock();
         endInsertRows();
     }
@@ -134,7 +134,7 @@ void PacketsTableModel::remove(int row)
         (*iter)--;
     mutex_shownPerRow.unlock();
     endRemoveRows();
-    emit dataChanged(index(row, 0), index(shownPerRow.size() - 1, 0));
+    emit dataChanged(index(row, 0), index((int)shownPerRow.size() - 1, 0));
 }
 
 void PacketsTableModel::removeAll()

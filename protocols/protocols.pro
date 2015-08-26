@@ -9,8 +9,15 @@ TEMPLATE = lib
 
 include(../common.pri)
 
-QMAKE_LFLAGS_RELEASE += -s -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
-QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+*-g++* {
+    QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+    QMAKE_LFLAGS_RELEASE += -s -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+}
+
+*-msvc* {
+    QMAKE_CXXFLAGS_RELEASE += /GL
+    QMAKE_LFLAGS_RELEASE += /LTCG
+}
 
 win32: DEFINES += Q_OS_WIN
 unix:  DEFINES += Q_OS_UNIX

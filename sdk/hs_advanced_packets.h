@@ -70,7 +70,7 @@ namespace hungry_sniffer {
 
             virtual void updateNameAssociation()
             {
-                static constexpr int MAX_INFO_LEN = 1024;
+                static CONSTEXPR int MAX_INFO_LEN = 1024;
                 auto start = data.cbegin(), end = data.cend();
                 while(*start == ' ' && start != end)
                     ++start;
@@ -94,7 +94,7 @@ namespace hungry_sniffer {
 
             virtual unsigned getLength() const
             {
-                return data.size();
+                return (unsigned)data.size();
             }
     };
 

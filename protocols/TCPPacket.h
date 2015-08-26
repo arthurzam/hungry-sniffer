@@ -26,7 +26,7 @@
 #include <hs_advanced_packets.h>
 
 #pragma pack(push,1)
-struct __attribute__((packed)) tcp_hdr
+struct tcp_hdr
 {
     uint16_t th_sport;		/* source port */
     uint16_t th_dport;		/* destination port */

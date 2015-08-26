@@ -91,7 +91,7 @@ hungry_sniffer::Preference::Panel* GeneralUI::init(const HungrySniffer_Core&, QS
     settings.beginGroup(QStringLiteral("UI"));
     res->cb_colored->setChecked(settings.value(QStringLiteral("colored_packets"), true).toBool());
     res->cb_splitter_sizes->setChecked(settings.value(QStringLiteral("splitter_sizes"), false).toBool());
-    res->tb_default_dir->setText(settings.value(QStringLiteral("default_dir"), QStringLiteral()).toString());
+    res->tb_default_dir->setText(settings.value(QStringLiteral("default_dir")).toString());
     res->tb_recents_num->setValue(SniffWindow::window->max_recent_files);
     settings.endGroup();
     settings.endGroup();

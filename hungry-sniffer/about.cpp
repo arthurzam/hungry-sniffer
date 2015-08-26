@@ -45,9 +45,9 @@ About::About(QWidget *parent) :
     verticalLayout->addWidget(new QLabel(QStringLiteral("Version %1").arg(QCoreApplication::applicationVersion())));
 
     QTextBrowser* text = new QTextBrowser(this);
-    text->setHtml(QStringLiteral("<p><a href=\"https://github.com/arthurzam/hungry-sniffer\">https://github.com/arthurzam/hungry-sniffer</a></p>"
-                                 "<p>This program was created by Arthur Zamarin, <a href=\"mailto:arthurzam@gmail.com\">arthurzam@gmail.com</a></p>"
-                                 "<p>This program is licensed under the MIT license</p>"));
+    text->setHtml(QStringLiteral("<p><a href=\"https://github.com/arthurzam/hungry-sniffer\">https://github.com/arthurzam/hungry-sniffer</a></p> \
+                                 <p>This program was created by Arthur Zamarin, <a href=\"mailto:arthurzam@gmail.com\">arthurzam@gmail.com</a></p> \
+                                 <p>This program is licensed under the MIT license</p>"));
     text->setOpenExternalLinks(true);
     verticalLayout->addWidget(text);
 }

@@ -50,7 +50,7 @@ class PluginsModel : public QAbstractTableModel
 
         int rowCount(const QModelIndex & = QModelIndex()) const
         {
-            return list.size();
+            return (int)list.size();
         }
 
         int columnCount(const QModelIndex & = QModelIndex()) const
@@ -84,7 +84,7 @@ void AboutPlugins::init()
 
 void PluginsModel::addPlugin(QLibrary& lib)
 {
-    int row = this->list.size();
+    int row = (int)this->list.size();
     beginInsertRows(QModelIndex(), row, row);
     list.push_back(lib);
     endInsertRows();

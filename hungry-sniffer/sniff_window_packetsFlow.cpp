@@ -20,6 +20,10 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef Q_COMPILER_INITIALIZER_LISTS
+#define Q_COMPILER_INITIALIZER_LISTS
+#endif
+
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
 #include "filter_tree.h"
@@ -38,8 +42,7 @@ using namespace DataStructure;
 
 void SniffWindow::runLivePcap(const std::string &name, int maxNumber, QString capture)
 {
-    this->toNotStop = true;
-    static constexpr unsigned LIVE_TIMEOUT = 1000; // milliseconds
+    static Q_CONSTEXPR unsigned LIVE_TIMEOUT = 1000; // milliseconds
     char errbuf[PCAP_ERRBUF_SIZE];
 
     pcap_t* pd = pcap_open_live(name.c_str(), 65535, 1, LIVE_TIMEOUT, errbuf);
@@ -55,6 +58,7 @@ void SniffWindow::runLivePcap(const std::string &name, int maxNumber, QString ca
     pcap_compile(pd, &filter, capture.toUtf8().constData(), 0, 0xffffffff);
     pcap_setfilter(pd, &filter);
 
+    this->toNotStop = true;
     this->threads.push_back(new std::thread(&SniffWindow::runLivePcap_p, this, pd, maxNumber));
 }
 

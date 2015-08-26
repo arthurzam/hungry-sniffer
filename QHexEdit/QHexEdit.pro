@@ -2,8 +2,13 @@ TEMPLATE = lib
 TARGET      = QHexEdit
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-QMAKE_LFLAGS_RELEASE += -flto -fno-rtti
-QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
+*-g++* {
+    QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
+}
+
+*-msvc* {
+    QMAKE_CXXFLAGS_RELEASE += /GL
+}
 
 SOURCES += \
     commands.cpp \

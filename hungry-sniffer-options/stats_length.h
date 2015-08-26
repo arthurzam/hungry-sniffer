@@ -46,7 +46,7 @@ class StatsLengthModel : public QAbstractTableModel
         };
         uint32_t totalCount = 0;
 
-        static constexpr unsigned LENGTH = sizeof(StatsLengthModel_lengths) / sizeof(uint32_t) - 1;
+        static Q_CONSTEXPR unsigned LENGTH = sizeof(StatsLengthModel_lengths) / sizeof(uint32_t) - 1;
         struct stat parts[LENGTH];
 
     public:
@@ -75,7 +75,7 @@ class StatsLength : public QDialog, public hungry_sniffer::Stats::StatWindow
         StatsLength();
         ~StatsLength() {}
 
-        virtual void addPacket(const hungry_sniffer::Packet*, const timeval&, const uint8_t*, size_t len);
+        virtual void addPacket(const hungry_sniffer::Packet*, const struct timeval&, const uint8_t*, size_t len);
         virtual void showWindow();
 
         static StatWindow* init(const HungrySniffer_Core&)

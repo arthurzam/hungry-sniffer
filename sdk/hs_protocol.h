@@ -29,12 +29,19 @@
 #include <list>
 #include <vector>
 
+#ifdef _MSC_VER
+    #include <memory>
+    #define CONSTEXPR const
+#else
+    #define CONSTEXPR constexpr
+#endif
+
 namespace hungry_sniffer {
 
     class Packet;
 
     namespace Preference {
-        class Preference;
+        struct Preference;
     }
 
     namespace Option {
@@ -105,7 +112,7 @@ namespace hungry_sniffer {
 
             std::string websiteUrl;
 
-            static constexpr uint8_t getFlags(bool isNameService, bool isConversationEnabeled)
+            static CONSTEXPR uint8_t getFlags(bool isNameService, bool isConversationEnabeled)
             {
                 return (isNameService ? FLAGS::FLAG_NAME_SERVICE : 0) |
                        (isConversationEnabeled ? FLAGS::FLAG_CONVERSATION : 0);
@@ -374,12 +381,12 @@ namespace hungry_sniffer {
              */
             bool getIsNameService() const
             {
-                return flags & FLAGS::FLAG_NAME_SERVICE;
+                return (flags & FLAGS::FLAG_NAME_SERVICE) == FLAGS::FLAG_NAME_SERVICE;
             }
 
             bool getIsConversationEnabeled() const
             {
-                return flags & FLAGS::FLAG_CONVERSATION;
+                return (flags & FLAGS::FLAG_CONVERSATION) == FLAGS::FLAG_CONVERSATION;
             }
 
             void addOption(const std::string& optionName, Option::optionEnableFunction func, bool rootNeeded = false)
@@ -409,11 +416,12 @@ namespace hungry_sniffer {
 
                 header_t() = delete;
 
-                header_t(const char* key, const std::string& value, long pos = 0, long len = 0) :
-                    key(key), value(value), pos(pos), len(len) {}
+                header_t(const std::string& key, const std::string& value) :
+                    key(key), value(value), pos(0), len(0) {}
 
-                header_t(const std::string& key, const std::string& value, long pos = 0, long len = 0) :
-                    key(key), value(value), pos(pos), len(len) {}
+                template<typename T, typename E>
+                header_t(const std::string& key, const std::string& value, T pos, E len) :
+                    key(key), value(value), pos((long)pos), len((long)len) {}
             };
 
             typedef std::vector<header_t> headers_t;
@@ -435,7 +443,7 @@ namespace hungry_sniffer {
             const std::string* name; /*!<Name field*/
 
             uint32_t color; /*!<ARGB color*/
-            static constexpr uint32_t calcColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 0xFF)
+            static CONSTEXPR uint32_t calcColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 0xFF)
             {
                 return ((alpha << 24) | (red << 16) | (green << 8) | blue);
             }

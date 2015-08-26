@@ -9,10 +9,16 @@ include(../common.pri)
 
 win32: LIBS += -lwpcap -lws2_32
 unix: LIBS += -lpcap -ldl
-win32: DEFINES += WIN32
 
-QMAKE_LFLAGS_RELEASE += -flto -fno-rtti
-QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
+*-g++* {
+    QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
+    QMAKE_LFLAGS_RELEASE += -s -flto -fno-rtti
+}
+
+*-msvc* {
+    QMAKE_CXXFLAGS_RELEASE += /GL
+    QMAKE_LFLAGS_RELEASE += /LTCG
+}
 
 INCLUDEPATH += $$PWD/../sdk
 

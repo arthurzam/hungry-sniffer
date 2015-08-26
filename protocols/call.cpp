@@ -37,7 +37,7 @@
 
 Protocol dataProtocol(init<PacketText>, "Data");
 
-extern "C" void add(HungrySniffer_Core& core)
+EXPORT_FUNCTION void add(HungrySniffer_Core& core)
 {
     Protocol& ipv4 = core.base.addProtocol(0x0800, init<IPPacket>, "IP", Protocol::getFlags(true, true));
     Protocol& ipv6 = core.base.addProtocol(0x86dd, ipv4, init<IPv6Packet>, "IPv6");

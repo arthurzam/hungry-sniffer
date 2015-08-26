@@ -37,34 +37,6 @@
         return ((char *) &a);
     }
     typedef uint8_t ether_addr;
-
-    const char* inet_ntop(int af, const void* src, char* dst, int cnt)
-    {
-        union {
-            struct sockaddr_in ipv4;
-            struct sockaddr_in6 ipv6;
-        }data;
-        DWORD length;
-
-        memset(&data, 0, sizeof(struct sockaddr_in));
-        switch(af)
-        {
-            case AF_INET6:
-                memcpy(&(data.ipv6.sin6_addr), src, sizeof(data.ipv6.sin6_addr));
-                data.ipv6.sin6_family = AF_INET6;
-                length = sizeof(data.ipv6);
-                break;
-            case AF_INET:
-                memcpy(&(data.ipv4.sin_addr), src, sizeof(data.ipv4.sin_addr));
-                data.ipv4.sin_family = AF_INET;
-                length = sizeof(data.ipv4);
-                break;
-        }
-        if (WSAAddressToStringA((struct sockaddr*)&data, length, 0, dst, (LPDWORD) &cnt) != 0) {
-            return NULL;
-        }
-        return dst;
-    }
 #elif defined(Q_OS_UNIX)
     #include <arpa/inet.h>
     #include <netinet/ether.h>
@@ -112,12 +84,12 @@ ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, con
         else
         {
             this->headers.push_back({"Sender MAC Address", ether_ntoa((ether_addr*) this->data.eth_ipv6.arp_sha), 8, 6});
-            this->headers.push_back({"Target MAC Address", ether_ntoa((ether_addr*) this->data.eth_ipv6.arp_tha)});
+            this->headers.push_back({"Target MAC Address", ether_ntoa((ether_addr*) this->data.eth_ipv6.arp_tha), 30, 6});
 
             inet_ntop(AF_INET6, &this->data.eth_ipv6.arp_sip, str, INET6_ADDRSTRLEN);
             this->headers.push_back({"Sender IPv6 Address" , str, 14, 16});
             inet_ntop(AF_INET6, &this->data.eth_ipv6.arp_tip, str, INET6_ADDRSTRLEN);
-            this->headers.push_back({"Target IPv6 Address" , str});
+            this->headers.push_back({"Target IPv6 Address" , str, 36, 16});
         }
     }
 }

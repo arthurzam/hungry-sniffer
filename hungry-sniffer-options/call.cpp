@@ -27,7 +27,7 @@ using namespace hungry_sniffer;
 
 #include <hs_plugin.h>
 
-extern "C" void add(HungrySniffer_Core& core)
+EXPORT_FUNCTION void add(HungrySniffer_Core& core)
 {
     Protocol& ipv4 = core.base[0x0800];
 #ifdef Q_OS_UNIX
@@ -36,9 +36,8 @@ extern "C" void add(HungrySniffer_Core& core)
     ipv4.addOption("Find hostname of Source", resolve_srcIP, false);
     ipv4.addOption("Find hostname of Destination", resolve_dstIP, false);
 
-    Protocol& tcp = ipv4[6];
-
 #ifdef Q_OS_UNIX
+    Protocol& tcp = ipv4[6];
     tcp.addOption("Redirect Source Port", start_srcPortRedirect, true);
 #endif
 

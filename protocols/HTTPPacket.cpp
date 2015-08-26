@@ -43,7 +43,7 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
     : PacketTextHeaders(data, len, protocol, prev),
       isRequest(prev->realDestination() == "80")
 {
-    static constexpr int MAX_FIELD_LEN = 256;
+    static CONSTEXPR int MAX_FIELD_LEN = 256;
     // parse first line
 
     auto start = this->data.begin(),
@@ -74,7 +74,7 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
     {
         return;
     }
-    int ____len = (temp - start);
+    int ____len = (int)(temp - start);
     if((____len <= MAX_FIELD_LEN) & (____len > 0))
         this->headers.push_back({(isRequest ? "Version" : "Phrase"), std::string(start, temp - 1), start - this->data.begin(), temp - 1 - start});
     else
@@ -84,7 +84,7 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
     // parse headers block
     static const char blockDivide[] = "\r\n\r\n";
     auto startOfData = std::search(start, end, blockDivide, blockDivide + 4);
-    this->extractTextHeaders(start, startOfData, start - this->data.begin());
+    this->extractTextHeaders(start, startOfData, (int)(start - this->data.begin()));
 
     startOfData += 4;
 

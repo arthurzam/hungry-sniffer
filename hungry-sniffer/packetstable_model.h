@@ -27,6 +27,10 @@
 #include <vector>
 #include <mutex>
 
+#ifdef Q_CC_MSVC
+    #include <Winsock2.h>
+#endif
+
 namespace hungry_sniffer {
     class Packet;
     class Protocol;
@@ -41,7 +45,7 @@ namespace DataStructure {
         char* data;
         std::vector<std::pair<QString, QString>>* additionalHeaders;
 
-        constexpr RawPacketData() : len(0), time({0,0}), data(nullptr), additionalHeaders(nullptr) {}
+        Q_DECL_CONSTEXPR RawPacketData() : len(0), time({0,0}), data(nullptr), additionalHeaders(nullptr) {}
         RawPacketData(const RawPacketData& other);
         RawPacketData(RawPacketData&& other);
         RawPacketData& operator=(const RawPacketData& other);
@@ -79,13 +83,13 @@ class PacketsTableModel : public QAbstractTableModel
         mutable std::mutex mutex_shownPerRow;
         bool showColors = true;
 
-        static constexpr unsigned COLUMNS_COUNT = 7;
+        static Q_CONSTEXPR unsigned COLUMNS_COUNT = 7;
     public:
         explicit PacketsTableModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
 
         int rowCount(const QModelIndex & = QModelIndex()) const
         {
-            return shownPerRow.size();
+            return (int)shownPerRow.size();
         }
 
         int columnCount(const QModelIndex & = QModelIndex()) const

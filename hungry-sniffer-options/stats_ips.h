@@ -47,7 +47,7 @@ class StatsIpsModel : public QAbstractTableModel
 
         int rowCount(const QModelIndex& = QModelIndex()) const
         {
-            return ips.size();
+            return (int)ips.size();
         }
 
         int columnCount(const QModelIndex& = QModelIndex()) const
@@ -70,7 +70,7 @@ class StatsIps : public QDialog, public hungry_sniffer::Stats::StatWindow
         StatsIps();
         ~StatsIps() {}
 
-        virtual void addPacket(const hungry_sniffer::Packet* packet, const timeval&, const uint8_t*, size_t);
+        virtual void addPacket(const hungry_sniffer::Packet* packet, const struct timeval&, const uint8_t*, size_t);
         virtual void showWindow();
 
         static StatWindow* init(const HungrySniffer_Core& core);

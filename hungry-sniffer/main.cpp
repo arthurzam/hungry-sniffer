@@ -38,9 +38,18 @@
 
 #include <hs_plugin.h>
 
-#ifndef PLUGINS_DIR
-#define PLUGINS_DIR "/usr/share/hungry-sniffer/plugins/"
+static QString getPluginsPath()
+{
+#ifdef PLUGINS_DIR
+    return QStringLiteral(PLUGINS_DIR);
+#elif defined(Q_OS_WIN)
+    return QApplication::applicationDirPath().append("/plugins");
+#elif defined(Q_OS_UNIX)
+    return QStringLiteral("/usr/share/hungry-sniffer/plugins");
+#else
+    return QStringLiteral("./plugins");
 #endif
+}
 
 void addPrefs(HungrySniffer_Core& core);
 
@@ -112,7 +121,7 @@ int main(int argc, char *argv[])
     Preferences::settings = &settings;
 
     { // plugins load
-        loadLibs(QStringLiteral(PLUGINS_DIR));
+        loadLibs(getPluginsPath());
         settings.beginGroup(QStringLiteral("General"));
         settings.beginGroup(QStringLiteral("Modules"));
         QVariant var = settings.value(QStringLiteral("plugins_dir"));

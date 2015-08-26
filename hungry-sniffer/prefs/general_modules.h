@@ -27,7 +27,7 @@
 #include <hs_prefs.h>
 
 class StringListSelector;
-class HungrySniffer_Core;
+struct HungrySniffer_Core;
 
 class GeneralModules : public QWidget, public hungry_sniffer::Preference::Panel
 {

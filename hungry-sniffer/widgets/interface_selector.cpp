@@ -65,7 +65,7 @@ class InterfaceModel : public QAbstractTableModel {
 
         int rowCount(const QModelIndex & = QModelIndex()) const
         {
-            return list.size();
+            return (int)list.size();
         }
 
         int columnCount(const QModelIndex & = QModelIndex()) const
@@ -181,7 +181,11 @@ Qt::ItemFlags InterfaceModel::flags(const QModelIndex& index) const
     return QAbstractTableModel::flags(index);
 }
 
+#if defined(Q_OS_WIN)
+bool get_numeric_address(struct sockaddr* sa, char* outbuf, DWORD buflen)
+#elif defined(Q_OS_UNIX)
 bool get_numeric_address(struct sockaddr* sa, char* outbuf, size_t buflen)
+#endif
 {
     socklen_t len;
     switch (sa->sa_family)

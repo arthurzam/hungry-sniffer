@@ -28,7 +28,7 @@
 class QSettings;
 class QWidget;
 
-class HungrySniffer_Core;
+struct HungrySniffer_Core;
 
 namespace hungry_sniffer {
     namespace Preference {
