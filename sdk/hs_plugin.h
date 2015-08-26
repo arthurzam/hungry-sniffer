@@ -25,7 +25,8 @@
 
 #include "hs_core.h"
 
-CONSTEXPR uint32_t API_VERSION = 0;
+#define API_NUM_VERSION(major, minor, patch) ((major << 16) | (minor << 8) | patch)
+#define API_VERSION API_NUM_VERSION(1, 1, 0)
 
 #ifdef WIN32
     #define EXPORT_FUNCTION extern "C" __declspec(dllexport)
