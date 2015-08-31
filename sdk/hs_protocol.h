@@ -111,6 +111,7 @@ namespace hungry_sniffer {
             const Preference::Preference* preferencePanel = nullptr;
 
             std::string websiteUrl;
+            std::string fullName;
 
             static CONSTEXPR uint8_t getFlags(bool isNameService, bool isConversationEnabeled)
             {

@@ -84,6 +84,7 @@ void PacketStats::addProtocol(const Protocol* protocol, QStandardItem* father)
     n.lastValue = protocol->getPacketsCount();
     n.itemValue = new QStandardItem(QString::number(n.lastValue));
     QStandardItem* first = new QStandardItem(QString::fromStdString(protocol->getName()));
+    first->setToolTip(QString::fromStdString(protocol->fullName));
     father->appendRow({first, n.itemValue});
     for(auto& i : protocol->getProtocolsDB())
     {
