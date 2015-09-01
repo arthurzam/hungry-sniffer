@@ -38,12 +38,12 @@
 #include <hs_core.h>
 
 #if PY_MAJOR_VERSION < 3
-typedef void initModuleReturn;
-#define PyUnicode_AsUTF8 PyString_AsString
-#define GetPyString PyString_FromString
+    typedef void initModuleReturn;
+    #define PyUnicode_AsUTF8 PyString_AsString
+    #define GetPyString PyString_FromString
 #else
-typedef PyObject* initModuleReturn;
-#define GetPyString PyUnicode_FromString
+    typedef PyObject* initModuleReturn;
+    #define GetPyString PyUnicode_FromString
 #endif
 
 #define HS_PYDICT_ADD_OBJECT(dict, k, v) PyDict_SetItem(dict, GetPyString(k), v)
@@ -65,252 +65,326 @@ static const char* getPythonPath()
 }
 
 #ifdef Q_OS_WIN
-    int gettimeofday(struct timeval *tv, struct timezone*);
+    int gettimeofday(struct timeval* tv, struct timezone*);
 #endif
 
-extern "C" {
-
-static PyObject* getLayer(const hungry_sniffer::Packet* layer)
-{
-    PyObject* d = PyDict_New();
-    HS_PYDICT_ADD_STRING(d, "name", layer->getProtocol()->getName());
-    HS_PYDICT_ADD_STRING(d, "info", layer->getInfo());
-
-    PyObject* headers = PyDict_New();
-    for(auto& i : layer->getHeaders())
-        HS_PYDICT_ADD_STRINGS(headers, i.key, i.value);
-    HS_PYDICT_ADD_OBJECT(d, "headers", headers);
-
-    return d;
-}
-
-static PyObject* getPacket(unsigned pos)
-{
-    if(pos >= SniffWindow::window->model.local.size())
-        return Py_None;
-    struct DataStructure::localPacket& pack = SniffWindow::window->model.local[pos];
-
-    PyObject* d = PyDict_New();
-    HS_PYDICT_ADD_NUM(d, "num", pos);
-    HS_PYDICT_ADD_OBJECT(d, "isShown", PyBool_FromLong(pack.isShown));
-    HS_PYDICT_ADD_OBJECT(d, "data", PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len));
-    HS_PYDICT_ADD_OBJECT(d, "time", PyFloat_FromDouble(pack.rawPacket.time.tv_sec + (double)pack.rawPacket.time.tv_usec * 0.000001));
-
-    PyObject* layers = PyList_New(0);
-    for(const hungry_sniffer::Packet* packet = pack.decodedPacket; packet != nullptr; packet = packet->getNext())
+namespace hs {
+    static PyObject* getLayer(const hungry_sniffer::Packet* layer)
     {
-        PyList_Append(layers, getLayer(packet));
-    }
-    HS_PYDICT_ADD_OBJECT(d, "layers", layers);
+        PyObject* d = PyDict_New();
+        HS_PYDICT_ADD_STRING(d, "name", layer->getProtocol()->getName());
+        HS_PYDICT_ADD_STRING(d, "info", layer->getInfo());
 
-    return d;
-}
+        PyObject* headers = PyDict_New();
+        for(auto& i : layer->getHeaders())
+            HS_PYDICT_ADD_STRINGS(headers, i.key, i.value);
+        HS_PYDICT_ADD_OBJECT(d, "headers", headers);
 
-PyObject* hs_getPacketNum(PyObject*, PyObject* args)
-{
-    int pos;
-    if (!PyArg_ParseTuple(args, "i", &pos)) {
-        return NULL;
-    }
-    return getPacket(pos);
-}
-
-PyObject* hs_getNextShown(PyObject*, PyObject* args)
-{
-    int pos;
-    if (!PyArg_ParseTuple(args, "i", &pos)) {
-        return NULL;
+        return d;
     }
 
-    auto& list = SniffWindow::window->model.local;
-    for(unsigned i = pos; i < list.size(); ++i)
+    static PyObject* getPacket(unsigned pos)
     {
-        if(list[i].isShown)
-            return getPacket(i);
-    }
-    return Py_None;
-}
-
-PyObject* hs_getCountAll(PyObject*)
-{
-    return PyLong_FromLong((long)SniffWindow::window->model.local.size());
-}
-
-PyObject* hs_getCountShown(PyObject*)
-{
-    return PyLong_FromLong((long)SniffWindow::window->model.shownPerRow.size());
-}
-
-PyObject* hs_savePacket(PyObject*, PyObject* args)
-{
-    int pos;
-    PyObject* data;
-    if (!PyArg_ParseTuple(args, "iY", &pos, &data)) {
-        return NULL;
-    }
-
-    unsigned size = PyByteArray_Size(data);
-    const char* b = PyByteArray_AsString(data);
-    if(pos == -1)
-    {
-        DataStructure::RawPacketData raw;
-        gettimeofday(&raw.time, nullptr);
-        raw.setData(b, size);
-        SniffWindow::window->toAdd.push(raw);
-    }
-    else if(pos < (int)SniffWindow::window->model.local.size())
-    {
+        if(pos >= SniffWindow::window->model.local.size())
+            return Py_None;
         struct DataStructure::localPacket& pack = SniffWindow::window->model.local[pos];
-        DataStructure::RawPacketData& raw = pack.rawPacket;
-        free(raw.data);
-        raw.setData(b, size);
 
-        delete pack.decodedPacket;
-        pack.decodedPacket = new hungry_sniffer::EthernetPacket(raw.data, raw.len, &SniffWindow::core->base);
+        PyObject* d = PyDict_New();
+        HS_PYDICT_ADD_NUM(d, "num", pos);
+        HS_PYDICT_ADD_OBJECT(d, "isShown", PyBool_FromLong(pack.isShown));
+        HS_PYDICT_ADD_OBJECT(d, "data", PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len));
+        HS_PYDICT_ADD_OBJECT(d, "time", PyFloat_FromDouble(pack.rawPacket.time.tv_sec + (double)pack.rawPacket.time.tv_usec * 0.000001));
 
-        SniffWindow::window->updateTableShown();
+        PyObject* layers = PyList_New(0);
+        for(const hungry_sniffer::Packet* packet = pack.decodedPacket; packet != nullptr; packet = packet->getNext())
+        {
+            PyList_Append(layers, getLayer(packet));
+        }
+        HS_PYDICT_ADD_OBJECT(d, "layers", layers);
+
+        return d;
     }
-    return Py_None;
-}
 
-PyObject* hs_removePacket(PyObject*, PyObject* args)
-{
-    int pos;
-    if (!PyArg_ParseTuple(args, "i", &pos)) {
-        return NULL;
+    PyObject* getPacketNum(PyObject*, PyObject* args)
+    {
+        int pos;
+        if (!PyArg_ParseTuple(args, "i", &pos))
+        {
+            return NULL;
+        }
+        return getPacket(pos);
     }
-    SniffWindow::window->model.remove(pos);
-    SniffWindow::window->ui->statusBar->updateText();
-    return Py_None;
-}
 
-PyObject* hs_setFilter(PyObject*, PyObject* args)
-{
-    char* str = NULL;
-    if (!PyArg_ParseTuple(args, "z", &str)) {
-        return NULL;
+    PyObject* getNextShown(PyObject*, PyObject* args)
+    {
+        int pos;
+        if (!PyArg_ParseTuple(args, "i", &pos))
+        {
+            return NULL;
+        }
+
+        auto& list = SniffWindow::window->model.local;
+        for(unsigned i = pos; i < list.size(); ++i)
+        {
+            if(list[i].isShown)
+                return getPacket(i);
+        }
+        return Py_None;
     }
-    SniffWindow::window->ui->tb_filter->setText(QString(str));
-    SniffWindow::window->on_bt_filter_apply_clicked();
-    return Py_None;
-}
 
-PyObject* hs_getFilter(PyObject*)
-{
-    return GetPyString(SniffWindow::window->ui->tb_filter->text().toUtf8().data());
-}
-
-PyObject* ui_reset(PyObject*)
-{
-    SniffWindow::window->lb_cmd->clear();
-    return Py_None;
-}
-
-PyObject* ui_open(PyObject*, PyObject* args)
-{
-    char* str = NULL;
-    if (!PyArg_ParseTuple(args, "s", &str)) {
-        return NULL;
+    PyObject* getCountAll(PyObject*)
+    {
+        return PyLong_FromLong((long)SniffWindow::window->model.local.size());
     }
-    SniffWindow::window->runOfflineFile(str);
-    return Py_None;
-}
 
-PyObject* ui_cmd_output(PyObject*, PyObject* args)
-{
-    char* str = NULL;
-    if (!PyArg_ParseTuple(args, "s", &str)) {
-        return NULL;
+    PyObject* getCountShown(PyObject*)
+    {
+        return PyLong_FromLong((long)SniffWindow::window->model.shownPerRow.size());
     }
-    QPlainTextEdit* cmd = SniffWindow::window->lb_cmd;
-    cmd->moveCursor(QTextCursor::End);
-    cmd->textCursor().insertHtml(str);
-    cmd->moveCursor(QTextCursor::End);
-    return Py_None;
-}
 
-PyObject* ui_stop(PyObject*)
-{
-    SniffWindow::window->on_actionStop_triggered();
-    return Py_None;
-}
+    PyObject* savePacket(PyObject*, PyObject* args)
+    {
+        int pos;
+        PyObject* data;
+        if (!PyArg_ParseTuple(args, "iY", &pos, &data))
+        {
+            return NULL;
+        }
 
-PyObject* ui_exit(PyObject*)
-{
-    SniffWindow::window->close();
-    return Py_None;
-}
+        unsigned size = PyByteArray_Size(data);
+        const char* b = PyByteArray_AsString(data);
+        if(pos == -1)
+        {
+            DataStructure::RawPacketData raw;
+            gettimeofday(&raw.time, nullptr);
+            raw.setData(b, size);
+            SniffWindow::window->toAdd.push(raw);
+        }
+        else if(pos < (int)SniffWindow::window->model.local.size())
+        {
+            struct DataStructure::localPacket& pack = SniffWindow::window->model.local[pos];
+            DataStructure::RawPacketData& raw = pack.rawPacket;
+            free(raw.data);
+            raw.setData(b, size);
 
-static PyMethodDef hs_methods[] = {
-    { "getPacketNum", (PyCFunction)hs_getPacketNum, METH_VARARGS, NULL },
-    { "getNextShown", (PyCFunction)hs_getNextShown, METH_VARARGS, NULL },
-    { "getCountAll", (PyCFunction)hs_getCountAll, METH_NOARGS, NULL },
-    { "getCountShown", (PyCFunction)hs_getCountShown, METH_NOARGS, NULL },
-    { "savePacket", (PyCFunction)hs_savePacket, METH_VARARGS, NULL },
-    { "removePacket", (PyCFunction)hs_removePacket, METH_VARARGS, NULL },
-    { "setFilter", (PyCFunction)hs_setFilter, METH_VARARGS, NULL },
-    { "getFilter", (PyCFunction)hs_getFilter, METH_NOARGS, NULL },
-    { NULL, NULL, 0, NULL }
-};
+            delete pack.decodedPacket;
+            pack.decodedPacket = new hungry_sniffer::EthernetPacket(raw.data, raw.len, &SniffWindow::core->base);
+
+            SniffWindow::window->updateTableShown();
+        }
+        return Py_None;
+    }
+
+    PyObject* removePacket(PyObject*, PyObject* args)
+    {
+        int pos;
+        if (!PyArg_ParseTuple(args, "i", &pos))
+        {
+            return NULL;
+        }
+        SniffWindow::window->model.remove(pos);
+        SniffWindow::window->ui->statusBar->updateText();
+        return Py_None;
+    }
+
+    PyObject* setFilter(PyObject*, PyObject* args)
+    {
+        char* str = NULL;
+        if (!PyArg_ParseTuple(args, "z", &str))
+        {
+            return NULL;
+        }
+        SniffWindow::window->ui->tb_filter->setText(QString(str));
+        SniffWindow::window->on_bt_filter_apply_clicked();
+        return Py_None;
+    }
+
+    PyObject* getFilter(PyObject*)
+    {
+        return GetPyString(SniffWindow::window->ui->tb_filter->text().toUtf8().data());
+    }
+
+    static PyMethodDef methods[] =
+    {
+        { "getPacketNum", (PyCFunction)getPacketNum, METH_VARARGS, NULL },
+        { "getNextShown", (PyCFunction)getNextShown, METH_VARARGS, NULL },
+        { "getCountAll", (PyCFunction)getCountAll, METH_NOARGS, NULL },
+        { "getCountShown", (PyCFunction)getCountShown, METH_NOARGS, NULL },
+        { "savePacket", (PyCFunction)savePacket, METH_VARARGS, NULL },
+        { "removePacket", (PyCFunction)removePacket, METH_VARARGS, NULL },
+        { "setFilter", (PyCFunction)setFilter, METH_VARARGS, NULL },
+        { "getFilter", (PyCFunction)getFilter, METH_NOARGS, NULL },
+        { NULL, NULL, 0, NULL }
+    };
 
 #if PY_MAJOR_VERSION >= 3
-static PyModuleDef hsModule = {
-    PyModuleDef_HEAD_INIT, "_hs_private", NULL, -1, hs_methods, NULL, NULL, NULL, NULL
-};
+    static PyModuleDef module =
+    {
+        PyModuleDef_HEAD_INIT, "_hs_private", NULL, -1, methods, NULL, NULL, NULL, NULL
+    };
 #endif
 
-static initModuleReturn PyInit_hs(void)
-{
+    static initModuleReturn PyInit_hs(void)
+    {
 #if PY_MAJOR_VERSION < 3
-    Py_InitModule("_hs_private", hs_methods);
+        Py_InitModule("_hs_private", methods);
 #else
-    return PyModule_Create(&hsModule);
+        return PyModule_Create(&module);
 #endif
+    }
 }
 
-static PyMethodDef ui_methods[] = {
-    { "reset", (PyCFunction)ui_reset, METH_NOARGS, NULL },
-    { "open", (PyCFunction)ui_open, METH_VARARGS, NULL },
-    { "cmd_output", (PyCFunction)ui_cmd_output, METH_VARARGS, NULL },
-    { "stop", (PyCFunction)ui_stop, METH_NOARGS, NULL },
-    { "exit", (PyCFunction)ui_exit, METH_NOARGS, NULL },
-    { NULL, NULL, 0, NULL }
-};
+namespace ui {
+    PyObject* reset(PyObject*)
+    {
+        SniffWindow::window->lb_cmd->clear();
+        return Py_None;
+    }
+
+    PyObject* open(PyObject*, PyObject* args)
+    {
+        char* str = NULL;
+        if (!PyArg_ParseTuple(args, "s", &str))
+        {
+            return NULL;
+        }
+        SniffWindow::window->runOfflineFile(str);
+        return Py_None;
+    }
+
+    PyObject* stop(PyObject*)
+    {
+        SniffWindow::window->on_actionStop_triggered();
+        return Py_None;
+    }
+
+    PyObject* exit(PyObject*)
+    {
+        SniffWindow::window->close();
+        return Py_None;
+    }
+
+    static PyMethodDef methods[] =
+    {
+        { "reset", (PyCFunction)reset, METH_NOARGS, NULL },
+        { "open", (PyCFunction)open, METH_VARARGS, NULL },
+        { "stop", (PyCFunction)stop, METH_NOARGS, NULL },
+        { "exit", (PyCFunction)exit, METH_NOARGS, NULL },
+        { NULL, NULL, 0, NULL }
+    };
 
 #if PY_MAJOR_VERSION >= 3
-static PyModuleDef uiModule = {
-    PyModuleDef_HEAD_INIT, "_hs_ui", NULL, -1, ui_methods, NULL, NULL, NULL, NULL
-};
+    static PyModuleDef module =
+    {
+        PyModuleDef_HEAD_INIT, "_hs_ui", NULL, -1, methods, NULL, NULL, NULL, NULL
+    };
 #endif
 
-static initModuleReturn PyInit_hs_ui(void)
-{
+    static initModuleReturn PyInit_hs_ui(void)
+    {
 #if PY_MAJOR_VERSION < 3
-    Py_InitModule("_hs_ui", ui_methods);
+        Py_InitModule("_hs_ui", methods);
 #else
-    return PyModule_Create(&uiModule);
+        return PyModule_Create(&module);
 #endif
+    }
 }
 
-static void redirect(PyObject* globals)
-{
-    const char* stdOutErr =
-            "import sys\n"
-            "class CatchOutErr:\n"
-            "   def __init__(self, color):\n"
-            "       self.color = color\n"
-            "   def write(self, txt):\n"
-            "       if txt != None and txt != '':\n"
-            "           cmd_output('<font color=\"{0}\">{1}</font>'.format(self.color, str(txt).replace('\\n','<br/>')))\n"
-            "\n"
-            "sys.stdout = CatchOutErr('blue')\n"
-            "sys.stderr = CatchOutErr('red')\n";
-    PyRun_String(stdOutErr, Py_file_input, globals, globals);
+namespace catchOutErr {
+
+    struct catchOutErr
+    {
+        PyObject_HEAD
+        char* color;
+    };
+
+    static void CatchOutErr_dealloc(catchOutErr* self)
+    {
+        free(self->color);
+        Py_TYPE(self)->tp_free((PyObject*)self);
+    }
+
+    static PyObject* CatchOutErr_new(PyTypeObject* type, PyObject*, PyObject*)
+    {
+        catchOutErr* self;
+
+        self = (catchOutErr*)type->tp_alloc(type, 0);
+        if (self != NULL)
+        {
+            self->color = NULL;
+        }
+
+        return (PyObject*)self;
+    }
+
+    static int CatchOutErr_init(catchOutErr* self, PyObject* args, PyObject*)
+    {
+        const char* color = NULL;
+        if (!PyArg_ParseTuple(args, "s", &color))
+        {
+            return -1;
+        }
+        self->color = (char*)malloc(strlen(color));
+        strcpy(self->color, color);
+
+        return 0;
+    }
+
+    static PyObject* CatchOutErr_write(catchOutErr* self, PyObject* args)
+    {
+        char* str = NULL;
+        if (!PyArg_ParseTuple(args, "s", &str))
+        {
+            return NULL;
+        }
+        QPlainTextEdit* cmd = SniffWindow::window->lb_cmd;
+        cmd->moveCursor(QTextCursor::End);
+        cmd->textCursor().insertHtml(QStringLiteral("<font color=\"%1\">%2</font>").arg(self->color).arg(str).replace("\n", "<br/>"));
+        cmd->moveCursor(QTextCursor::End);
+        return Py_None;
+    }
+
+    static PyMethodDef CatchOutErr_methods[] =
+    {
+        {"write", (PyCFunction)CatchOutErr_write, METH_VARARGS, NULL},
+        { NULL, NULL, 0, NULL }
+    };
+
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+    static PyTypeObject type =
+    {
+        PyVarObject_HEAD_INIT(NULL, 0)
+        "", sizeof(catchOutErr), 0,
+        (destructor)CatchOutErr_dealloc,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, CatchOutErr_methods,
+        0, 0, 0, 0, 0, 0, 0, (initproc)CatchOutErr_init, 0, CatchOutErr_new
+    };
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic pop
+#endif
+
+    static void redirect(PyObject* sys)
+    {
+        PyType_Ready(&type);
+        Py_INCREF(&type);
+
+        PyObject* argList = Py_BuildValue("(s)", "blue");
+        PyObject_SetAttrString(sys, "stdout", PyObject_CallObject((PyObject*)&type, argList));
+        Py_DECREF(argList);
+
+        argList = Py_BuildValue("(s)", "red");
+        PyObject_SetAttrString(sys, "stderr", PyObject_CallObject((PyObject*)&type, argList));
+        Py_DECREF(argList);
+    }
+
 }
 
-static void addDirToPath(const char* path)
+static void addDirToPath(PyObject* sys, const char* path)
 {
-    PyObject* sys = PyImport_ImportModule("sys");
     PyObject* sys_path = PyObject_GetAttrString(sys, "path");
     PyObject* folder_path = GetPyString(path);
     PyList_Append(sys_path, folder_path);
@@ -331,8 +405,6 @@ static void addDirToPath(const char* path)
     settings.endGroup();
 }
 
-}
-
 void SniffWindow::stopPython()
 {
     Py_Finalize();
@@ -346,19 +418,21 @@ void SniffWindow::initPython(QLabel* img_python)
     img_python->setToolTip(QStringLiteral("Python " PY_VERSION));
 #endif
 
-    PyImport_AppendInittab("_hs_private",&PyInit_hs);
-    PyImport_AppendInittab("_hs_ui",&PyInit_hs_ui);
+    PyImport_AppendInittab("_hs_private", &hs::PyInit_hs);
+    PyImport_AppendInittab("_hs_ui", &ui::PyInit_hs_ui);
     Py_Initialize();
 
-    addDirToPath(getPythonPath());
+    PyObject* sys = PyImport_ImportModule("sys");
+
+    addDirToPath(sys, getPythonPath());
 
     PyObject* mainModule = PyImport_AddModule("__main__");
     PyObject* hsModule = PyImport_ImportModule("hs");
     PyModule_AddObject(mainModule, "hs", hsModule);
 
-    this->pyGlobals = PyModule_GetDict(mainModule);
-    PyRun_String("from _hs_ui import *", Py_single_input, (PyObject*)pyGlobals, (PyObject*)pyGlobals);
-    redirect((PyObject*)this->pyGlobals);
+    PyObject* globals = (PyObject*)(this->pyGlobals = PyModule_GetDict(mainModule));
+    PyRun_String("from _hs_ui import *", Py_single_input, globals, globals);
+    catchOutErr::redirect(sys);
 
     this->py_checkCommand.reset();
 }
