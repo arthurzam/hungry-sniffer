@@ -303,7 +303,7 @@ namespace hungry_sniffer {
              */
             void addFilter(const std::string& filterRegex, filterFunction function)
             {
-                this->filters.push_back({std::regex(filterRegex, std::regex_constants::icase), function});
+                this->filters.push_back({std::regex(filterRegex, std::regex_constants::icase | std::regex_constants::optimize), function});
             }
 
             /**

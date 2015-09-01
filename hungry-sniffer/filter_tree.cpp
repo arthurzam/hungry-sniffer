@@ -128,6 +128,7 @@ namespace parseString {
         {
             case '(':
                 return new TempNode(parseExpr(start + 1, end - 1), nullptr, NodeTypes::Not);
+            case '!':
             case '~':
                 return new TempNode(parseNot(start + 1, end), nullptr, NodeTypes::Not);
             default:
@@ -158,6 +159,7 @@ namespace parseString {
                         return temp;
                     ++i;
                     break;
+                case '!':
                 case '~':
                     exprStart = ++i;
                     findMatchingExprEnd(i, end);
