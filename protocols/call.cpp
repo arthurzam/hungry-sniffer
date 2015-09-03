@@ -101,6 +101,7 @@ EXPORT_FUNCTION void add(HungrySniffer_Core& core)
     {
         Protocol& dns = udp.addProtocol(53, init<DNSPacket>, "DNS", Protocol::getFlags(false, true));
         dns.addFilter("^id *== *([^ ]+)$", DNSPacket::filter_id);
+        udp.addProtocol(5353, dns, init<DNSPacket>, "MDNS");
     }
     udp.addProtocol(1900, init<HTTPPacket>, "SSDP");
 #ifdef Q_OS_UNIX

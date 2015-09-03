@@ -32,7 +32,8 @@ SOURCES += \
   IPPacket.cpp \
   IPv6Packet.cpp \
   TCPPacket.cpp \
-  VRRPPacket.cpp
+  VRRPPacket.cpp \
+    ICMPv6Packet.cpp
 
 
 HEADERS += \
@@ -44,7 +45,8 @@ HEADERS += \
   DNSPacket.h \
   ICMPPacket.h \
   TCPPacket.h \
-  VRRPPacket.h
+  VRRPPacket.h \
+    ICMPv6Packet.h
 
 INCLUDEPATH += $$PWD/../sdk
 

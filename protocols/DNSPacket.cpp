@@ -28,6 +28,8 @@
     #include <arpa/inet.h>
 #endif
 
+#include <stdio.h>
+
 static std::string getTypeStr(uint16_t type)
 {
     switch(type)
@@ -136,9 +138,9 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
 
 std::string DNSPacket::getConversationFilterText() const
 {
-    std::string res("DNS.id==");
-    res.append(id);
-    return res;
+    char res[64];
+    snprintf(res, sizeof(res), "%s.id==%s", protocol->getName().c_str(), id.c_str());
+    return std::string(res);
 }
 
 bool DNSPacket::filter_id(const Packet* packet, const std::vector<std::string>* res)
