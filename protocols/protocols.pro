@@ -48,8 +48,6 @@ HEADERS += \
   VRRPPacket.h \
     ICMPv6Packet.h
 
-INCLUDEPATH += $$PWD/../sdk
-
 unix {
     SOURCES += iptc.cpp \
       PacketJson.cpp
@@ -60,3 +58,8 @@ unix {
 win32 {
     LIBS += -lws2_32
 }
+
+LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
+
+INCLUDEPATH += $$PWD/../sdk
+DEPENDPATH += $$PWD/../sdk

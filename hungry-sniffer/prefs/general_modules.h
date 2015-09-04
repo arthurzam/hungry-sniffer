@@ -41,7 +41,7 @@ class GeneralModules : public QWidget, public hungry_sniffer::Preference::Panel
 
         virtual void save(QSettings& settings);
 
-        static hungry_sniffer::Preference::Panel* init(const HungrySniffer_Core& core, QSettings& settings);
+        static hungry_sniffer::Preference::Panel* init(QSettings& settings);
 
     private:
         StringListSelector* list_plugins;

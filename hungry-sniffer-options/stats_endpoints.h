@@ -74,8 +74,6 @@ class StatsEndpoints : public QDialog, public hungry_sniffer::Stats::StatWindow
 
         virtual void addPacket(const hungry_sniffer::Packet* packet, const struct timeval&, const uint8_t*, size_t);
         virtual void showWindow();
-
-        static StatWindow* init(const HungrySniffer_Core& core);
 };
 
 #endif // STATS_IPS_H

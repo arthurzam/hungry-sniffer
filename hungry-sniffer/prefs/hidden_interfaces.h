@@ -39,7 +39,7 @@ class hidden_interfaces : public InterfaceSelector, public hungry_sniffer::Prefe
 
         virtual void save(QSettings& settings);
 
-        static hungry_sniffer::Preference::Panel* init(const HungrySniffer_Core&, QSettings& settings);
+        static hungry_sniffer::Preference::Panel* init(QSettings& settings);
 };
 
 #endif // HIDDEN_INTERFACES_H

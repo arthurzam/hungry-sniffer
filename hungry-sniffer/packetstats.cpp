@@ -25,7 +25,6 @@
 #endif
 
 #include "packetstats.h"
-#include "sniff_window.h"
 
 #include <QPushButton>
 #include <QTimer>
@@ -49,7 +48,7 @@ PacketStats::PacketStats(QWidget *parent) :
     box->addWidget(treeView);
 
     model = new QStandardItemModel;
-    addProtocol(&SniffWindow::core->base, model->invisibleRootItem());
+    addProtocol(&HungrySniffer_Core::core->base, model->invisibleRootItem());
     model->setHorizontalHeaderLabels({QStringLiteral("Protocol"), QStringLiteral("Number")});
     treeView->setModel(model);
     treeView->expandAll();

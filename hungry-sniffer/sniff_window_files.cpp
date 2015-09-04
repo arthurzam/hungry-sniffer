@@ -335,7 +335,7 @@ namespace HspcapFile {
                             size = ntohs(size);
                             std::string name, key, value;
                             readString(name);
-                            hungry_sniffer::Protocol* protocol = const_cast<hungry_sniffer::Protocol*>(SniffWindow::core->base.findProtocol(name));
+                            hungry_sniffer::Protocol* protocol = const_cast<hungry_sniffer::Protocol*>(HungrySniffer_Core::core->base.findProtocol(name));
                             if(protocol)
                             {
                                 for(int i = size; i != 0; --i)
@@ -400,7 +400,7 @@ void SniffWindow::runOfflineOpen_p(const std::string& filename)
         HspcapFile::Load file(filename.c_str());
         file.readAll();
         QThread::sleep(1);
-        model.reloadText(&SniffWindow::core->base);
+        model.reloadText(&HungrySniffer_Core::core->base);
         model.rerunFilter(this->filterTree);
     }
 }
@@ -435,7 +435,7 @@ void SniffWindow::on_action_save_all_triggered()
     else if(fil == QStringLiteral("hspcap (*.hspcap)"))
     {
         HspcapFile::Save file(filename.toUtf8().constData(), (uint32_t)model.local.size());
-        file << core->base;
+        file << HungrySniffer_Core::core->base;
         for(const auto& i : model.local)
             file << i;
     }
@@ -459,7 +459,7 @@ void SniffWindow::on_action_save_shown_triggered()
     else if(fil == QStringLiteral("hspcap (*.hspcap)"))
     {
         HspcapFile::Save file(filename.toUtf8().constData(), (uint32_t)model.shownPerRow.size());
-        file << core->base;
+        file << HungrySniffer_Core::core->base;
         for(int& num : model.shownPerRow)
             file << model.local[num];
     }

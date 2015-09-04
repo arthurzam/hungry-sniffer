@@ -124,77 +124,31 @@ namespace hungry_sniffer {
              *
              * @param function pointer to function (created by init<>)
              */
-            Protocol(initFunction function) :
-                    subProtocols(std::make_shared<protocols_t>()),
-                    name("unknown"),
-                    filters()
-            {
-                this->function = function;
-                this->flags = 0;
-            }
+            Protocol(initFunction function);
 
-            Protocol(initFunction function, const std::string& name, uint8_t flags = 0) :
-                    subProtocols(std::make_shared<protocols_t>()),
-                    name(name), filters()
-            {
-                this->function = function;
-                this->flags = flags;
-            }
+            Protocol(initFunction function, const std::string& name, uint8_t flags = 0);
 
-            Protocol(const Protocol& other) :
-                    subProtocols(other.subProtocols),
-                    name(other.name), names(other.names),
-                    filters(other.filters)
-            {
-                this->function = other.function;
-                this->countPackets = other.countPackets;
-                this->flags = other.flags;
-            }
+            Protocol(const Protocol& other);
 
-            Protocol(const Protocol& other, initFunction function, const std::string& name) :
-                    subProtocols(other.subProtocols),
-                    name(name), names(other.names),
-                    filters(other.filters)
-            {
-                this->function = function;
-                this->countPackets = other.countPackets;
-                this->flags = other.flags;
-            }
+            Protocol(const Protocol& other, initFunction function, const std::string& name);
 
-            Protocol(Protocol&& other) :
-                    subProtocols(other.subProtocols),
-                    name(std::move(other.name)), names(std::move(other.names)),
-                    filters(std::move(other.filters))
-            {
-                this->function = other.function;
-                this->countPackets = other.countPackets;
-                this->flags = other.flags;
-            }
+            Protocol(Protocol&& other);
 
             virtual ~Protocol()
             {
             }
 
             Protocol& addProtocol(size_t type, initFunction function,
-                    const std::string& name = "unknown", uint8_t flags = 0)
-            {
-                return this->subProtocols->insert({type, Protocol(function, name, flags)}).first->second;
-            }
+                    const std::string& name = "unknown", uint8_t flags = 0);
 
             /**
              * @brief Add @c protocol to map in @c type
              * @param type the type to which the protocol will be associated
              * @param protocol Protocol object that will be added
              */
-            Protocol& addProtocol(size_t type, Protocol&& protocol)
-            {
-                return this->subProtocols->insert({type, Protocol(std::move(protocol))}).first->second;
-            }
+            Protocol& addProtocol(size_t type, Protocol&& protocol);
 
-            Protocol& addProtocol(size_t type, const Protocol& protocol, initFunction function, const std::string& name)
-            {
-                return this->subProtocols->insert({type, Protocol(protocol, function, name)}).first->second;
-            }
+            Protocol& addProtocol(size_t type, const Protocol& protocol, initFunction function, const std::string& name);
 
             /**
              *  @brief  Access to Protocol.
@@ -301,10 +255,7 @@ namespace hungry_sniffer {
              *
              * @note don't add the protocol name is start of regex, it is added automatically
              */
-            void addFilter(const std::string& filterRegex, filterFunction function)
-            {
-                this->filters.push_back({std::regex(filterRegex, std::regex_constants::icase | std::regex_constants::optimize), function});
-            }
+            void addFilter(const std::string& filterRegex, filterFunction function);
 
             /**
              * @brief get the filters container
@@ -341,14 +292,7 @@ namespace hungry_sniffer {
              * @param key the original name
              * @return the new, associated name
              */
-            const std::string& getNameAssociated(const std::string& key) const
-            {
-                auto value = this->names.find(key);
-                if(value == this->names.end())
-                    return key;
-                else
-                    return value->second;
-            }
+            const std::string& getNameAssociated(const std::string& key) const;
 
             /**
              * @brief set associated name for key
@@ -390,10 +334,7 @@ namespace hungry_sniffer {
                 return (flags & FLAGS::FLAG_CONVERSATION) == FLAGS::FLAG_CONVERSATION;
             }
 
-            void addOption(const std::string& optionName, Option::optionEnableFunction func, bool rootNeeded = false)
-            {
-                this->options.push_back({optionName, func, rootNeeded});
-            }
+            void addOption(const std::string& optionName, Option::optionEnableFunction func, bool rootNeeded = false);
 
             const options_t& getOptions() const
             {

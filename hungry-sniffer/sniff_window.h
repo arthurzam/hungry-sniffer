@@ -53,8 +53,6 @@ class SniffWindow : public QMainWindow
     public:
         explicit SniffWindow(QWidget *parent = 0);
         ~SniffWindow();
-
-        static HungrySniffer_Core* core;
         static SniffWindow* window;
         static hungry_sniffer::Protocol infoProtocol;
 

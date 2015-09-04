@@ -31,9 +31,12 @@ HEADERS +=\
     stats_length.h \
     stats_endpoints.h
 
-INCLUDEPATH += $$PWD/../sdk
-
 FORMS +=
 
 
 win32: LIBS += -lws2_32
+
+LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
+
+INCLUDEPATH += $$PWD/../sdk
+DEPENDPATH += $$PWD/../sdk

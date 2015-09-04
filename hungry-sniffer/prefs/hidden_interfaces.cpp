@@ -35,7 +35,7 @@ void hidden_interfaces::save(QSettings& settings)
     settings.setValue(QStringLiteral("HiddenInf"), this->getSelected());
 }
 
-Panel* hidden_interfaces::init(const HungrySniffer_Core&, QSettings& settings)
+Panel* hidden_interfaces::init(QSettings& settings)
 {
     hidden_interfaces* hid = new hidden_interfaces();
     hid->select(settings.value(QStringLiteral("HiddenInf")).toStringList());

@@ -78,7 +78,7 @@ class StatsLength : public QDialog, public hungry_sniffer::Stats::StatWindow
         virtual void addPacket(const hungry_sniffer::Packet*, const struct timeval&, const uint8_t*, size_t len);
         virtual void showWindow();
 
-        static StatWindow* init(const HungrySniffer_Core&)
+        static StatWindow* init()
         {
             return new StatsLength();
         }

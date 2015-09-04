@@ -20,8 +20,6 @@ unix: LIBS += -lpcap -ldl
     QMAKE_LFLAGS_RELEASE += /LTCG
 }
 
-INCLUDEPATH += $$PWD/../sdk
-
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 CONFIG(test) {
@@ -108,3 +106,8 @@ INCLUDEPATH += $$PWD/..
 
 include(prefs/prefs.pri)
 include(widgets/widgets.pri)
+
+LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
+
+INCLUDEPATH += $$PWD/../sdk
+DEPENDPATH += $$PWD/../sdk

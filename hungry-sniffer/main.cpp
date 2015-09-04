@@ -57,7 +57,7 @@ using namespace hungry_sniffer;
 
 inline void loadLibs(const QString& path)
 {
-    typedef void (*add_function_t)(HungrySniffer_Core&);
+    typedef void (*add_function_t)();
     typedef uint32_t (*info_uint32_t)();
 
     QDir dir(path);
@@ -74,11 +74,11 @@ inline void loadLibs(const QString& path)
 #endif
             continue;
         }
-        add_function_t foo = (add_function_t)lib.resolve("add");
-        if(foo)
+        add_function_t add = (add_function_t)lib.resolve("add");
+        if(add)
         {
             try {
-                foo(*SniffWindow::core);
+                add();
 #ifndef QT_NO_DEBUG
             } catch (const std::exception& e) {
                 qDebug("error with %s: %s", iter.toLatin1().constData(), e.what());
@@ -98,7 +98,6 @@ inline void loadLibs(const QString& path)
     }
 }
 
-HungrySniffer_Core* SniffWindow::core = nullptr;
 QSettings* Preferences::settings = nullptr;
 
 int main(int argc, char *argv[])
@@ -111,7 +110,7 @@ int main(int argc, char *argv[])
     base.addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     base.addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
     HungrySniffer_Core core(base);
-    SniffWindow::core = &core;
+    HungrySniffer_Core::core = &core;
 
 #ifdef QT_NO_DEBUG
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("hungrysniffer"));
@@ -133,7 +132,7 @@ int main(int argc, char *argv[])
         settings.endGroup();
         settings.endGroup();
     }
-    addPrefs(*SniffWindow::core);
+    addPrefs(*HungrySniffer_Core::core);
     SniffWindow w;
 
     bool notEndCmdOption = true;

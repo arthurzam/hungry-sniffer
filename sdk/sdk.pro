@@ -1,5 +1,24 @@
+CONFIG   += c++11
+
+TARGET = hungry-sniffer-sdk
 TEMPLATE = lib
-CONFIG += c++11 static
+
+include(../common.pri)
+
+*-g++* {
+    QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+    QMAKE_LFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+}
+
+*-msvc* {
+    QMAKE_CXXFLAGS_RELEASE += /GL
+    QMAKE_LFLAGS_RELEASE += /LTCG
+}
+
+SOURCES += \
+    protocol.cpp \
+    globals.cpp
+
 HEADERS  += \
     hs_core.h \
     hs_advanced_packets.h \
@@ -8,10 +27,10 @@ HEADERS  += \
     hs_plugin.h \
     hs_stats.h
 
-include(../common.pri)
-
 unix {
     OTHER_FILES += HungrySniffer.pc
+
+    target.path = $$PREFIX/lib
 
     headers.path = $$PREFIX/include/HungrySniffer
     headers.files = $$HEADERS
@@ -19,5 +38,5 @@ unix {
     pc.path = $$PREFIX/lib/pkgconfig/
     pc.files = HungrySniffer.pc
 
-    INSTALLS += headers pc
+    INSTALLS += headers pc target
 }

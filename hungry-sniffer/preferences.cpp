@@ -24,7 +24,6 @@
 #endif
 
 #include "preferences.h"
-#include "sniff_window.h"
 
 #include <QDialogButtonBox>
 #include <QHeaderView>
@@ -94,7 +93,7 @@ Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
     verticalLayout_2->addWidget(buttonBox);
 
     stackedWidget->addWidget(new QWidget());
-    for(const auto& i : SniffWindow::core->preferences)
+    for(const auto& i : HungrySniffer_Core::core->preferences)
     {
         tree_select->addTopLevelItem(getItem(i, stackedWidget, this->nodes, show_pref));
     }
@@ -162,7 +161,7 @@ QWidget* Preferences::node_t::getWidget(QStackedWidget* stack)
 {
     if(!panel)
     {
-        panel = pref.func(*SniffWindow::core, *Preferences::settings);
+        panel = pref.func(*Preferences::settings);
         stack->addWidget(panel->get());
     }
     return panel->get();

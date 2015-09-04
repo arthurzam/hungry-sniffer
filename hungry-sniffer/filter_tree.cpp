@@ -21,7 +21,6 @@
 */
 
 #include "filter_tree.h"
-#include "sniff_window.h"
 #include <hs_core.h>
 
 enum NodeTypes {
@@ -206,7 +205,7 @@ namespace parseString {
         stripSpaces(start, end);
         string::const_iterator dot = std::find(start, end, '.');
         string name(start, dot);
-        const hungry_sniffer::Protocol* protocol = SniffWindow::core->base.findProtocol(name);
+        const hungry_sniffer::Protocol* protocol = HungrySniffer_Core::core->base.findProtocol(name);
 
         if(!protocol)
         {

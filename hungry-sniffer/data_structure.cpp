@@ -22,7 +22,6 @@
 
 #include "packetstable_model.h"
 #include "EthernetPacket.h"
-#include "sniff_window.h"
 #include <hs_core.h>
 
 DataStructure::RawPacketData::RawPacketData(const DataStructure::RawPacketData& other) :
@@ -85,7 +84,7 @@ void DataStructure::RawPacketData::setData(const void* data, uint32_t len)
 DataStructure::localPacket::localPacket(DataStructure::RawPacketData&& raw) :
     rawPacket(std::move(raw)), isShown(false)
 {
-    this->decodedPacket = new hungry_sniffer::EthernetPacket(rawPacket.data, rawPacket.len, &SniffWindow::core->base);
+    this->decodedPacket = new hungry_sniffer::EthernetPacket(rawPacket.data, rawPacket.len, &HungrySniffer_Core::core->base);
 }
 
 DataStructure::localPacket& DataStructure::localPacket::operator=(DataStructure::localPacket&& other)

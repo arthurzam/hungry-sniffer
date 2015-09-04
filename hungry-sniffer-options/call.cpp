@@ -29,23 +29,24 @@ using hungry_sniffer::Stats::StatWindow;
 
 #include <hs_plugin.h>
 
-static StatWindow* initEndpointIPv4(const HungrySniffer_Core& core)
+static StatWindow* initEndpointIPv4()
 {
-    return new StatsEndpoints(&core.base[0x0800]);
+    return new StatsEndpoints(&HungrySniffer_Core::core->base[0x0800]);
 }
 
-static StatWindow* initEndpointIPv6(const HungrySniffer_Core& core)
+static StatWindow* initEndpointIPv6()
 {
-    return new StatsEndpoints(&core.base[0x86dd]);
+    return new StatsEndpoints(&HungrySniffer_Core::core->base[0x86dd]);
 }
 
-static StatWindow* initEndpointEthernet(const HungrySniffer_Core& core)
+static StatWindow* initEndpointEthernet()
 {
-    return new StatsEndpoints(&core.base);
+    return new StatsEndpoints(&HungrySniffer_Core::core->base);
 }
 
-EXPORT_FUNCTION void add(HungrySniffer_Core& core)
+EXPORT_FUNCTION void add()
 {
+    HungrySniffer_Core& core = *HungrySniffer_Core::core;
     Protocol& ipv4 = core.base[0x0800];
 #ifdef Q_OS_UNIX
     ipv4.addOption("ARPspoof between IP-s", start_arpspoof, true);

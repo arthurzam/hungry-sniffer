@@ -83,7 +83,7 @@ SniffWindow::SniffWindow(QWidget* parent) :
 
     ui->tree_packet->setHeaderLabels(QStringList({QStringLiteral("Key"), QStringLiteral("Value")}));
     ui->tree_packet->setColumnCount(2);
-    loadStatsFunctions(core->stats, *ui->menuStats);
+    loadStatsFunctions(HungrySniffer_Core::core->stats, *ui->menuStats);
 #ifdef PYTHON_CMD
     QWidget* verticalLayoutWidget = new QWidget(ui->splitter);
     QVBoxLayout* panel_python = new QVBoxLayout(verticalLayoutWidget);
@@ -111,7 +111,7 @@ SniffWindow::SniffWindow(QWidget* parent) :
 #endif
     setAcceptDrops(true);
 
-    if(core->preferences.empty())
+    if(HungrySniffer_Core::core->preferences.empty())
         ui->action_preferences->setVisible(false);
 
     { // settings block
@@ -680,7 +680,7 @@ void SniffWindow::open_stats_window()
     QAction* action = qobject_cast<QAction*>(sender());
     if (!action) return;
     hungry_sniffer::Stats::statInitFunction func = (hungry_sniffer::Stats::statInitFunction)action->data().value<void*>();
-    hungry_sniffer::Stats::StatWindow* w = func(*core);
+    hungry_sniffer::Stats::StatWindow* w = func();
     bool notOnlyShown = !ui->action_only_Shown->isChecked();
     for(const DataStructure::localPacket& i : model.local)
         if(i.isShown | notOnlyShown)

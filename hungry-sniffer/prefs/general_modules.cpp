@@ -67,7 +67,7 @@ void GeneralModules::save(QSettings& settings)
     settings.endGroup();
 }
 
-hungry_sniffer::Preference::Panel* GeneralModules::init(const HungrySniffer_Core&, QSettings& settings)
+hungry_sniffer::Preference::Panel* GeneralModules::init(QSettings& settings)
 {
     GeneralModules* res = new GeneralModules();
 

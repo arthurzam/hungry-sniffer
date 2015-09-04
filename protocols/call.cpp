@@ -56,11 +56,13 @@ bool filter_follow(const Packet* packet, const std::vector<std::string>* res)
     return false;
 }
 
-EXPORT_FUNCTION void add(HungrySniffer_Core& core)
+EXPORT_FUNCTION void add()
 {
-    Protocol& ipv4 = core.base.addProtocol(0x0800, init<IPPacket>, "IP", Protocol::getFlags(true, true));
-    Protocol& ipv6 = core.base.addProtocol(0x86dd, ipv4, init<IPv6Packet>, "IPv6");
-    core.base.addProtocol(0x0806, init<ArpPacket>, "ARP");
+    Protocol& eth = HungrySniffer_Core::core->base;
+
+    Protocol& ipv4 = eth.addProtocol(0x0800, init<IPPacket>, "IP", Protocol::getFlags(true, true));
+    Protocol& ipv6 = eth.addProtocol(0x86dd, ipv4, init<IPv6Packet>, "IPv6");
+    eth.addProtocol(0x0806, init<ArpPacket>, "ARP");
 
     ipv4.addFilter("^dst *== *([^ ]+)$", filter_dst);
     ipv4.addFilter("^src *== *([^ ]+)$", filter_src);

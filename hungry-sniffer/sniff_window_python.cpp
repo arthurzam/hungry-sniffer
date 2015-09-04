@@ -168,7 +168,7 @@ namespace hs {
             raw.setData(b, size);
 
             delete pack.decodedPacket;
-            pack.decodedPacket = new hungry_sniffer::EthernetPacket(raw.data, raw.len, &SniffWindow::core->base);
+            pack.decodedPacket = new hungry_sniffer::EthernetPacket(raw.data, raw.len, &HungrySniffer_Core::core->base);
 
             SniffWindow::window->updateTableShown();
         }
@@ -455,14 +455,13 @@ void SniffWindow::addPyCommand(const char* command)
     if(command[0] == '\0' && !this->py_checkCommand.block)
         return;
 
-    this->pyCommand.append("\n");
+    this->pyCommand.push_back('\n');
     this->pyCommand.append(command);
 
     if(this->checkPyCommand(command))
     {
         PyRun_String(this->pyCommand.c_str(), Py_single_input, (PyObject*)pyGlobals, (PyObject*)pyGlobals);
-        bool error = PyErr_Occurred();
-        if (error)
+        if (PyErr_Occurred())
         {
             PyErr_Print();
             PyErr_Clear();

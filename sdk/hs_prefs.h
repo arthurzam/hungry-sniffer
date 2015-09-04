@@ -24,6 +24,7 @@
 #define HS_PREFS
 
 #include <list>
+#include <string>
 
 class QSettings;
 class QWidget;
@@ -41,7 +42,7 @@ namespace hungry_sniffer {
                 virtual ~Panel() {}
         };
 
-        typedef Panel* (*preferencesFunction_t)(const HungrySniffer_Core& core, QSettings& settings);
+        typedef Panel* (*preferencesFunction_t)(QSettings& settings);
 
         struct Preference
         {
