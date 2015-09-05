@@ -95,3 +95,18 @@ unsigned TCPPacket::getLength() const
 {
     return (this->value->th_off * 4);
 }
+
+size_t TCPPacket::getHash() const
+{
+    return this->prev->getHash() ^ (std::hash<uint16_t>()(value->th_sport ^ value->th_dport) << 1);
+}
+
+bool TCPPacket::compare(const Packet* other) const
+{
+    const TCPPacket* tcp = static_cast<const TCPPacket*>(other);
+    uint16_t t1 = this->value->th_sport ^ this->value->th_dport;
+    uint16_t t2 = tcp->value->th_sport ^ tcp->value->th_dport;
+    if (t1 == 0 ? (tcp->value->th_sport ^ this->value->th_sport) != 0 : t1 != t2)
+        return false;\
+    return this->prev->compare(tcp->prev);
+}

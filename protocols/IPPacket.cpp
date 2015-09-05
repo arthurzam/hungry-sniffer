@@ -100,3 +100,16 @@ bool IPPacket::undrop_IP(const void* data)
     return removeDropIP(static_cast<const char*>(data), true);
 }
 #endif
+
+size_t IPPacket::getHash() const
+{
+    return std::hash<uint32_t>()(this->value->ip_src.s_addr ^ this->value->ip_dst.s_addr);
+}
+
+bool IPPacket::compare(const Packet* other) const
+{
+    const IPPacket* ip = static_cast<const IPPacket*>(other);
+    uint32_t t1 = this->value->ip_src.s_addr ^ this->value->ip_dst.s_addr;
+    uint32_t t2 = ip->value->ip_src.s_addr ^ ip->value->ip_dst.s_addr;
+    return (t1 == 0 ? (ip->value->ip_src.s_addr ^ this->value->ip_dst.s_addr) == 0 : t1 == t2);
+}

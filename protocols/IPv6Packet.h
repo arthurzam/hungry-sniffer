@@ -67,6 +67,9 @@ class IPv6Packet : public PacketStructed<struct ip6hdr> {
         static int drop_dstIP(const Packet* packet, Option::disabled_options_t& options);
         static bool undrop_IP(const void* data);
 #endif
+
+        virtual size_t getHash() const;
+        virtual bool compare(const Packet* other) const;
 };
 
 #endif /* IPV6PACKET_H_ */

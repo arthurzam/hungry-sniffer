@@ -97,3 +97,30 @@ bool IPv6Packet::undrop_IP(const void* data)
     return removeDropIP(static_cast<const char*>(data), false);
 }
 #endif
+
+size_t _getHash(const struct in6_addr& ip6)
+{
+    size_t hash;
+    const size_t* ptr = (const size_t*)&ip6;
+    for(unsigned i = 0; i < (sizeof(struct in6_addr) / sizeof(size_t)); ++i)
+    {
+        hash = (hash ^ (*ptr << 1)) >> 1;
+        ptr++;
+    }
+    return hash;
+}
+
+size_t IPv6Packet::getHash() const
+{
+    return _getHash(this->value->ip6_src) ^ _getHash(this->value->ip6_dst);
+}
+
+bool IPv6Packet::compare(const Packet* other) const
+{
+#define COMPARE_IP6(ptr1, part1, ptr2, part2) memcmp(ptr1->value->part1.s6_addr, ptr2->value->part2.s6_addr, sizeof(struct in6_addr))
+    const IPv6Packet* ip6 = static_cast<const IPv6Packet*>(other);
+    if(COMPARE_IP6(this, ip6_src, ip6, ip6_src))
+        return !(COMPARE_IP6(this, ip6_dst, ip6, ip6_src) || COMPARE_IP6(ip6, ip6_dst, this, ip6_src));
+    return !COMPARE_IP6(this, ip6_dst, ip6, ip6_dst);
+#undef COMPARE_IP6
+}

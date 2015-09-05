@@ -24,6 +24,7 @@
 #define UDPPACKET_H_
 
 #include <hs_advanced_packets.h>
+#include <hs_transport_layer_packet.h>
 
 #pragma pack(push,1)
 struct udp_hdr
@@ -44,6 +45,9 @@ class UDPPacket: public PacketStructed<struct udp_hdr> {
         virtual ~UDPPacket() {}
         virtual std::string getConversationFilterText() const;
         virtual void updateNameAssociation();
+
+        virtual size_t getHash() const;
+        virtual bool compare(const Packet* other) const;
 };
 
 #endif /* UDPPACKET_H_ */

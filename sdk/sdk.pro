@@ -17,7 +17,8 @@ include(../common.pri)
 
 SOURCES += \
     protocol.cpp \
-    globals.cpp
+    globals.cpp \
+    transport_layer_packet.cpp
 
 HEADERS  += \
     hs_core.h \
@@ -25,7 +26,8 @@ HEADERS  += \
     hs_prefs.h \
     hs_protocol.h \
     hs_plugin.h \
-    hs_stats.h
+    hs_stats.h \
+    hs_transport_layer_packet.h
 
 unix {
     OTHER_FILES += HungrySniffer.pc
@@ -40,3 +42,4 @@ unix {
 
     INSTALLS += headers pc target
 }
+

@@ -72,3 +72,18 @@ void UDPPacket::updateNameAssociation()
     this->destination.append(":");
     this->destination.append(this->protocol->getNameAssociated(this->_realDestination));
 }
+
+size_t UDPPacket::getHash() const
+{
+    return this->prev->getHash() ^ (std::hash<uint16_t>()(value->uh_sport ^ value->uh_dport) << 1);
+}
+
+bool UDPPacket::compare(const Packet* other) const
+{
+    const UDPPacket* udp = static_cast<const UDPPacket*>(other);
+    uint16_t t1 = this->value->uh_sport ^ this->value->uh_dport;
+    uint16_t t2 = udp->value->uh_sport ^ udp->value->uh_dport;
+    if (t1 == 0 ? (udp->value->uh_sport ^ this->value->uh_sport) != 0 : t1 != t2)
+        return false;
+    return this->prev->compare(udp->prev);
+}

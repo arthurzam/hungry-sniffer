@@ -20,6 +20,44 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "hs_core.h"
+#ifndef TRANSPORTLAYERPACKET_H
+#define TRANSPORTLAYERPACKET_H
 
-struct HungrySniffer_Core* HungrySniffer_Core::core = nullptr;
+#include <hs_protocol.h>
+#include <unordered_map>
+
+namespace std {
+    template<>
+    struct hash<hungry_sniffer::Packet*>
+    {
+        size_t operator()( const hungry_sniffer::Packet* p) const
+        {
+            return p->getHash();
+        }
+    };
+
+    template<>
+    struct equal_to<hungry_sniffer::Packet*>
+    {
+        bool operator()(const hungry_sniffer::Packet* x, const hungry_sniffer::Packet* y) const
+        {
+            return x->compare(y);
+        }
+    };
+}
+
+namespace hungry_sniffer {
+    class TransportLayerConnections
+    {
+        protected:
+            std::unordered_map<Packet*, Packet*> conns;
+        public:
+            TransportLayerConnections();
+
+            void addToConns(Packet* packet);
+
+            Packet* getConnectionLast(Packet* packet);
+    };
+}
+
+#endif

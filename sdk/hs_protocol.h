@@ -39,6 +39,7 @@
 namespace hungry_sniffer {
 
     class Packet;
+    class TransportLayerConnections;
 
     namespace Preference {
         struct Preference;
@@ -340,6 +341,8 @@ namespace hungry_sniffer {
             {
                 return this->options;
             }
+
+            TransportLayerConnections* connections = nullptr;
     };
 
     /**
@@ -629,6 +632,16 @@ namespace hungry_sniffer {
             bool isLocalGood() const
             {
                 return this->isGood;
+            }
+
+            virtual size_t getHash() const
+            {
+                return 0;
+            }
+
+            virtual bool compare(const Packet* other) const
+            {
+                return this == other;
             }
     };
 

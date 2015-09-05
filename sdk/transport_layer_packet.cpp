@@ -20,6 +20,21 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "hs_core.h"
+#include "hs_transport_layer_packet.h"
 
-struct HungrySniffer_Core* HungrySniffer_Core::core = nullptr;
+using namespace hungry_sniffer;
+
+TransportLayerConnections::TransportLayerConnections() {}
+
+void TransportLayerConnections::addToConns(Packet* packet)
+{
+    this->conns[packet] = packet;
+}
+
+Packet*TransportLayerConnections::getConnectionLast(Packet* packet)
+{
+    auto res = conns.find(packet);
+    if (res != conns.end())
+        return res->second;
+    return nullptr;
+}

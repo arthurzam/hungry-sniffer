@@ -24,6 +24,7 @@
 #define TCPPACKET_H_
 
 #include <hs_advanced_packets.h>
+#include <hs_transport_layer_packet.h>
 
 #pragma pack(push,1)
 struct tcp_hdr
@@ -71,6 +72,9 @@ class TCPPacket: public PacketStructed<struct tcp_hdr> {
         virtual std::string getConversationFilterText() const;
         virtual void updateNameAssociation();
         virtual unsigned getLength() const;
+
+        virtual size_t getHash() const;
+        virtual bool compare(const Packet* other) const;
 };
 
 #endif /* TCPPACKET_H_ */
