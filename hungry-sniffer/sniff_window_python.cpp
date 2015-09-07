@@ -27,6 +27,8 @@
 
 #undef _DEBUG
 #include "Python.h"
+#include "structmember.h"
+
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
 #include "widgets/history_line_edit.h"
@@ -69,19 +71,6 @@ static const char* getPythonPath()
 #endif
 
 namespace hs {
-    static PyObject* getLayer(const hungry_sniffer::Packet* layer)
-    {
-        PyObject* d = PyDict_New();
-        HS_PYDICT_ADD_STRING(d, "name", layer->getProtocol()->getName());
-        HS_PYDICT_ADD_STRING(d, "info", layer->getInfo());
-
-        PyObject* headers = PyDict_New();
-        for(auto& i : layer->getHeaders())
-            HS_PYDICT_ADD_STRINGS(headers, i.key, i.value);
-        HS_PYDICT_ADD_OBJECT(d, "headers", headers);
-
-        return d;
-    }
 
     static PyObject* getPacket(unsigned pos)
     {
@@ -99,12 +88,12 @@ namespace hs {
 #endif
         HS_PYDICT_ADD_OBJECT(d, "time", PyFloat_FromDouble(pack.rawPacket.time.tv_sec + (double)pack.rawPacket.time.tv_usec * 0.000001));
 
-        PyObject* layers = PyList_New(0);
+        int i = 0;
         for(const hungry_sniffer::Packet* packet = pack.decodedPacket; packet != nullptr; packet = packet->getNext())
         {
-            PyList_Append(layers, getLayer(packet));
+            i++;
         }
-        HS_PYDICT_ADD_OBJECT(d, "layers", layers);
+        HS_PYDICT_ADD_NUM(d, "layers", i);
 
         return d;
     }
@@ -227,6 +216,170 @@ namespace hs {
 #endif
     }
 
+    namespace packet {
+        namespace layer {
+            struct layer_obj
+            {
+                PyObject_HEAD
+                PyObject* name;
+                PyObject* info;
+                PyObject* headers;
+            };
+
+            static void layer_dealloc(layer_obj* self)
+            {
+                Py_XDECREF(self->name);
+                Py_XDECREF(self->info);
+                Py_XDECREF(self->headers);
+                Py_TYPE(self)->tp_free((PyObject*)self);
+            }
+
+            static PyObject* layer_new(PyTypeObject* type, PyObject*, PyObject*)
+            {
+                layer_obj* self;
+
+                self = (layer_obj*)type->tp_alloc(type, 0);
+                if (self != NULL)
+                {
+                    self->name = GetPyString("");
+                    if (self->name == NULL)
+                    {
+                        Py_DECREF(self);
+                        return NULL;
+                    }
+
+                    self->info = GetPyString("");
+                    if (self->info == NULL)
+                    {
+                        Py_DECREF(self);
+                        return NULL;
+                    }
+
+                    self->headers = PyDict_New();
+                    if (self->headers == NULL)
+                    {
+                        Py_DECREF(self);
+                        return NULL;
+                    }
+                }
+
+                return (PyObject*)self;
+            }
+
+            static int layer_init(layer_obj* self, PyObject* args, PyObject*)
+            {
+                int row;
+                int layerNum;
+
+                if (!PyArg_ParseTuple(args, "ii", &row, &layerNum))
+                {
+                    return -1;
+                }
+
+                const hungry_sniffer::Packet* layer = SniffWindow::window->model.local[row].decodedPacket->getNext(layerNum);
+
+                Py_XDECREF(self->name);
+                Py_XDECREF(self->info);
+                self->name = GetPyString(layer->getProtocol()->getName().c_str());
+                self->info = GetPyString(layer->getInfo().c_str());
+
+                Py_XDECREF(self->headers);
+                self->headers = PyDict_New();
+                for(auto& i : layer->getHeaders())
+                    HS_PYDICT_ADD_STRINGS(self->headers, i.key, i.value);
+
+                return 0;
+            }
+
+            static PyMemberDef layer_members[] =
+            {
+                {(char*)"name", T_OBJECT_EX, offsetof(layer_obj, name), READONLY, NULL},
+                {(char*)"info", T_OBJECT_EX, offsetof(layer_obj, info), READONLY, NULL},
+                {(char*)"headers", T_OBJECT_EX, offsetof(layer_obj, headers), READONLY, NULL},
+                {NULL, 0, 0, 0, NULL}
+            };
+
+            static PyObject* layer_repr(layer_obj* self)
+            {
+#if PY_MAJOR_VERSION < 3
+                return PyString_FromFormat("[%s - %s]", PyString_AS_STRING(self->name), PyString_AS_STRING(self->info));
+#else
+                return PyUnicode_FromFormat("[%U - %U]", self->name, self->info);
+#endif
+            }
+
+            static PyObject* layer_str(layer_obj* self)
+            {
+#if PY_MAJOR_VERSION < 3
+                PyObject* res = PyString_FromFormat("%s\n%s\n", PyString_AS_STRING(self->name), PyString_AS_STRING(self->info));
+#else
+                PyObject* res = PyUnicode_FromFormat("%U\n%U\n", self->name, self->info);
+#endif
+
+                PyObject* key, *value;
+                Py_ssize_t pos = 0;
+                while (PyDict_Next(self->headers, &pos, &key, &value))
+                {
+#if PY_MAJOR_VERSION < 3
+                    PyString_ConcatAndDel(&res, PyString_FromFormat("%s : %s\n", PyString_AS_STRING(key), PyString_AS_STRING(value)));
+#else
+                    PyUnicode_AppendAndDel(&res, PyUnicode_FromFormat("%U : %U\n", key, value));
+#endif
+                }
+                return res;
+            }
+
+            static Py_ssize_t layer_len(layer_obj* self)
+            {
+                return PyDict_Size(self->headers);
+            }
+
+            static PyObject* layer_itemAt(layer_obj* self, PyObject* key)
+            {
+                return PyDict_GetItem(self->headers, key);
+            }
+
+            static PyMappingMethods layer_map =
+            {
+                (lenfunc)layer_len,
+                (binaryfunc)layer_itemAt,
+                0
+            };
+
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+            static PyTypeObject type =
+            {
+                PyVarObject_HEAD_INIT(NULL, 0)
+                "", sizeof(layer_obj), 0,
+                (destructor)layer_dealloc,
+                0, 0, 0, 0, (reprfunc)layer_repr, 0, 0, &layer_map, 0, 0, (reprfunc)layer_str, 0, 0, 0,
+                Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, /*methods*/0,
+                layer_members, 0, 0, 0, 0, 0, 0, (initproc)layer_init, 0, layer_new
+            };
+
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic pop
+#endif
+            static void init(PyObject* hsModule)
+            {
+                PyType_Ready(&type);
+                Py_INCREF(&type);
+                PyModule_AddObject(hsModule, "Layer", (PyObject*)&type);
+            }
+        }
+
+        struct packet_obj
+        {
+            PyObject_HEAD
+            int num;
+
+            PyObject layersArr;
+        };
+    }
+
     namespace filter {
         struct filter_obj
         {
@@ -257,7 +410,8 @@ namespace hs {
             return Py_None;
         }
 
-        static PyMethodDef hs_filter_methods[] = {
+        static PyMethodDef hs_filter_methods[] =
+        {
             {"get", (PyCFunction)filter_get, METH_NOARGS | METH_CLASS, NULL},
             {"clear", (PyCFunction)filter_clear, METH_NOARGS | METH_CLASS, NULL},
             {"set", (PyCFunction)filter_set, METH_VARARGS | METH_CLASS, NULL},
@@ -283,7 +437,7 @@ namespace hs {
         {
             PyType_Ready(&type);
             Py_INCREF(&type);
-            PyModule_AddObject(hsModule, "filter", (PyObject *)&type);
+            PyModule_AddObject(hsModule, "filter", (PyObject*)&type);
         }
     }
 }
@@ -483,6 +637,7 @@ void SniffWindow::initPython(QLabel* img_python)
     PyObject* mainModule = PyImport_AddModule("__main__");
     PyObject* hsModule = PyImport_ImportModule("hs");
     hs::filter::init(hsModule);
+    hs::packet::layer::init(hsModule);
     PyModule_AddObject(mainModule, "hs", hsModule);
 
     PyObject* globals = (PyObject*)(this->pyGlobals = PyModule_GetDict(mainModule));

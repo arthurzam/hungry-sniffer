@@ -21,27 +21,6 @@
 """
 import _hs_private
 
-class Layer:
-    def __init__(self, dict):
-        self.name = dict['name']
-        self.headers = dict['headers']
-        self.info = dict['info']
-
-    def __getitem__(self, index):
-        if isinstance(index, str):
-            return self.headers[index]
-        return None
-
-    def __str__(self):
-        res = self.name + "\n"
-        res += self.info + "\n"
-        for k,v in self.headers.items():
-            res += " " + k + " : " + v + "\n"
-        return res
-
-    def __repr__(self):
-        return "[{0} - {1}]".format(self.name, self.info)
-
 class Packet:
     def __init__(self, dict):
         self.num = dict['num']
@@ -49,9 +28,10 @@ class Packet:
         self.data = dict['data']
         self.time = dict['time']
 
+        count = dict['layers']
         self.layers = []
-        for layer in dict['layers']:
-            self.layers.append(Layer(layer))
+        for i in range(count):
+            self.layers.append(Layer(self.num, i))
 
     def save(self, data = None):
         if data != None:
