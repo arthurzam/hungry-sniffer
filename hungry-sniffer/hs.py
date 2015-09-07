@@ -21,50 +21,6 @@
 """
 import _hs_private
 
-class Packet:
-    def __init__(self, dict):
-        self.num = dict['num']
-        self.isShown = dict['isShown']
-        self.data = dict['data']
-        self.time = dict['time']
-
-        count = dict['layers']
-        self.layers = []
-        for i in range(count):
-            self.layers.append(Layer(self.num, i))
-
-    def save(self, data = None):
-        if data != None:
-            self.data = data
-        _hs_private.savePacket(self.num, self.data)
-
-    def remove(self):
-        _hs_private.removePacket(self.num)
-
-    def __getitem__(self, index):
-        if isinstance(index, int):
-            return self.layers[index]
-        if isinstance(index, str):
-            for layer in self.layers:
-                if layer.name == index:
-                    return layer
-        return None
-
-    def __getslice__(self, slice):
-        return self.layers[slice]
-
-    def __str__(self):
-        res = "#{0}\n".format(self.num + 1)
-        res += "shown\n" if self.isShown else "not shown\n"
-        res += self.layers[0].name
-        for layer in self.layers[1:]:
-            res += "-> " + layer.name
-        res += "\n"
-        return res
-
-    def __repr__(self):
-        return "[{0} - {1} - {2}]".format(self.num, self.isShown, [layer.name for layer in self.layers])
-
 class AllPackets:
     def __init__(self):
         class AllPackets_iter:
@@ -73,9 +29,8 @@ class AllPackets:
 
             def __next__(self):
                 self.current += 1
-                next = _hs_private.getPacketNum(self.current)
                 if next:
-                    return Packet(next)
+                    return Packet(self.current)
                 else:
                     raise StopIteration
         self.iter_class = AllPackets_iter
@@ -88,9 +43,9 @@ class AllPackets:
             return [self[ii] for ii in range(*index.indices(len(self)))]
         if isinstance(index, int):
             if index >= 0:
-                return Packet(_hs_private.getPacketNum(index))
+                return Packet(index)
             else:
-                return Packet(_hs_private.getPacketNum(len(self) + index))
+                return Packet(len(self) + index)
         return None
 
     def __iter__(self):
