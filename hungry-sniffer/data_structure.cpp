@@ -28,7 +28,9 @@ DataStructure::RawPacketData::RawPacketData(const DataStructure::RawPacketData& 
     time(other.time)
 {
     setData(other.data, other.len);
-    this->additionalHeaders = new std::vector<std::pair<QString, QString>>(*other.additionalHeaders);
+    if(other.additionalHeaders)
+        this->additionalHeaders = new std::vector<std::pair<QString, QString>>(*other.additionalHeaders);
+    this->additionalHeaders = nullptr;
 }
 
 DataStructure::RawPacketData::RawPacketData(DataStructure::RawPacketData&& other) :

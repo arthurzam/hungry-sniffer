@@ -92,7 +92,11 @@ namespace hs {
         PyObject* d = PyDict_New();
         HS_PYDICT_ADD_NUM(d, "num", pos);
         HS_PYDICT_ADD_OBJECT(d, "isShown", PyBool_FromLong(pack.isShown));
+#if PY_MAJOR_VERSION < 3
+        HS_PYDICT_ADD_OBJECT(d, "data", PyString_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len));
+#else
         HS_PYDICT_ADD_OBJECT(d, "data", PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len));
+#endif
         HS_PYDICT_ADD_OBJECT(d, "time", PyFloat_FromDouble(pack.rawPacket.time.tv_sec + (double)pack.rawPacket.time.tv_usec * 0.000001));
 
         PyObject* layers = PyList_New(0);
@@ -145,14 +149,23 @@ namespace hs {
     PyObject* savePacket(PyObject*, PyObject* args)
     {
         int pos;
+        int size;
+        const char* b;
+#if PY_MAJOR_VERSION < 3
+        if (!PyArg_ParseTuple(args, "is#", &pos, &b, &size))
+        {
+            return NULL;
+        }
+#else
         PyObject* data;
         if (!PyArg_ParseTuple(args, "iY", &pos, &data))
         {
             return NULL;
         }
+        size = PyByteArray_Size(data);
+        b = PyByteArray_AsString(data);
+#endif
 
-        unsigned size = PyByteArray_Size(data);
-        const char* b = PyByteArray_AsString(data);
         if(pos == -1)
         {
             DataStructure::RawPacketData raw;

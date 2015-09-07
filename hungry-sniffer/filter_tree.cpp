@@ -22,6 +22,7 @@
 
 #include "filter_tree.h"
 #include <hs_core.h>
+#include <QDebug>
 
 enum NodeTypes {
     // if first bit is ON, then this is one type of NOT

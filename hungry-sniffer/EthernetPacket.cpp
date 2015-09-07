@@ -47,6 +47,7 @@ EthernetPacket::EthernetPacket(const void* data, size_t len,
         const Protocol* protocol, const Packet* prev) :
         PacketStructed(data, len, protocol, prev)
 {
+    if(!value) return;
     this->_realSource = ether_ntoa((ether_addr*) this->value->ether_shost);
     this->_realDestination = ether_ntoa((ether_addr*) this->value->ether_dhost);
 
