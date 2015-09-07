@@ -145,19 +145,8 @@ class ShownPackets:
     def __iter__(self):
         return self.iter_class()
 
-class Filter:
-    def __init__(self):
-        pass
-
-    def set(self, val = None):
-        _hs_private.setFilter(val)
-
-    def get(self):
-        return _hs_private.getFilter()
-
 all = AllPackets()
 shown = ShownPackets()
-filter = Filter()
 
 def addPacket(data):
     _hs_private.savePacket(-1, data)

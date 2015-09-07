@@ -187,23 +187,6 @@ namespace hs {
         return Py_None;
     }
 
-    PyObject* setFilter(PyObject*, PyObject* args)
-    {
-        char* str = NULL;
-        if (!PyArg_ParseTuple(args, "z", &str))
-        {
-            return NULL;
-        }
-        SniffWindow::window->ui->tb_filter->setText(QString(str));
-        SniffWindow::window->on_bt_filter_apply_clicked();
-        return Py_None;
-    }
-
-    PyObject* getFilter(PyObject*)
-    {
-        return GetPyString(SniffWindow::window->ui->tb_filter->text().toUtf8().data());
-    }
-
     static PyMethodDef methods[] =
     {
         { "getPacketNum", (PyCFunction)getPacketNum, METH_VARARGS, NULL },
@@ -212,8 +195,6 @@ namespace hs {
         { "getCountShown", (PyCFunction)getCountShown, METH_NOARGS, NULL },
         { "savePacket", (PyCFunction)savePacket, METH_VARARGS, NULL },
         { "removePacket", (PyCFunction)removePacket, METH_VARARGS, NULL },
-        { "setFilter", (PyCFunction)setFilter, METH_VARARGS, NULL },
-        { "getFilter", (PyCFunction)getFilter, METH_NOARGS, NULL },
         { NULL, NULL, 0, NULL }
     };
 
@@ -231,6 +212,66 @@ namespace hs {
 #else
         return PyModule_Create(&module);
 #endif
+    }
+
+    namespace filter {
+        struct filter_obj
+        {
+            PyObject_HEAD
+        };
+
+        static PyObject* filter_get(PyObject*)
+        {
+            return GetPyString(SniffWindow::window->ui->tb_filter->text().toUtf8().data());
+        }
+
+        static PyObject* filter_clear(PyObject*)
+        {
+            SniffWindow::window->ui->tb_filter->clear();
+            SniffWindow::window->on_bt_filter_apply_clicked();
+            return Py_None;
+        }
+
+        static PyObject* filter_set(PyObject*, PyObject* args)
+        {
+            char* str = NULL;
+            if (!PyArg_ParseTuple(args, "z", &str))
+            {
+                return NULL;
+            }
+            SniffWindow::window->ui->tb_filter->setText(QString(str));
+            SniffWindow::window->on_bt_filter_apply_clicked();
+            return Py_None;
+        }
+
+        static PyMethodDef hs_filter_methods[] = {
+            {"get", (PyCFunction)filter_get, METH_NOARGS | METH_CLASS, NULL},
+            {"clear", (PyCFunction)filter_clear, METH_NOARGS | METH_CLASS, NULL},
+            {"set", (PyCFunction)filter_set, METH_VARARGS | METH_CLASS, NULL},
+            { NULL, NULL, 0, NULL }
+        };
+
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+        static PyTypeObject type =
+        {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            "", sizeof(filter_obj), 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, hs_filter_methods,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic pop
+#endif
+        static void init(PyObject* hsModule)
+        {
+            PyType_Ready(&type);
+            Py_INCREF(&type);
+            PyModule_AddObject(hsModule, "filter", (PyObject *)&type);
+        }
     }
 }
 
@@ -428,6 +469,7 @@ void SniffWindow::initPython(QLabel* img_python)
 
     PyObject* mainModule = PyImport_AddModule("__main__");
     PyObject* hsModule = PyImport_ImportModule("hs");
+    hs::filter::init(hsModule);
     PyModule_AddObject(mainModule, "hs", hsModule);
 
     PyObject* globals = (PyObject*)(this->pyGlobals = PyModule_GetDict(mainModule));
