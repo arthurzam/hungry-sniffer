@@ -40,26 +40,10 @@
 #include <hs_core.h>
 
 #if PY_MAJOR_VERSION < 3
-    typedef void initModuleReturn;
-    #define PyUnicode_AsUTF8 PyString_AsString
     #define GetPyString PyString_FromString
 #else
-    typedef PyObject* initModuleReturn;
     #define GetPyString PyUnicode_FromString
 #endif
-
-static const char* getPythonPath()
-{
-#ifdef PYTHON_DIR
-    return PYTHON_DIR;
-#elif defined(Q_OS_WIN)
-    return ".";
-#elif defined(Q_OS_UNIX)
-    return "/usr/share/hungry-sniffer";
-#else
-    return ".";
-#endif
-}
 
 #ifdef Q_OS_WIN
     int gettimeofday(struct timeval* tv, struct timezone*);
@@ -68,17 +52,16 @@ static const char* getPythonPath()
 namespace hs {
     PyObject* savePacket(PyObject*, PyObject* args)
     {
-        int pos;
         int size;
         const char* b;
 #if PY_MAJOR_VERSION < 3
-        if (!PyArg_ParseTuple(args, "is#", &pos, &b, &size))
+        if (!PyArg_ParseTuple(args, "s#", &b, &size))
         {
             return NULL;
         }
 #else
         PyObject* data;
-        if (!PyArg_ParseTuple(args, "iY", &pos, &data))
+        if (!PyArg_ParseTuple(args, "Y", &data))
         {
             return NULL;
         }
@@ -86,49 +69,25 @@ namespace hs {
         b = PyByteArray_AsString(data);
 #endif
 
-        if(pos == -1)
-        {
-            DataStructure::RawPacketData raw;
-            gettimeofday(&raw.time, nullptr);
-            raw.setData(b, size);
-            SniffWindow::window->toAdd.push(raw);
-        }
-        else if(pos < (int)SniffWindow::window->model.local.size())
-        {
-            struct DataStructure::localPacket& pack = SniffWindow::window->model.local[pos];
-            DataStructure::RawPacketData& raw = pack.rawPacket;
-            free(raw.data);
-            raw.setData(b, size);
-
-            delete pack.decodedPacket;
-            pack.decodedPacket = new hungry_sniffer::EthernetPacket(raw.data, raw.len, &HungrySniffer_Core::core->base);
-
-            SniffWindow::window->updateTableShown();
-        }
+        DataStructure::RawPacketData raw;
+        gettimeofday(&raw.time, nullptr);
+        raw.setData(b, size);
+        SniffWindow::window->toAdd.push(raw);
         return Py_None;
     }
 
     static PyMethodDef methods[] =
     {
-        { "savePacket", (PyCFunction)savePacket, METH_VARARGS, NULL },
+        { "addPacket", (PyCFunction)savePacket, METH_VARARGS, NULL },
         { NULL, NULL, 0, NULL }
     };
 
 #if PY_MAJOR_VERSION >= 3
     static PyModuleDef module =
     {
-        PyModuleDef_HEAD_INIT, "_hs_private", NULL, -1, methods, NULL, NULL, NULL, NULL
+        PyModuleDef_HEAD_INIT, "hs", NULL, -1, methods, NULL, NULL, NULL, NULL
     };
 #endif
-
-    static initModuleReturn PyInit_hs(void)
-    {
-#if PY_MAJOR_VERSION < 3
-        Py_InitModule("_hs_private", methods);
-#else
-        return PyModule_Create(&module);
-#endif
-    }
 
     namespace packet {
         namespace layer {
@@ -533,7 +492,7 @@ namespace hs {
 #ifdef Q_CC_GNU
     #pragma GCC diagnostic pop
 #endif
-        static void init(PyObject* hsModule)
+        static void init()
         {
             PyType_Ready(&layer::type);
             Py_INCREF(&layer::type);
@@ -879,18 +838,9 @@ namespace ui {
 #if PY_MAJOR_VERSION >= 3
     static PyModuleDef module =
     {
-        PyModuleDef_HEAD_INIT, "_hs_ui", NULL, -1, methods, NULL, NULL, NULL, NULL
+        PyModuleDef_HEAD_INIT, "__main__", NULL, -1, methods, NULL, NULL, NULL, NULL
     };
 #endif
-
-    static initModuleReturn PyInit_hs_ui(void)
-    {
-#if PY_MAJOR_VERSION < 3
-        Py_InitModule("_hs_ui", methods);
-#else
-        return PyModule_Create(&module);
-#endif
-    }
 }
 
 namespace catchOutErr {
@@ -986,11 +936,9 @@ namespace catchOutErr {
 
 }
 
-static void addDirToPath(PyObject* sys, const char* path)
+static void addDirToPath(PyObject* sys)
 {
     PyObject* sys_path = PyObject_GetAttrString(sys, "path");
-    PyObject* folder_path = GetPyString(path);
-    PyList_Append(sys_path, folder_path);
 
     QSettings& settings = *Preferences::settings;
     settings.beginGroup(QStringLiteral("General"));
@@ -1000,8 +948,9 @@ static void addDirToPath(PyObject* sys, const char* path)
     {
         for(const QString& p : var.toStringList())
         {
-            folder_path = GetPyString(p.toUtf8().constData());
+            PyObject* folder_path = GetPyString(p.toUtf8().constData());
             PyList_Append(sys_path, folder_path);
+            Py_DECREF(folder_path);
         }
     }
     settings.endGroup();
@@ -1021,24 +970,27 @@ void SniffWindow::initPython(QLabel* img_python)
     img_python->setToolTip(QStringLiteral("Python " PY_VERSION));
 #endif
 
-    PyImport_AppendInittab("_hs_private", &hs::PyInit_hs);
-    PyImport_AppendInittab("_hs_ui", &ui::PyInit_hs_ui);
     Py_Initialize();
 
     PyObject* sys = PyImport_ImportModule("sys");
+    addDirToPath(sys);
 
-    addDirToPath(sys, getPythonPath());
+#if PY_MAJOR_VERSION < 3
+    PyObject* mainModule = Py_InitModule("__main__", ui::methods);
+    PyObject* hsModule = Py_InitModule("hs", hs::methods);
+#else
+    PyObject* mainModule = PyModule_Create(&ui::module);
+    PyModule_AddObject(mainModule, "__builtins__", PyEval_GetBuiltins());
+    PyObject* hsModule = PyModule_Create(&hs::module);
+#endif
 
-    PyObject* mainModule = PyImport_AddModule("__main__");
-    PyObject* hsModule = PyImport_ImportModule("hs");
     hs::filter::init(hsModule);
-    hs::packet::init(hsModule);
+    hs::packet::init();
     hs::all_packets::init(hsModule);
     hs::shown_packets::init(hsModule);
     PyModule_AddObject(mainModule, "hs", hsModule);
 
-    PyObject* globals = (PyObject*)(this->pyGlobals = PyModule_GetDict(mainModule));
-    PyRun_String("from _hs_ui import *", Py_single_input, globals, globals);
+    this->pyGlobals = PyModule_GetDict(mainModule);
     catchOutErr::redirect(sys);
 
     this->py_checkCommand.reset();

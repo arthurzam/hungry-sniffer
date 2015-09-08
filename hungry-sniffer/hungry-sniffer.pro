@@ -24,7 +24,6 @@ DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 CONFIG(test) {
     DEFINES += PLUGINS_DIR=\\\"$$OUT_PWD/../plugins\\\"
-    DEFINES += PYTHON_DIR=\\\"$$PWD/\\\"
 }
 
 SOURCES += main.cpp\
@@ -84,20 +83,15 @@ unix: OTHER_FILES += hungry-sniffer.desktop
         INCLUDEPATH += $$PYTHON_PATH/include
     }
     DEFINES += PYTHON_CMD
-
-    OTHER_FILES += hs.py
 }
 
 unix {
     target.path = $$PREFIX/bin/
 
-    data.path = $$PREFIX/share/hungry-sniffer/
-    data.files = hs.py
-
     desktop.path = $$PREFIX/share/applications/
     desktop.files = hungry-sniffer.desktop
 
-    INSTALLS += target data desktop
+    INSTALLS += target desktop
 }
 
 unix|win32: LIBS += -L$$OUT_PWD/../QHexEdit/ -lQHexEdit
