@@ -66,17 +66,6 @@ static const char* getPythonPath()
 #endif
 
 namespace hs {
-
-    PyObject* getCountAll(PyObject*)
-    {
-        return PyLong_FromLong((long)SniffWindow::window->model.local.size());
-    }
-
-    PyObject* getCountShown(PyObject*)
-    {
-        return PyLong_FromLong((long)SniffWindow::window->model.shownPerRow.size());
-    }
-
     PyObject* savePacket(PyObject*, PyObject* args)
     {
         int pos;
@@ -121,8 +110,6 @@ namespace hs {
 
     static PyMethodDef methods[] =
     {
-        { "getCountAll", (PyCFunction)getCountAll, METH_NOARGS, NULL },
-        { "getCountShown", (PyCFunction)getCountShown, METH_NOARGS, NULL },
         { "savePacket", (PyCFunction)savePacket, METH_VARARGS, NULL },
         { NULL, NULL, 0, NULL }
     };
@@ -553,7 +540,238 @@ namespace hs {
 
             PyType_Ready(&type);
             Py_INCREF(&type);
-            PyModule_AddObject(hsModule, "Packet", (PyObject*)&type);
+        }
+    }
+
+    namespace all_packets {
+
+        struct iter_obj
+        {
+            PyObject_HEAD
+            unsigned current;
+        };
+
+        PyObject* all_iter_iter(PyObject* self)
+        {
+            Py_INCREF(self);
+            return self;
+        }
+
+        static PyObject* all_iter_iternext(iter_obj* self)
+        {
+            unsigned row = (self->current++);
+            if(row < SniffWindow::window->model.local.size())
+            {
+                PyObject* argList = Py_BuildValue("(i)", row);
+                PyObject* tmp = PyObject_CallObject((PyObject*)&hs::packet::type, argList);
+                Py_DECREF(argList);
+                return tmp;
+            }
+            PyErr_SetNone(PyExc_StopIteration);
+            return NULL;
+        }
+
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+        static PyTypeObject iter_type =
+        {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            "", sizeof(iter_obj), 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)all_iter_iter, (getiterfunc)all_iter_iternext, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic pop
+#endif
+        struct all_obj
+        {
+            PyObject_HEAD
+        };
+
+        PyObject* all_iter(PyObject*)
+        {
+            iter_obj* iter;
+            iter = PyObject_New(iter_obj, &iter_type);
+            if(iter == NULL)
+                return NULL;
+            iter->current = 0;
+            return (PyObject*)iter;
+        }
+
+        Py_ssize_t all_len(PyObject*)
+        {
+            return SniffWindow::window->model.local.size();
+        }
+
+        PyObject* all_item(PyObject*, Py_ssize_t index)
+        {
+            if(index >= (Py_ssize_t)SniffWindow::window->model.local.size())
+            {
+                PyErr_SetNone(PyExc_IndexError);
+                return NULL;
+            }
+            PyObject* argList = Py_BuildValue("(i)", index);
+            PyObject* tmp = PyObject_CallObject((PyObject*)&hs::packet::type, argList);
+            Py_DECREF(argList);
+            return tmp;
+        }
+
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+        static PySequenceMethods seq_methods =
+        {
+            all_len,
+            0,
+            0,
+            all_item
+        };
+
+        static PyTypeObject all_type =
+        {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            "", sizeof(all_obj), 0,
+            0,
+            0, 0, 0, 0, 0, 0, &seq_methods, 0, 0, 0, 0, 0, 0, 0,
+            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)all_iter, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic pop
+#endif
+        static void init(PyObject* hsModule)
+        {
+            PyType_Ready(&iter_type);
+            Py_INCREF(&iter_type);
+
+            PyType_Ready(&all_type);
+            Py_INCREF(&all_type);
+
+
+            PyObject* iter = PyObject_New(PyObject, &all_type);
+            if(iter)
+                PyModule_AddObject(hsModule, "all", iter);
+        }
+    }
+
+    namespace shown_packets {
+
+        struct iter_obj
+        {
+            PyObject_HEAD
+            unsigned current;
+        };
+
+        PyObject* shown_iter_iter(PyObject* self)
+        {
+            Py_INCREF(self);
+            return self;
+        }
+
+        static PyObject* shown_iter_iternext(iter_obj* self)
+        {
+            unsigned row = (self->current++);
+            const auto& shown = SniffWindow::window->model.shownPerRow;
+            if(row < shown.size())
+            {
+                PyObject* argList = Py_BuildValue("(i)", shown[row]);
+                PyObject* tmp = PyObject_CallObject((PyObject*)&hs::packet::type, argList);
+                Py_DECREF(argList);
+                return tmp;
+            }
+            PyErr_SetNone(PyExc_StopIteration);
+            return NULL;
+        }
+
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+        static PyTypeObject iter_type =
+        {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            "", sizeof(iter_obj), 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)shown_iter_iter, (getiterfunc)shown_iter_iternext, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic pop
+#endif
+        struct shown_obj
+        {
+            PyObject_HEAD
+        };
+
+        PyObject* shown_iter(PyObject*)
+        {
+            iter_obj* iter;
+            iter = PyObject_New(iter_obj, &iter_type);
+            if(iter == NULL)
+                return NULL;
+            iter->current = 0;
+            return (PyObject*)iter;
+        }
+
+        Py_ssize_t shown_len(PyObject*)
+        {
+            return SniffWindow::window->model.shownPerRow.size();
+        }
+
+        PyObject* shown_item(PyObject*, Py_ssize_t index)
+        {
+            const auto& shown = SniffWindow::window->model.shownPerRow;
+            if(index >= (Py_ssize_t)shown.size())
+            {
+                PyErr_SetNone(PyExc_IndexError);
+                return NULL;
+            }
+            PyObject* argList = Py_BuildValue("(i)", shown[index]);
+            PyObject* tmp = PyObject_CallObject((PyObject*)&hs::packet::type, argList);
+            Py_DECREF(argList);
+            return tmp;
+        }
+
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+        static PySequenceMethods seq_methods =
+        {
+            shown_len,
+            0,
+            0,
+            shown_item
+        };
+
+        static PyTypeObject shown_type =
+        {
+            PyVarObject_HEAD_INIT(NULL, 0)
+            "", sizeof(shown_obj), 0,
+            0,
+            0, 0, 0, 0, 0, 0, &seq_methods, 0, 0, 0, 0, 0, 0, 0,
+            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)shown_iter, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        };
+#ifdef Q_CC_GNU
+    #pragma GCC diagnostic pop
+#endif
+        static void init(PyObject* hsModule)
+        {
+            PyType_Ready(&iter_type);
+            Py_INCREF(&iter_type);
+
+            PyType_Ready(&shown_type);
+            Py_INCREF(&shown_type);
+
+
+            PyObject* iter = PyObject_New(PyObject, &shown_type);
+            if(iter)
+                PyModule_AddObject(hsModule, "shown", iter);
         }
     }
 
@@ -815,6 +1033,8 @@ void SniffWindow::initPython(QLabel* img_python)
     PyObject* hsModule = PyImport_ImportModule("hs");
     hs::filter::init(hsModule);
     hs::packet::init(hsModule);
+    hs::all_packets::init(hsModule);
+    hs::shown_packets::init(hsModule);
     PyModule_AddObject(mainModule, "hs", hsModule);
 
     PyObject* globals = (PyObject*)(this->pyGlobals = PyModule_GetDict(mainModule));
