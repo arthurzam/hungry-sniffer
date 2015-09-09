@@ -307,7 +307,6 @@ namespace hs {
             return 0;
         }
 
-
         static PyObject* packet_repr(packet_obj* self)
         {
 #if PY_MAJOR_VERSION < 3
@@ -605,15 +604,13 @@ namespace hs {
         static void init(PyObject* hsModule)
         {
             PyType_Ready(&iter_type);
-            Py_INCREF(&iter_type);
-
             PyType_Ready(&all_type);
+
+            Py_INCREF(&iter_type);
             Py_INCREF(&all_type);
 
-
-            PyObject* iter = PyObject_New(PyObject, &all_type);
-            if(iter)
-                PyModule_AddObject(hsModule, "all", iter);
+            PyObject* all = PyObject_New(PyObject, &all_type);
+            PyModule_AddObject(hsModule, "all", all);
         }
     }
 
@@ -722,15 +719,13 @@ namespace hs {
         static void init(PyObject* hsModule)
         {
             PyType_Ready(&iter_type);
-            Py_INCREF(&iter_type);
-
             PyType_Ready(&shown_type);
+
+            Py_INCREF(&iter_type);
             Py_INCREF(&shown_type);
 
-
-            PyObject* iter = PyObject_New(PyObject, &shown_type);
-            if(iter)
-                PyModule_AddObject(hsModule, "shown", iter);
+            PyObject* shown = PyObject_New(PyObject, &shown_type);
+            PyModule_AddObject(hsModule, "shown", shown);
         }
     }
 
@@ -845,45 +840,13 @@ namespace ui {
 
 namespace catchOutErr {
 
-    struct catchOutErr
+    struct catch_obj
     {
         PyObject_HEAD
-        char* color;
+        const char* color;
     };
 
-    static void CatchOutErr_dealloc(catchOutErr* self)
-    {
-        free(self->color);
-        Py_TYPE(self)->tp_free((PyObject*)self);
-    }
-
-    static PyObject* CatchOutErr_new(PyTypeObject* type, PyObject*, PyObject*)
-    {
-        catchOutErr* self;
-
-        self = (catchOutErr*)type->tp_alloc(type, 0);
-        if (self != NULL)
-        {
-            self->color = NULL;
-        }
-
-        return (PyObject*)self;
-    }
-
-    static int CatchOutErr_init(catchOutErr* self, PyObject* args, PyObject*)
-    {
-        const char* color = NULL;
-        if (!PyArg_ParseTuple(args, "s", &color))
-        {
-            return -1;
-        }
-        self->color = (char*)malloc(strlen(color));
-        strcpy(self->color, color);
-
-        return 0;
-    }
-
-    static PyObject* CatchOutErr_write(catchOutErr* self, PyObject* args)
+    static PyObject* CatchOutErr_write(catch_obj* self, PyObject* args)
     {
         char* str = NULL;
         if (!PyArg_ParseTuple(args, "s", &str))
@@ -910,11 +873,10 @@ namespace catchOutErr {
     static PyTypeObject type =
     {
         PyVarObject_HEAD_INIT(NULL, 0)
-        "", sizeof(catchOutErr), 0,
-        (destructor)CatchOutErr_dealloc,
+        "", sizeof(catch_obj), 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, CatchOutErr_methods,
-        0, 0, 0, 0, 0, 0, 0, (initproc)CatchOutErr_init, 0, CatchOutErr_new
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 #ifdef Q_CC_GNU
     #pragma GCC diagnostic pop
@@ -925,13 +887,15 @@ namespace catchOutErr {
         PyType_Ready(&type);
         Py_INCREF(&type);
 
-        PyObject* argList = Py_BuildValue("(s)", "blue");
-        PyObject_SetAttrString(sys, "stdout", PyObject_CallObject((PyObject*)&type, argList));
-        Py_DECREF(argList);
+        catch_obj* t = PyObject_New(catch_obj, &type);
+        t->color = "blue";
+        PyObject_SetAttrString(sys, "stdout", (PyObject*)t);
+        Py_DECREF(t);
 
-        argList = Py_BuildValue("(s)", "red");
-        PyObject_SetAttrString(sys, "stderr", PyObject_CallObject((PyObject*)&type, argList));
-        Py_DECREF(argList);
+        t = PyObject_New(catch_obj, &type);
+        t->color = "red";
+        PyObject_SetAttrString(sys, "stderr", (PyObject*)t);
+        Py_DECREF(t);
     }
 
 }
@@ -964,7 +928,7 @@ void SniffWindow::stopPython()
 
 void SniffWindow::initPython(QLabel* img_python)
 {
-#ifdef _MSC_VER
+#ifdef Q_CC_MSVC
     img_python->setToolTip(QStringLiteral("Python ").append(PY_VERSION));
 #else
     img_python->setToolTip(QStringLiteral("Python " PY_VERSION));
@@ -974,6 +938,7 @@ void SniffWindow::initPython(QLabel* img_python)
 
     PyObject* sys = PyImport_ImportModule("sys");
     addDirToPath(sys);
+    catchOutErr::redirect(sys);
 
 #if PY_MAJOR_VERSION < 3
     PyObject* mainModule = Py_InitModule("__main__", ui::methods);
@@ -991,8 +956,6 @@ void SniffWindow::initPython(QLabel* img_python)
     PyModule_AddObject(mainModule, "hs", hsModule);
 
     this->pyGlobals = PyModule_GetDict(mainModule);
-    catchOutErr::redirect(sys);
-
     this->py_checkCommand.reset();
 }
 
