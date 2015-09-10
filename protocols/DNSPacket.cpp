@@ -139,7 +139,11 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
 std::string DNSPacket::getConversationFilterText() const
 {
     char res[64];
+#ifdef _MSC_VER
+    _snprintf(res, sizeof(res), "%s.id==%s", protocol->getName().c_str(), id.c_str());
+#else
     snprintf(res, sizeof(res), "%s.id==%s", protocol->getName().c_str(), id.c_str());
+#endif
     return std::string(res);
 }
 

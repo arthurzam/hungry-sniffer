@@ -36,6 +36,14 @@
     #define CONSTEXPR constexpr
 #endif
 
+#ifndef WIN32
+    #define EXPORT
+#elif defined(SDK_LIBRARY)
+    #define EXPORT __declspec(dllexport)
+#else
+    #define EXPORT __declspec(dllimport)
+#endif
+
 namespace hungry_sniffer {
 
     class Packet;
@@ -125,21 +133,21 @@ namespace hungry_sniffer {
              *
              * @param function pointer to function (created by init<>)
              */
-            Protocol(initFunction function);
+            EXPORT Protocol(initFunction function);
 
-            Protocol(initFunction function, const std::string& name, uint8_t flags = 0);
+            EXPORT Protocol(initFunction function, const std::string& name, uint8_t flags = 0);
 
-            Protocol(const Protocol& other);
+            EXPORT Protocol(const Protocol& other);
 
-            Protocol(const Protocol& other, initFunction function, const std::string& name);
+            EXPORT Protocol(const Protocol& other, initFunction function, const std::string& name);
 
-            Protocol(Protocol&& other);
+            EXPORT Protocol(Protocol&& other);
 
             virtual ~Protocol()
             {
             }
 
-            Protocol& addProtocol(size_t type, initFunction function,
+            EXPORT Protocol& addProtocol(size_t type, initFunction function,
                     const std::string& name = "unknown", uint8_t flags = 0);
 
             /**
@@ -147,9 +155,9 @@ namespace hungry_sniffer {
              * @param type the type to which the protocol will be associated
              * @param protocol Protocol object that will be added
              */
-            Protocol& addProtocol(size_t type, Protocol&& protocol);
+            EXPORT Protocol& addProtocol(size_t type, Protocol&& protocol);
 
-            Protocol& addProtocol(size_t type, const Protocol& protocol, initFunction function, const std::string& name);
+            EXPORT Protocol& addProtocol(size_t type, const Protocol& protocol, initFunction function, const std::string& name);
 
             /**
              *  @brief  Access to Protocol.
@@ -256,7 +264,7 @@ namespace hungry_sniffer {
              *
              * @note don't add the protocol name is start of regex, it is added automatically
              */
-            void addFilter(const std::string& filterRegex, filterFunction function);
+            EXPORT void addFilter(const std::string& filterRegex, filterFunction function);
 
             /**
              * @brief get the filters container
@@ -293,7 +301,7 @@ namespace hungry_sniffer {
              * @param key the original name
              * @return the new, associated name
              */
-            const std::string& getNameAssociated(const std::string& key) const;
+            EXPORT const std::string& getNameAssociated(const std::string& key) const;
 
             /**
              * @brief set associated name for key
@@ -335,7 +343,7 @@ namespace hungry_sniffer {
                 return (flags & FLAGS::FLAG_CONVERSATION) == FLAGS::FLAG_CONVERSATION;
             }
 
-            void addOption(const std::string& optionName, Option::optionEnableFunction func, bool rootNeeded = false);
+            EXPORT void addOption(const std::string& optionName, Option::optionEnableFunction func, bool rootNeeded = false);
 
             const options_t& getOptions() const
             {

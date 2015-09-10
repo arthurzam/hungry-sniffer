@@ -94,14 +94,16 @@ unix {
     INSTALLS += target desktop
 }
 
-unix|win32: LIBS += -L$$OUT_PWD/../QHexEdit/ -lQHexEdit
-
-INCLUDEPATH += $$PWD/..
-
 include(prefs/prefs.pri)
 include(widgets/widgets.pri)
 
-LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sdk/release/ -lhungry-sniffer-sdk
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sdk/debug/ -lhungry-sniffer-sdk
+else:unix: LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
 
-INCLUDEPATH += $$PWD/../sdk
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../QHexEdit/release/ -lQHexEdit
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../QHexEdit/debug/ -lQHexEdit
+else:unix: LIBS += -L$$OUT_PWD/../QHexEdit/ -lQHexEdit
+
+INCLUDEPATH += $$PWD/../sdk $$PWD/..
 DEPENDPATH += $$PWD/../sdk

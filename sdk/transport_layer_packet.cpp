@@ -31,7 +31,7 @@ void TransportLayerConnections::addToConns(Packet* packet)
     this->conns[packet] = packet;
 }
 
-Packet*TransportLayerConnections::getConnectionLast(Packet* packet)
+Packet* TransportLayerConnections::getConnectionLast(Packet* packet)
 {
     auto res = conns.find(packet);
     if (res != conns.end())

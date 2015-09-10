@@ -52,11 +52,11 @@ namespace hungry_sniffer {
         protected:
             std::unordered_map<Packet*, Packet*> conns;
         public:
-            TransportLayerConnections();
+            EXPORT TransportLayerConnections();
 
-            void addToConns(Packet* packet);
+            EXPORT void addToConns(Packet* packet);
 
-            Packet* getConnectionLast(Packet* packet);
+            EXPORT Packet* getConnectionLast(Packet* packet);
     };
 }
 

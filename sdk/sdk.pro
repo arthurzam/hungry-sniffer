@@ -5,6 +5,8 @@ TEMPLATE = lib
 
 include(../common.pri)
 
+DEFINES += SDK_LIBRARY
+
 *-g++* {
     QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
     QMAKE_LFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
@@ -13,6 +15,7 @@ include(../common.pri)
 *-msvc* {
     QMAKE_CXXFLAGS_RELEASE += /GL
     QMAKE_LFLAGS_RELEASE += /LTCG
+    unset(VERSION)
 }
 
 SOURCES += \

@@ -59,7 +59,9 @@ win32 {
     LIBS += -lws2_32
 }
 
-LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sdk/release/ -lhungry-sniffer-sdk
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sdk/debug/ -lhungry-sniffer-sdk
+else:unix: LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
 
 INCLUDEPATH += $$PWD/../sdk
 DEPENDPATH += $$PWD/../sdk

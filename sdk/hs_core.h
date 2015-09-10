@@ -28,7 +28,7 @@
 #include <hs_stats.h>
 
 struct HungrySniffer_Core {
-    static struct HungrySniffer_Core* core;
+    EXPORT static struct HungrySniffer_Core* core;
 
     typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
     hungry_sniffer::Protocol& base;
