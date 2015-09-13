@@ -12,6 +12,12 @@ DEFINES += SDK_LIBRARY
     QMAKE_LFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 }
 
+win32-g++ {
+    QMAKE_LFLAGS_RELEASE += -static-libgcc -static-libstdc++
+    DEFINES += WIN32
+    unset(VERSION)
+}
+
 *-msvc* {
     QMAKE_CXXFLAGS_RELEASE += /GL
     QMAKE_LFLAGS_RELEASE += /LTCG

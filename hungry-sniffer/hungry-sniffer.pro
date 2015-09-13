@@ -15,6 +15,11 @@ unix: LIBS += -lpcap -ldl
     QMAKE_LFLAGS_RELEASE += -s -flto -fno-rtti
 }
 
+win32-g++ {
+    QMAKE_LFLAGS_RELEASE += -static-libgcc -static-libstdc++ -static
+    DEFINES += WIN32
+}
+
 *-msvc* {
     QMAKE_CXXFLAGS_RELEASE += /GL
     QMAKE_LFLAGS_RELEASE += /LTCG
@@ -96,14 +101,11 @@ unix {
 
 include(prefs/prefs.pri)
 include(widgets/widgets.pri)
+include(../QHexEdit/QHexEdit.pri)
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sdk/release/ -lhungry-sniffer-sdk
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sdk/debug/ -lhungry-sniffer-sdk
 else:unix: LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
-
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../QHexEdit/release/ -lQHexEdit
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../QHexEdit/debug/ -lQHexEdit
-else:unix: LIBS += -L$$OUT_PWD/../QHexEdit/ -lQHexEdit
 
 INCLUDEPATH += $$PWD/../sdk $$PWD/..
 DEPENDPATH += $$PWD/../sdk

@@ -21,6 +21,9 @@
 */
 
 #include "IPv6Packet.h"
+#ifdef Q_CC_MINGW
+    const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+#endif
 #if defined(Q_OS_UNIX)
     #include <arpa/inet.h>
     #include "iptc.h"

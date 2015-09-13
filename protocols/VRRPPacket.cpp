@@ -23,6 +23,10 @@
 #include "VRRPPacket.h"
 #if defined(Q_OS_WIN)
     #include <Ws2tcpip.h>
+    #ifdef Q_CC_MINGW
+        const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+    #endif
+
 #elif defined(Q_OS_UNIX)
     #include <arpa/inet.h>
 #endif

@@ -11,6 +11,11 @@ include(../common.pri)
     QMAKE_LFLAGS_RELEASE += -s -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
 }
 
+win32-g++ {
+    QMAKE_LFLAGS_RELEASE += -static-libgcc -static-libstdc++ -static
+    DEFINES += WIN32
+}
+
 *-msvc* {
     QMAKE_CXXFLAGS_RELEASE += /GL
     QMAKE_LFLAGS_RELEASE += /LTCG
