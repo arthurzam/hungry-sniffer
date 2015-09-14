@@ -73,7 +73,7 @@ namespace hs {
         gettimeofday(&raw.time, nullptr);
         raw.setData(b, size);
         SniffWindow::window->toAdd.push(raw);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     static PyMethodDef methods[] =
@@ -101,67 +101,10 @@ namespace hs {
 
             static void layer_dealloc(layer_obj* self)
             {
-                Py_XDECREF(self->name);
-                Py_XDECREF(self->info);
-                Py_XDECREF(self->headers);
+                Py_DECREF(self->name);
+                Py_DECREF(self->info);
+                Py_DECREF(self->headers);
                 Py_TYPE(self)->tp_free((PyObject*)self);
-            }
-
-            static PyObject* layer_new(PyTypeObject* type, PyObject*, PyObject*)
-            {
-                layer_obj* self;
-
-                self = (layer_obj*)type->tp_alloc(type, 0);
-                if (self != NULL)
-                {
-                    self->name = GetPyString("");
-                    if (self->name == NULL)
-                    {
-                        Py_DECREF(self);
-                        return NULL;
-                    }
-
-                    self->info = GetPyString("");
-                    if (self->info == NULL)
-                    {
-                        Py_DECREF(self);
-                        return NULL;
-                    }
-
-                    self->headers = PyDict_New();
-                    if (self->headers == NULL)
-                    {
-                        Py_DECREF(self);
-                        return NULL;
-                    }
-                }
-
-                return (PyObject*)self;
-            }
-
-            static int layer_init(layer_obj* self, PyObject* args, PyObject*)
-            {
-                int row;
-                int layerNum;
-
-                if (!PyArg_ParseTuple(args, "ii", &row, &layerNum))
-                {
-                    return -1;
-                }
-
-                const hungry_sniffer::Packet* layer = SniffWindow::window->model.local[row].decodedPacket->getNext(layerNum);
-
-                Py_XDECREF(self->name);
-                Py_XDECREF(self->info);
-                self->name = GetPyString(layer->getProtocol()->getName().c_str());
-                self->info = GetPyString(layer->getInfo().c_str());
-
-                Py_XDECREF(self->headers);
-                self->headers = PyDict_New();
-                for(auto& i : layer->getHeaders())
-                    PyDict_SetItem(self->headers, GetPyString(i.key.c_str()), GetPyString(i.value.c_str()));
-
-                return 0;
             }
 
             static PyMemberDef layer_members[] =
@@ -230,7 +173,7 @@ namespace hs {
                 (destructor)layer_dealloc,
                 0, 0, 0, 0, (reprfunc)layer_repr, 0, 0, &layer_map, 0, 0, (reprfunc)layer_str, 0, 0, 0,
                 Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, /*methods*/0,
-                layer_members, 0, 0, 0, 0, 0, 0, (initproc)layer_init, 0, layer_new
+                layer_members, 0, 0, 0, 0, 0, 0, 0, 0, 0
             };
 
 #ifdef Q_CC_GNU
@@ -250,61 +193,9 @@ namespace hs {
 
         static void packet_dealloc(packet_obj* self)
         {
-            Py_XDECREF(self->layersArr);
+            Py_DECREF(self->layersArr);
             Py_XDECREF(self->data);
             Py_TYPE(self)->tp_free((PyObject*)self);
-        }
-
-        static PyObject* packet_new(PyTypeObject* type, PyObject*, PyObject*)
-        {
-            packet_obj* self;
-
-            self = (packet_obj*)type->tp_alloc(type, 0);
-            if (self != NULL)
-            {
-                self->num = 0;
-                self->time = 0;
-                self->isShown = false;
-                self->data = Py_None;
-                self->layersArr = Py_None;
-            }
-
-            return (PyObject*)self;
-        }
-
-        static int packet_init(packet_obj* self, PyObject* args, PyObject*)
-        {
-            int row;
-
-            if (!PyArg_ParseTuple(args, "i", &row))
-            {
-                return -1;
-            }
-
-            const DataStructure::localPacket& pack = SniffWindow::window->model.local[row];
-            self->num = row;
-            self->isShown = pack.isShown;
-            self->time = pack.rawPacket.time.tv_sec + (float)pack.rawPacket.time.tv_usec * 0.000001;
-
-#if PY_MAJOR_VERSION < 3
-            self->data = PyString_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len);
-#else
-            self->data = PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len);
-#endif
-
-            Py_XDECREF(self->layersArr);
-            self->layersArr = PyList_New(0);
-            int i = 0;
-            for(const hungry_sniffer::Packet* packet = pack.decodedPacket; packet != nullptr; packet = packet->getNext(), i++)
-            {
-                PyObject* argList = Py_BuildValue("(ii)", row, i);
-                PyObject* layer = PyObject_CallObject((PyObject*)&layer::type, argList);
-                PyList_Append(self->layersArr, layer);
-                Py_DECREF(layer);
-                Py_DECREF(argList);
-            }
-
-            return 0;
         }
 
         static PyObject* packet_repr(packet_obj* self)
@@ -379,7 +270,7 @@ namespace hs {
         {
             SniffWindow::window->model.remove(self->num);
             SniffWindow::window->ui->statusBar->updateText();
-            return Py_None;
+            Py_RETURN_NONE;
         }
 
         static PyObject* packet_save(packet_obj* self, PyObject* args)
@@ -418,7 +309,7 @@ namespace hs {
             pack.decodedPacket = new hungry_sniffer::EthernetPacket(raw.data, raw.len, &HungrySniffer_Core::core->base);
 
             SniffWindow::window->updateTableShown();
-            return Py_None;
+            Py_RETURN_NONE;
         }
 
         static PyMethodDef packet_methods[] =
@@ -461,7 +352,10 @@ namespace hs {
                     }
                 }
                 if(res == NULL)
-                    return Py_None;
+                {
+                    PyErr_SetString(PyExc_KeyError, "protocol name not found");
+                    return NULL;
+                }
             }
             Py_XINCREF(res);
             return res;
@@ -481,11 +375,10 @@ namespace hs {
         static PyTypeObject type =
         {
             PyVarObject_HEAD_INIT(NULL, 0)
-            "", sizeof(packet_obj), 0,
-            (destructor)packet_dealloc,
-            0, 0, 0, 0, (reprfunc)packet_repr, 0, 0, &packet_map, 0, 0, (reprfunc)packet_str, 0, 0, 0,
+            "", sizeof(packet_obj), 0, (destructor)packet_dealloc, 0, 0, 0,
+            0, (reprfunc)packet_repr, 0, 0, &packet_map, 0, 0, (reprfunc)packet_str, 0, 0, 0,
             Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, packet_methods,
-            packet_members, 0, 0, 0, 0, 0, 0, (initproc)packet_init, 0, packet_new
+            packet_members, 0, 0, 0, 0, 0, 0, 0, 0, 0
         };
 
 #ifdef Q_CC_GNU
@@ -498,6 +391,43 @@ namespace hs {
 
             PyType_Ready(&type);
             Py_INCREF(&type);
+        }
+
+        static PyObject* buildPacket(int row)
+        {
+            packet_obj* obj = PyObject_New(packet_obj, &type);
+
+            const DataStructure::localPacket& pack = SniffWindow::window->model.local[row];
+            obj->num = row;
+            obj->isShown = pack.isShown;
+            obj->time = pack.rawPacket.time.tv_sec + (float)pack.rawPacket.time.tv_usec * 0.000001;
+
+#if PY_MAJOR_VERSION < 3
+            obj->data = PyString_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len);
+#else
+            obj->data = PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len);
+#endif
+
+            obj->layersArr = PyList_New(0);
+            int i = 0;
+            for(const hungry_sniffer::Packet* layer = pack.decodedPacket; layer != nullptr; layer = layer->getNext(), i++)
+            {
+                layer::layer_obj* layer_obj = PyObject_New(layer::layer_obj, &layer::type);
+                if(layer_obj == NULL)
+                    return NULL;
+
+                layer_obj->name = GetPyString(layer->getProtocol()->getName().c_str());
+                layer_obj->info = GetPyString(layer->getInfo().c_str());
+
+                layer_obj->headers = PyDict_New();
+                for(auto& i : layer->getHeaders())
+                    PyDict_SetItem(layer_obj->headers, GetPyString(i.key.c_str()), GetPyString(i.value.c_str()));
+
+                PyList_Append(obj->layersArr, (PyObject*)layer_obj);
+                Py_DECREF(layer_obj);
+            }
+
+            return (PyObject*)obj;
         }
     }
 
@@ -520,10 +450,7 @@ namespace hs {
             unsigned row = (self->current++);
             if(row < SniffWindow::window->model.local.size())
             {
-                PyObject* argList = Py_BuildValue("(i)", row);
-                PyObject* tmp = PyObject_CallObject((PyObject*)&hs::packet::type, argList);
-                Py_DECREF(argList);
-                return tmp;
+                return hs::packet::buildPacket(row);
             }
             PyErr_SetNone(PyExc_StopIteration);
             return NULL;
@@ -549,14 +476,12 @@ namespace hs {
             PyObject_HEAD
         };
 
-        PyObject* all_iter(PyObject*)
+        iter_obj* all_iter(PyObject*)
         {
-            iter_obj* iter;
-            iter = PyObject_New(iter_obj, &iter_type);
-            if(iter == NULL)
-                return NULL;
-            iter->current = 0;
-            return (PyObject*)iter;
+            iter_obj* iter = PyObject_New(iter_obj, &iter_type);
+            if(iter != NULL)
+                iter->current = 0;
+            return iter;
         }
 
         Py_ssize_t all_len(PyObject*)
@@ -568,13 +493,10 @@ namespace hs {
         {
             if(index >= (Py_ssize_t)SniffWindow::window->model.local.size())
             {
-                PyErr_SetNone(PyExc_IndexError);
+                PyErr_SetString(PyExc_IndexError, "index out of range");
                 return NULL;
             }
-            PyObject* argList = Py_BuildValue("(i)", index);
-            PyObject* tmp = PyObject_CallObject((PyObject*)&hs::packet::type, argList);
-            Py_DECREF(argList);
-            return tmp;
+            return hs::packet::buildPacket(index);
         }
 
 #ifdef Q_CC_GNU
@@ -609,8 +531,7 @@ namespace hs {
             Py_INCREF(&iter_type);
             Py_INCREF(&all_type);
 
-            PyObject* all = PyObject_New(PyObject, &all_type);
-            PyModule_AddObject(hsModule, "all", all);
+            PyModule_AddObject(hsModule, "all", PyObject_New(PyObject, &all_type));
         }
     }
 
@@ -634,10 +555,7 @@ namespace hs {
             const auto& shown = SniffWindow::window->model.shownPerRow;
             if(row < shown.size())
             {
-                PyObject* argList = Py_BuildValue("(i)", shown[row]);
-                PyObject* tmp = PyObject_CallObject((PyObject*)&hs::packet::type, argList);
-                Py_DECREF(argList);
-                return tmp;
+                return hs::packet::buildPacket(shown[row]);
             }
             PyErr_SetNone(PyExc_StopIteration);
             return NULL;
@@ -683,13 +601,10 @@ namespace hs {
             const auto& shown = SniffWindow::window->model.shownPerRow;
             if(index >= (Py_ssize_t)shown.size())
             {
-                PyErr_SetNone(PyExc_IndexError);
+                PyErr_SetString(PyExc_IndexError, "index out of range");
                 return NULL;
             }
-            PyObject* argList = Py_BuildValue("(i)", shown[index]);
-            PyObject* tmp = PyObject_CallObject((PyObject*)&hs::packet::type, argList);
-            Py_DECREF(argList);
-            return tmp;
+            return hs::packet::buildPacket(shown[index]);
         }
 
 #ifdef Q_CC_GNU
@@ -724,8 +639,7 @@ namespace hs {
             Py_INCREF(&iter_type);
             Py_INCREF(&shown_type);
 
-            PyObject* shown = PyObject_New(PyObject, &shown_type);
-            PyModule_AddObject(hsModule, "shown", shown);
+            PyModule_AddObject(hsModule, "shown", PyObject_New(PyObject, &shown_type));
         }
     }
 
@@ -744,7 +658,7 @@ namespace hs {
         {
             SniffWindow::window->ui->tb_filter->clear();
             SniffWindow::window->on_bt_filter_apply_clicked();
-            return Py_None;
+            Py_RETURN_NONE;
         }
 
         static PyObject* filter_set(PyObject*, PyObject* args)
@@ -756,7 +670,7 @@ namespace hs {
             }
             SniffWindow::window->ui->tb_filter->setText(QString(str));
             SniffWindow::window->on_bt_filter_apply_clicked();
-            return Py_None;
+            Py_RETURN_NONE;
         }
 
         static PyMethodDef hs_filter_methods[] =
@@ -795,7 +709,7 @@ namespace ui {
     PyObject* reset(PyObject*)
     {
         SniffWindow::window->lb_cmd->clear();
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     PyObject* open(PyObject*, PyObject* args)
@@ -806,19 +720,19 @@ namespace ui {
             return NULL;
         }
         SniffWindow::window->runOfflineFile(str);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     PyObject* stop(PyObject*)
     {
         SniffWindow::window->on_actionStop_triggered();
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     PyObject* exit(PyObject*)
     {
         SniffWindow::window->close();
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     static PyMethodDef methods[] =
@@ -857,7 +771,7 @@ namespace catchOutErr {
         cmd->moveCursor(QTextCursor::End);
         cmd->textCursor().insertHtml(QStringLiteral("<font color=\"%1\">%2</font>").arg(self->color).arg(str).replace("\n", "<br/>"));
         cmd->moveCursor(QTextCursor::End);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     static PyMethodDef CatchOutErr_methods[] =

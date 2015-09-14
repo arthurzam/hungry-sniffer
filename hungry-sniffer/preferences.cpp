@@ -69,6 +69,7 @@ Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
     QDialog(parent)
 {
     this->resize(800, 600);
+    this->setWindowTitle(QStringLiteral("Preferences"));
     QVBoxLayout* verticalLayout_2 = new QVBoxLayout(this);
     splitter = new QSplitter(this);
     splitter->setOrientation(Qt::Horizontal);

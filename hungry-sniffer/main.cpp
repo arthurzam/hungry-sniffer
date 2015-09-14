@@ -112,11 +112,7 @@ int main(int argc, char *argv[])
     HungrySniffer_Core core(base);
     HungrySniffer_Core::core = &core;
 
-#ifdef QT_NO_DEBUG
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("hungrysniffer"));
-#else
-    QSettings settings(QStringLiteral("settings.conf"), QSettings::IniFormat);
-#endif
     Preferences::settings = &settings;
 
     { // plugins load

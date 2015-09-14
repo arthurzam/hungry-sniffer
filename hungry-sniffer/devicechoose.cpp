@@ -44,7 +44,7 @@ DeviceChoose::DeviceChoose(QWidget* parent) :
     QDialog(parent)
 {
     this->resize(400, 300);
-    this->setWindowTitle(QStringLiteral("Device Chooser"));
+    this->setWindowTitle(QStringLiteral("Interface Chooser"));
     QVBoxLayout* vbox = new QVBoxLayout(this);
 
     QStringList hidden = Preferences::settings->value(QStringLiteral("HiddenInf")).toStringList();
