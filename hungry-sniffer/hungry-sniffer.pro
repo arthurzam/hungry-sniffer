@@ -88,6 +88,8 @@ unix: OTHER_FILES += hungry-sniffer.desktop
         INCLUDEPATH += $$PYTHON_PATH/include
     }
     DEFINES += PYTHON_CMD
+    HEADERS += python_thread.h
+    SOURCES += python_thread.cpp
 }
 
 unix {

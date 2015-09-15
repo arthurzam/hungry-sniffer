@@ -99,13 +99,18 @@ SniffWindow::SniffWindow(QWidget* parent) :
     img_python->setSizePolicy(sizePolicy);
     img_python->setMaximumSize(QSize(32, 32));
     img_python->setPixmap(QPixmap(QStringLiteral(":/icons/python.png")));
+    img_python->setToolTip(PythonThread::getVersionString());
     horizontalLayout->addWidget(img_python);
     tb_command = new History_Line_Edit(verticalLayoutWidget);
     connect(tb_command, SIGNAL(returnPressed()), this, SLOT(tb_command_returnPressed()));
     horizontalLayout->addWidget(tb_command);
     panel_python->addLayout(horizontalLayout);
     ui->splitter->addWidget(verticalLayoutWidget);
-    initPython(img_python);
+
+    this->py_checkCommand.reset();
+    connect(this, SIGNAL(sig_appendToCmd(QString)), this, SLOT(lb_cmd_appendString(QString)));
+    connect(this, SIGNAL(sig_clearCmd()), this, SLOT(lb_cmd_clear()));
+    python_thread.start();
 #else
     ui->action_Python->setVisible(false);
 #endif
@@ -164,7 +169,7 @@ SniffWindow::~SniffWindow()
     this->isNotExiting = false;
     delete this->statsTable;
 #ifdef PYTHON_CMD
-    stopPython();
+    python_thread.quit();
 #endif
     this->on_actionStop_triggered();
     this->manageThread.join();
@@ -805,3 +810,16 @@ void SniffWindow::on_tree_packet_currentItemChanged(QTreeWidgetItem* current, QT
         ui->hexEdit->setSelection(start, end);
     }
 }
+#ifdef PYTHON_CMD
+void SniffWindow::lb_cmd_appendString(QString str)
+{
+    lb_cmd->moveCursor(QTextCursor::End);
+    lb_cmd->textCursor().insertHtml(str);
+    lb_cmd->moveCursor(QTextCursor::End);
+}
+
+void SniffWindow::lb_cmd_clear()
+{
+    lb_cmd->clear();
+}
+#endif

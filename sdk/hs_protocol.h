@@ -148,7 +148,7 @@ namespace hungry_sniffer {
             }
 
             EXPORT Protocol& addProtocol(size_t type, initFunction function,
-                    const std::string& name = "unknown", uint8_t flags = 0);
+                    const std::string& name, uint8_t flags = 0);
 
             /**
              * @brief Add @c protocol to map in @c type

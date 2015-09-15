@@ -29,6 +29,7 @@
 #include "optionsdisabler.h"
 #include "ThreadQueue.h"
 #include "packetstable_model.h"
+#include "python_thread.h"
 
 namespace Ui {
     class SniffWindow;
@@ -147,16 +148,18 @@ class SniffWindow : public QMainWindow
     public:
         QPlainTextEdit* lb_cmd;
         History_Line_Edit* tb_command;
+        PythonThread python_thread;
+    private slots:
+        void lb_cmd_appendString(QString str);
+        void lb_cmd_clear();
+    signals:
+        void sig_appendToCmd(QString str);
+        void sig_clearCmd();
     private:
-        void initPython(QLabel* img_python);
-        void stopPython();
-
         void addPyCommand(const char* pyCommand);
         bool checkPyCommand(const char* pyCommand);
 
     private:
-        void* pyGlobals;
-
         std::string pyCommand;
         struct {
             int_fast16_t bracketsC; // '(' ')'
