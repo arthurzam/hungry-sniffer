@@ -28,23 +28,34 @@
 #include <hs_stats.h>
 
 struct HungrySniffer_Core {
-    EXPORT static struct HungrySniffer_Core* core;
+    EXPORT static struct HungrySniffer_Core* core; /*!<Global pointer to the cross module singelton of HungrySniffer_Core*/
 
-    typedef bool (*outputFunction_t)(std::ostream&, const hungry_sniffer::Packet* packet);
-    hungry_sniffer::Protocol& base;
+    hungry_sniffer::Protocol& base; /*!<The first level Protocol*/
 
-    std::list<hungry_sniffer::Preference::Preference> preferences;
-    std::list<struct hungry_sniffer::Stats::StatsNode> stats;
+    std::list<hungry_sniffer::Preference::Preference> preferences; /*!<preferences tree*/
+    std::list<struct hungry_sniffer::Stats::StatsNode> stats; /*!<stats window tree*/
 
     HungrySniffer_Core(hungry_sniffer::Protocol& base)
         : base(base) {}
 
+    /**
+     * @brief add the preference to the preferences tree on first level
+     *
+     * @param pref the preference to be added
+     * @return reference to the added one in its location in tree
+     */
     hungry_sniffer::Preference::Preference& addProtocolPreference(hungry_sniffer::Preference::Preference&& pref)
     {
         preferences.push_back(std::move(pref));
         return preferences.back();
     }
 
+    /**
+     * @brief add the stat window to the stats window tree on first level
+     *
+     * @param node the stat window to be added
+     * @return reference to the added one in its location in tree
+     */
     struct hungry_sniffer::Stats::StatsNode& addStatWindow(struct hungry_sniffer::Stats::StatsNode&& node)
     {
         stats.push_back(std::move(node));

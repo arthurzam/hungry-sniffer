@@ -73,11 +73,9 @@ TCPPacket::TCPPacket(const void* data, size_t len, const Protocol* protocol, con
 
 std::string TCPPacket::getConversationFilterText() const
 {
-    std::string res("TCP.follow==");
-    res.append(this->source);
-    res.append(",");
-    res.append(this->destination);
-    return res;
+    char res[256];
+    snprintf(res, sizeof(res), "TCP.follow==%s,%s", this->source.c_str(), this->destination.c_str());
+    return std::string(res);
 }
 
 void TCPPacket::updateNameAssociation()

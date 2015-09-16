@@ -3,7 +3,7 @@
 *.so
 *.user
 moc_*
-html/*
-latex/*
+sdk/html/*
+sdk/latex/*
 __pycache__
 *.pyc

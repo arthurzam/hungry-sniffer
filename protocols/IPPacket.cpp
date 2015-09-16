@@ -50,11 +50,9 @@ IPPacket::IPPacket(const void* data, size_t len, const Protocol* protocol, const
 
 std::string IPPacket::getConversationFilterText() const
 {
-    std::string res("IP.follow==");
-    res.append(this->source);
-    res.append(",");
-    res.append(this->destination);
-    return res;
+    char res[64];
+    snprintf(res, sizeof(res), "IP.follow==%s,%s", this->source.c_str(), this->destination.c_str());
+    return std::string(res);
 }
 
 void IPPacket::updateNameAssociation()

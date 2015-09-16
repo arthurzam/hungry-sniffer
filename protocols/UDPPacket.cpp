@@ -55,11 +55,9 @@ UDPPacket::UDPPacket(const void* data, size_t len, const Protocol* protocol, con
 
 std::string UDPPacket::getConversationFilterText() const
 {
-    std::string res("UDP.follow==");
-    res.append(this->source);
-    res.append(",");
-    res.append(this->destination);
-    return res;
+    char res[256];
+    snprintf(res, sizeof(res), "UDP.follow==%s,%s", this->source.c_str(), this->destination.c_str());
+    return std::string(res);
 }
 
 void UDPPacket::updateNameAssociation()

@@ -51,11 +51,9 @@ IPv6Packet::IPv6Packet(const void* data, size_t len, const Protocol* protocol,
 
 std::string IPv6Packet::getConversationFilterText() const
 {
-    std::string res("IPv6.follow==");
-    res.append(this->source);
-    res.append(",");
-    res.append(this->destination);
-    return res;
+    char res[256];
+    snprintf(res, sizeof(res), "IPv6.follow==%s,%s", this->source.c_str(), this->destination.c_str());
+    return std::string(res);
 }
 
 void IPv6Packet::updateNameAssociation()

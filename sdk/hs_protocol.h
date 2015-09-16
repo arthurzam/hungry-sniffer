@@ -32,6 +32,7 @@
 #ifdef _MSC_VER
     #include <memory>
     #define CONSTEXPR const
+    #define snprintf _snprintf
 #else
     #define CONSTEXPR constexpr
 #endif
@@ -56,14 +57,22 @@ namespace hungry_sniffer {
     namespace Option {
         typedef bool (*optionDisableFunction)(const void* data);
 
+        /**
+         * @brief holds data on background option which is running
+         */
         struct enabledOption {
-            std::string name;
+            std::string name; /*!<textual description to be shown to user*/
+            /**
+             * @brief data holder for the disable function
+             *
+             * @note memory control is under the disable function
+             */
             const void* data;
-            optionDisableFunction disable_func;
+            optionDisableFunction disable_func; /*!<function pointer to the option disable function*/
         };
 
         /**
-         * @brief the return flags that are returned from optionEnableFunction
+         * @brief the return flags that are returned from @c optionEnableFunction
          */
         enum ENABLE_OPTION_RETURN {
             ENABLE_OPTION_RETURN_ADDED_DISABLE = 0x1, /*!<Disable Rule was added*/
@@ -117,10 +126,10 @@ namespace hungry_sniffer {
 
             uint8_t flags;
         public:
-            const Preference::Preference* preferencePanel = nullptr;
+            const Preference::Preference* preferencePanel = nullptr; /*!<Pointer to the associated Preference with this Protocol*/
 
-            std::string websiteUrl;
-            std::string fullName;
+            std::string websiteUrl;  /*!<Website URL for the protocol*/
+            std::string fullName;  /*!<Full name for the protocol*/
 
             static CONSTEXPR uint8_t getFlags(bool isNameService, bool isConversationEnabeled)
             {
@@ -368,6 +377,9 @@ namespace hungry_sniffer {
                 std::vector<header_t> subHeaders;
 
                 header_t() = delete;
+
+                header_t(const std::string& key) :
+                    key(key), value(), pos(0), len(0) {}
 
                 header_t(const std::string& key, const std::string& value) :
                     key(key), value(value), pos(0), len(0) {}

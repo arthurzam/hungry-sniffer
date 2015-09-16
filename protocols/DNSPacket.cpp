@@ -65,7 +65,7 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
     const char* data = (const char*)_data + sizeof(*value);
     for(int i = 0; i < questionsCount; ++i)
     {
-        header_t q("Query " + std::to_string(i + 1), "");
+        header_t q("Query " + std::to_string(i + 1));
         q.pos = (long)(data - (const char*)_data);
 
         uint8_t len;
@@ -106,7 +106,7 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
 
     for(int i = 0; i < answersCount; ++i)
     {
-        header_t q("Answer " + std::to_string(i + 1), "");
+        header_t q("Answer " + std::to_string(i + 1));
         q.pos = (long)(data - (const char*)_data);
         q.len = sizeof(answer_t);
 
@@ -139,11 +139,7 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
 std::string DNSPacket::getConversationFilterText() const
 {
     char res[64];
-#ifdef _MSC_VER
-    _snprintf(res, sizeof(res), "%s.id==%s", protocol->getName().c_str(), id.c_str());
-#else
     snprintf(res, sizeof(res), "%s.id==%s", protocol->getName().c_str(), id.c_str());
-#endif
     return std::string(res);
 }
 

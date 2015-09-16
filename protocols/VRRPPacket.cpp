@@ -22,11 +22,7 @@
 
 #include "VRRPPacket.h"
 #if defined(Q_OS_WIN)
-    #include <Ws2tcpip.h>
-    #ifdef Q_CC_MINGW
-        const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
-    #endif
-
+    #include <winsock2.h>
 #elif defined(Q_OS_UNIX)
     #include <arpa/inet.h>
 #endif
@@ -43,13 +39,11 @@ VRRPPacket::VRRPPacket(const void* data, size_t len, const Protocol* protocol, c
     this->headers.push_back({"Authenticate Type", std::to_string(this->value->auth_type), 4, 1});
     this->headers.push_back({"Advertisement Interval", std::to_string(this->value->adver_int), 5, 1});
 
-    const uint8_t* ip = (const uint8_t*)data + sizeof(this->value);
-    char str[INET_ADDRSTRLEN];
+    const struct in_addr* ip = (const struct in_addr*)((const uint8_t*)data + sizeof(this->value));
     for(int i = 0; i < this->value->naddr; i++)
     {
-        inet_ntop(AF_INET, (void*)ip, str, INET_ADDRSTRLEN);
-        this->headers.push_back({"IP Address", str});
-        ip += 4;
+        this->headers.push_back({"IP Address", inet_ntoa(*ip)});
+        ip += 1;
     }
 }
 
