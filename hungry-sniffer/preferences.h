@@ -51,7 +51,6 @@ class Preferences : public QDialog
         static QSettings* settings;
 
         explicit Preferences(QWidget* parent = 0, const hungry_sniffer::Preference::Preference* show_pref = nullptr);
-        ~Preferences();
 
         struct node_t {
             const hungry_sniffer::Preference::Preference& pref;
@@ -66,8 +65,9 @@ class Preferences : public QDialog
         void accept();
 
     private slots:
-        void on_tree_select_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
-        void on_tb_search_textEdited(const QString& arg1);
+        void tree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous);
+        void search_text_changed(const QString& arg1);
+        void reset_to_defaults();
 
     private:
         QSplitter* splitter;

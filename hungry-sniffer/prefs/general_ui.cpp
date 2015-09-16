@@ -36,7 +36,6 @@
 GeneralUI::GeneralUI() :
     QWidget(nullptr)
 {
-    this->resize(400, 300);
     QVBoxLayout* vbox = new QVBoxLayout(this);
 
     cb_splitter_sizes = new QCheckBox(this);
@@ -61,10 +60,6 @@ GeneralUI::GeneralUI() :
 
     vbox->addLayout(layout_recents);
     vbox->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
-}
-
-GeneralUI::~GeneralUI()
-{
 }
 
 void GeneralUI::save(QSettings& settings)

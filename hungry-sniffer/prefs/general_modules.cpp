@@ -33,10 +33,8 @@ QString getDir()
     return QFileDialog::getExistingDirectory(nullptr, QStringLiteral("Select default open folder"));
 }
 
-GeneralModules::GeneralModules() :
-    QWidget(nullptr)
+GeneralModules::GeneralModules()
 {
-    this->resize(452, 341);
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
     QGroupBox* panel_plugins = new QGroupBox(this);
     panel_plugins->setTitle(QStringLiteral("Plugins"));
@@ -51,10 +49,6 @@ GeneralModules::GeneralModules() :
     this->list_python = new StringListSelector(&getDir, this);
     python->addWidget(this->list_python);
     verticalLayout->addWidget(panel_python);
-}
-
-GeneralModules::~GeneralModules()
-{
 }
 
 void GeneralModules::save(QSettings& settings)

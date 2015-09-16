@@ -36,7 +36,7 @@ class GeneralUI : public QWidget, public hungry_sniffer::Preference::Panel
 
     public:
         GeneralUI();
-        ~GeneralUI();
+        ~GeneralUI() {}
         virtual QWidget* get()
         {
             return this;

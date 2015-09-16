@@ -28,6 +28,8 @@
 #include <QDialogButtonBox>
 #include <QHeaderView>
 #include <QLineEdit>
+#include <QMessageBox>
+#include <QPushButton>
 #include <QSettings>
 #include <QSplitter>
 #include <QStackedWidget>
@@ -91,6 +93,9 @@ Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
     QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
     buttonBox->setOrientation(Qt::Horizontal);
     buttonBox->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
+    QPushButton* btReset = new QPushButton(QStringLiteral("&Reset"), buttonBox);
+    connect(btReset, SIGNAL(clicked()), this, SLOT(reset_to_defaults()));
+    buttonBox->addButton(btReset, QDialogButtonBox::ActionRole);
     verticalLayout_2->addWidget(buttonBox);
 
     stackedWidget->addWidget(new QWidget());
@@ -102,14 +107,10 @@ Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
 
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
     connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-    connect(tb_search, SIGNAL(textChanged(QString)), this, SLOT(on_tb_search_textEdited(QString)));
-    connect(tree_select, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), this, SLOT(on_tree_select_currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)));
+    connect(tb_search, SIGNAL(textChanged(QString)), this, SLOT(search_text_changed(QString)));
+    connect(tree_select, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), this, SLOT(tree_currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)));
 
     splitter->setSizes(QList<int>({175, 599}));
-}
-
-Preferences::~Preferences()
-{
 }
 
 void Preferences::accept()
@@ -123,7 +124,7 @@ void Preferences::accept()
     QDialog::accept();
 }
 
-void Preferences::on_tree_select_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
+void Preferences::tree_currentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* previous)
 {
     if(current && current != previous)
     {
@@ -149,12 +150,26 @@ bool filterEntries(QTreeWidgetItem* item, const QString& str)
     return flag;
 }
 
-void Preferences::on_tb_search_textEdited(const QString& arg1)
+void Preferences::search_text_changed(const QString& arg1)
 {
     int end = tree_select->topLevelItemCount();
     for(int i = 0; i < end; i++)
     {
         filterEntries(tree_select->topLevelItem(i), arg1);
+    }
+}
+
+void Preferences::reset_to_defaults()
+{
+    if(QMessageBox::StandardButton::Yes == QMessageBox::question(nullptr,
+            QStringLiteral("Reset Preferences"),
+            QStringLiteral("Are you sure you want to reset the preferences?\nThis cannot be undone"),
+            QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No))
+    {
+        settings->clear();
+        this->close();
+        QMessageBox::information(nullptr, QStringLiteral("Reset Preferences"),
+                                 QStringLiteral("Please restart the program to see results"));
     }
 }
 

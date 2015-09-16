@@ -33,7 +33,7 @@ class GeneralModules : public QWidget, public hungry_sniffer::Preference::Panel
 {
     public:
         GeneralModules();
-        ~GeneralModules();
+        ~GeneralModules() {}
         virtual QWidget* get()
         {
             return this;
