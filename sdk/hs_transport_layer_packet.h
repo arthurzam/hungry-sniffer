@@ -26,6 +26,7 @@
 #include <hs_protocol.h>
 #include <unordered_map>
 
+/*! \cond docNever */
 namespace std {
     template<>
     struct hash<hungry_sniffer::Packet*>
@@ -45,6 +46,7 @@ namespace std {
         }
     };
 }
+/*! \endcond docNever */
 
 namespace hungry_sniffer {
     class TransportLayerConnections

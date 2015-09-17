@@ -107,22 +107,22 @@ class QHexEditPrivate : public QWidget
 
         bool _blink = false;                    // true: then cursor blinks
         bool _renderingRequired = false;        // Flag to store that rendering is necessary
-        bool _addressArea = false;              // left area of QHexEdit
-        bool _asciiArea = false;                // medium area
-        bool _highlighting = false;             // highlighting of changed bytes
-        bool _overwriteMode = false;
+        bool _addressArea = true;               // left area of QHexEdit
+        bool _asciiArea = true;                 // medium area
+        bool _highlighting = true;              // highlighting of changed bytes
+        bool _overwriteMode = true;
         bool _readOnly = false;                 // true: the user can only look and navigate
 
         int _charWidth, _charHeight;            // char dimensions (dpendend on font)
-        int _cursorX, _cursorY;                 // graphics position of the cursor
-        int _cursorPosition;                    // character positioin in stream (on byte ends in to steps)
+        int _cursorX = 0, _cursorY = 4;         // graphics position of the cursor
+        int _cursorPosition = 0;                // character positioin in stream (on byte ends in to steps)
         int _xPosAdr, _xPosHex, _xPosAscii;     // graphics x-position of the areas
 
-        int _selectionBegin;                    // First selected char
-        int _selectionEnd;                      // Last selected char
-        int _selectionInit;                     // That's, where we pressed the mouse button
+        int _selectionBegin = 0;                // First selected char
+        int _selectionEnd = 0;                  // Last selected char
+        int _selectionInit = 0;                 // That's, where we pressed the mouse button
 
-        int _size;
+        int _size = 0;
 };
 
 /** \endcond docNever */

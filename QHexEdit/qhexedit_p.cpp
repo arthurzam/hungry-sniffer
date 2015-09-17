@@ -13,26 +13,18 @@ Q_CONSTEXPR int GAP_ADR_HEX = 10;
 Q_CONSTEXPR int GAP_HEX_ASCII = 16;
 Q_CONSTEXPR int BYTES_PER_LINE = 16;
 
-QHexEditPrivate::QHexEditPrivate(QScrollArea* parent) : QWidget(parent)
+QHexEditPrivate::QHexEditPrivate(QScrollArea* parent) : QWidget(parent),
+    _addressAreaColor(0xd4, 0xd4, 0xd4, 0xff),
+    _highlightingColor(0xff, 0xff, 0x99, 0xff),
+    _selectionColor(0x6d, 0x9e, 0xff, 0xff)
 {
     _undoStack = new QUndoStack(this);
 
     _scrollArea = parent;
-    setAddressWidth(4);
-    setAddressOffset(0);
-    setAddressArea(true);
-    setAsciiArea(true);
-    setHighlighting(true);
-    setOverwriteMode(true);
-    setReadOnly(false);
-    setAddressAreaColor(QColor(0xd4, 0xd4, 0xd4, 0xff));
-    setHighlightingColor(QColor(0xff, 0xff, 0x99, 0xff));
-    setSelectionColor(QColor(0x6d, 0x9e, 0xff, 0xff));
-    setFont(QFont("Courier", 10));
+    _xData.setAddressWidth(4);
+    _xData.setAddressOffset(0);
 
-    _size = 0;
-    resetSelection(0);
-
+    QWidget::setFont(QFont("Courier", 10));
     setFocusPolicy(Qt::StrongFocus);
 
     connect(this, SIGNAL(dataChanged()), this, SLOT(adjust())); //adjust scrollbar when inserting data
@@ -174,40 +166,23 @@ int QHexEditPrivate::lastIndexOf(const QByteArray& ba, int from)
 
 void QHexEditPrivate::remove(int index, int len)
 {
-    if (len > 0)
+    if (len < 0)
+        return;
+
+    static_assert((int)CharCommand::replace == (int)ArrayCommand::replace, "please check enums");
+    static_assert((int)CharCommand::remove == (int)ArrayCommand::remove, "please check enums");
+    int cmdNum = (_overwriteMode ? (int)CharCommand::replace : (int)CharCommand::remove);
+
+    QUndoCommand* undoCommand;
+    if(len == 1)
+        undoCommand = new CharCommand(&_xData, (CharCommand::Cmd)cmdNum, index, char(0));
+    else
     {
-        if (len == 1)
-        {
-            if (_overwriteMode)
-            {
-                QUndoCommand* charCommand = new CharCommand(&_xData, CharCommand::replace, index, char(0));
-                _undoStack->push(charCommand);
-                emit dataChanged();
-            }
-            else
-            {
-                QUndoCommand* charCommand = new CharCommand(&_xData, CharCommand::remove, index, char(0));
-                _undoStack->push(charCommand);
-                emit dataChanged();
-            }
-        }
-        else
-        {
-            QByteArray ba = QByteArray(len, char(0));
-            if (_overwriteMode)
-            {
-                QUndoCommand* arrayCommand = new ArrayCommand(&_xData, ArrayCommand::replace, index, ba, ba.length());
-                _undoStack->push(arrayCommand);
-                emit dataChanged();
-            }
-            else
-            {
-                QUndoCommand* arrayCommand = new ArrayCommand(&_xData, ArrayCommand::remove, index, ba, len);
-                _undoStack->push(arrayCommand);
-                emit dataChanged();
-            }
-        }
+        QByteArray ba = QByteArray(len, char(0));
+        undoCommand = new ArrayCommand(&_xData, (ArrayCommand::Cmd)cmdNum, index, ba, ba.length());
     }
+    _undoStack->push(undoCommand);
+    emit dataChanged();
 }
 
 void QHexEditPrivate::replace(int index, char ch)
@@ -298,7 +273,6 @@ QString QHexEditPrivate::toRedableString()
 {
     return _xData.toRedableString();
 }
-
 
 QString QHexEditPrivate::selectionToReadableString()
 {
@@ -457,11 +431,10 @@ void QHexEditPrivate::keyPressEvent(QKeyEvent* event)
             }
 
             // If insert mode, then insert a byte
-            if (_overwriteMode == false)
-                if ((charX % 3) == 0)
-                {
-                    insert(posBa, char(0));
-                }
+            if (_overwriteMode == false && (charX % 3) == 0)
+            {
+                insert(posBa, char(0));
+            }
 
             // Change content
             if (_xData.size() > 0)
@@ -864,16 +837,13 @@ void QHexEditPrivate::setSelection(int begin, int end)
 
 void QHexEditPrivate::updateCursor()
 {
-    if (_blink)
-        _blink = false;
-    else
-        _blink = true;
+    _blink = !_blink;
     update(_cursorX, _cursorY, _charWidth, _charHeight);
 }
 
 void QHexEditPrivate::adjust()
 {
-    _charWidth = fontMetrics().width(QLatin1Char('9'));
+    _charWidth = fontMetrics().width(QChar('9'));
     _charHeight = fontMetrics().height();
 
     _xPosAdr = 0;
