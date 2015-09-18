@@ -53,7 +53,9 @@ DeviceChoose::DeviceChoose(QWidget* parent) :
     QHBoxLayout* hbox_filter = new QHBoxLayout();
     hbox_filter->addWidget(new QLabel(QStringLiteral("Capture Filter"), this));
     tb_filter = new QLineEdit(this);
+#ifndef QT_NO_TOOLTIP
     tb_filter->setToolTip(QStringLiteral("Capture Filter in Pcap format"));
+#endif
     hbox_filter->addWidget(tb_filter);
     vbox->addLayout(hbox_filter);
 
@@ -62,7 +64,9 @@ DeviceChoose::DeviceChoose(QWidget* parent) :
     tb_number = new QSpinBox(this);
     tb_number->setValue(0);
     tb_number->setRange(0, INT_MAX);
+#ifndef QT_NO_TOOLTIP
     tb_number->setToolTip(QStringLiteral("Maximum number of packets to\ncapture from those interfaces"));
+#endif
     hbox_num->addWidget(tb_number);
     vbox->addLayout(hbox_num);
 

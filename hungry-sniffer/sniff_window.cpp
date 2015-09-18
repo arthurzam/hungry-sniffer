@@ -99,7 +99,9 @@ SniffWindow::SniffWindow(QWidget* parent) :
     img_python->setSizePolicy(sizePolicy);
     img_python->setMaximumSize(QSize(32, 32));
     img_python->setPixmap(QPixmap(QStringLiteral(":/icons/python.png")));
+#ifndef QT_NO_TOOLTIP
     img_python->setToolTip(PythonThread::getVersionString());
+#endif
     horizontalLayout->addWidget(img_python);
     tb_command = new History_Line_Edit(verticalLayoutWidget);
     connect(tb_command, SIGNAL(returnPressed()), this, SLOT(tb_command_returnPressed()));
@@ -137,9 +139,9 @@ SniffWindow::SniffWindow(QWidget* parent) :
             var = settings.value(QStringLiteral("splitter_sizes"));
             if(!var.isNull())
             {
-                QVariantList l = var.value<QVariantList>();
                 QList<int> sizes;
-                for(auto i : var.value<QVariantList>())
+                QVariantList list = var.value<QVariantList>();
+                for(const auto& i : list)
                     sizes << i.toInt();
                 ui->splitter->setSizes(sizes);
             }
@@ -207,7 +209,9 @@ void SniffWindow::updateRecentsMenu()
     for(int i = 0; i < numRecentFiles; i++)
     {
         recentFiles_actions[i]->setText(QFileInfo(recentFiles_paths[i]).fileName());
+#ifndef QT_NO_TOOLTIP
         recentFiles_actions[i]->setToolTip(recentFiles_paths[i]);
+#endif
         recentFiles_actions[i]->setVisible(true);
     }
     ui->menu_recent_files->setDisabled(numRecentFiles == 0);

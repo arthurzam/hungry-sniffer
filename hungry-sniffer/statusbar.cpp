@@ -56,6 +56,8 @@ void StatusBar::updateText(int selectedRow)
 void StatusBar::setLiveSniffing(bool state)
 {
     lb_liveSniffing.setPixmap(state ? capture_on : capture_off);
+#ifndef QT_NO_TOOLTIP
     lb_liveSniffing.setToolTip(state ? QStringLiteral("Live Capturing") : QStringLiteral("Not Capturing"));
+#endif
 }
 
