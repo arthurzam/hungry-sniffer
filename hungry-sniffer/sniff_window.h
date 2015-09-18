@@ -35,7 +35,7 @@ namespace Ui {
     class SniffWindow;
 }
 
-class History_Line_Edit;
+class QLineEdit;
 class PacketStats;
 class QAction;
 class QLabel;
@@ -147,7 +147,7 @@ class SniffWindow : public QMainWindow
 #ifdef PYTHON_CMD
     public:
         QPlainTextEdit* lb_cmd;
-        History_Line_Edit* tb_command;
+        QLineEdit* tb_command;
         PythonThread python_thread;
     private slots:
         void lb_cmd_appendString(QString str);
@@ -166,7 +166,7 @@ class SniffWindow : public QMainWindow
             int_fast16_t bracketsS; // '[' ']'
             int_fast16_t bracketsM; // '{' '}'
 
-            bool block = false;         // :
+            bool block = false;     // :
 
             void reset()
             {

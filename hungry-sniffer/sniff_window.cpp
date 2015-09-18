@@ -59,7 +59,7 @@ void loadStatsFunctions(const std::list<hungry_sniffer::Stats::StatsNode>& nodes
 SniffWindow::SniffWindow(QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::SniffWindow),
-    model(this),
+    model(),
     statsTable(new PacketStats(this)),
     toNotStop(true),
     isNotExiting(true),
@@ -127,6 +127,7 @@ SniffWindow::SniffWindow(QWidget* parent) :
         bool flag = settings.value(QStringLiteral("splitter_sizes"), false).toBool();
         default_open_location = settings.value(QStringLiteral("default_dir")).toString();
         max_recent_files = settings.value(QStringLiteral("max_recent_files"), 10).toInt();
+        model.showColors = settings.value(QStringLiteral("colored_packets"), true).toBool();
         settings.endGroup();
         settings.endGroup();
 
@@ -263,7 +264,6 @@ void SniffWindow::closeEvent(QCloseEvent* bar)
     settings.beginGroup(QStringLiteral("General"));
     settings.beginGroup(QStringLiteral("UI"));
     bool flag = settings.value(QStringLiteral("splitter_sizes"), false).toBool();
-    model.showColors = settings.value(QStringLiteral("colored_packets"), true).toBool();
     settings.endGroup();
     settings.endGroup();
 

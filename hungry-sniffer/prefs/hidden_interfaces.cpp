@@ -26,18 +26,20 @@
 
 using namespace hungry_sniffer::Preference;
 
+static const QString VALUE_STR = QStringLiteral("HiddenInf");
+
 hidden_interfaces::hidden_interfaces() : InterfaceSelector(QStringList())
 {
 }
 
 void hidden_interfaces::save(QSettings& settings)
 {
-    settings.setValue(QStringLiteral("HiddenInf"), this->getSelected());
+    settings.setValue(VALUE_STR, this->getSelected());
 }
 
 Panel* hidden_interfaces::init(QSettings& settings)
 {
     hidden_interfaces* hid = new hidden_interfaces();
-    hid->select(settings.value(QStringLiteral("HiddenInf")).toStringList());
+    hid->select(settings.value(VALUE_STR).toStringList());
     return hid;
 }

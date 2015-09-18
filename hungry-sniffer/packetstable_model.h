@@ -85,7 +85,7 @@ class PacketsTableModel : public QAbstractTableModel
 
         static Q_CONSTEXPR unsigned COLUMNS_COUNT = 7;
     public:
-        explicit PacketsTableModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
+        PacketsTableModel() {}
 
         int rowCount(const QModelIndex & = QModelIndex()) const
         {

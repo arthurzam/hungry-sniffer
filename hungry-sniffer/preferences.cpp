@@ -92,10 +92,8 @@ Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
 
     QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
     buttonBox->setOrientation(Qt::Horizontal);
-    buttonBox->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
-    QPushButton* btReset = new QPushButton(QStringLiteral("&Reset"), buttonBox);
-    connect(btReset, SIGNAL(clicked()), this, SLOT(reset_to_defaults()));
-    buttonBox->addButton(btReset, QDialogButtonBox::ActionRole);
+    buttonBox->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok | QDialogButtonBox::RestoreDefaults);
+    connect(buttonBox->button(QDialogButtonBox::RestoreDefaults), SIGNAL(clicked()), this, SLOT(reset_to_defaults()));
     verticalLayout_2->addWidget(buttonBox);
 
     stackedWidget->addWidget(new QWidget());

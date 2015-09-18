@@ -29,18 +29,12 @@ class History_Line_Edit : public QLineEdit
 {
         Q_OBJECT
 
-        int         current_line;
+        int current_line = 0;
         QStringList lines;
-        QString     unfinished;
+        QString unfinished;
 
     public:
-        explicit History_Line_Edit(QWidget *parent = 0);
-
-        /**
-         * @brief Number of lines
-         * @return Number of lines entered
-         */
-        int lineCount() const { return lines.size(); }
+        explicit History_Line_Edit(QWidget* parent = 0);
 
     private slots:
         void enter_pressed();
@@ -52,8 +46,8 @@ class History_Line_Edit : public QLineEdit
         void lineExecuted(QString);
 
     protected:
-        void keyPressEvent(QKeyEvent *);
-        void wheelEvent(QWheelEvent *);
+        void keyPressEvent(QKeyEvent*);
+        void wheelEvent(QWheelEvent*);
 
         void previous_line();
         void next_line();

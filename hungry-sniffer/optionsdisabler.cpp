@@ -60,9 +60,7 @@ void OptionsDisabler::refreshOptions()
             auto iter = this->enabledOptions.begin();
             for(int j = 0; j < row; ++j) ++iter;
             hungry_sniffer::Option::optionDisableFunction disable_func = iter->disable_func;
-            if(!disable_func)
-                qDebug("disable function NULL for %s", iter->name.c_str());
-            else if(disable_func(iter->data))
+            if(!disable_func || disable_func(iter->data))
             {
                 this->enabledOptions.erase(iter);
                 this->refreshOptions();

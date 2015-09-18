@@ -25,15 +25,15 @@
 #include <QWheelEvent>
 
 History_Line_Edit::History_Line_Edit(QWidget* parent) :
-    QLineEdit(parent), current_line(0)
+    QLineEdit(parent)
 {
     connect(this, SIGNAL(returnPressed()), SLOT(enter_pressed()));
 }
 
 void History_Line_Edit::enter_pressed()
 {
-    if(lines.size() == 0 || lines[lines.size() - 1] != text())
-        lines << text();
+    if(lines.size() == 0 || lines.back() != text())
+        lines.append(text());
     current_line = lines.size();
     emit lineExecuted(lines.back());
 }
@@ -66,19 +66,18 @@ void History_Line_Edit::wheelEvent(QWheelEvent* ev )
 
 void History_Line_Edit::previous_line()
 {
-    if ( lines.empty() )
+    if (lines.empty())
         return;
 
-    if ( !text().isEmpty() &&
-            ( current_line >= lines.size() || text() != lines[current_line] ) )
+    if (!text().isEmpty() && (current_line >= lines.size() || text() != lines[current_line]))
         unfinished = text();
 
-    if ( current_line > 0 )
+    if (current_line > 0)
         current_line--;
 
     if(lines[current_line] == unfinished)
     {
-        if ( current_line > 0 )
+        if (current_line > 0)
             current_line--;
         else
             return;
@@ -90,12 +89,12 @@ void History_Line_Edit::previous_line()
 
 void History_Line_Edit::next_line()
 {
-    if ( lines.empty() )
+    if (lines.empty())
         return;
 
     current_line++;
 
-    if ( current_line >= lines.size() )
+    if (current_line >= lines.size())
     {
         setText(unfinished);
         unfinished = "";

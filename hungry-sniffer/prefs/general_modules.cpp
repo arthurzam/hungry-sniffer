@@ -67,8 +67,8 @@ hungry_sniffer::Preference::Panel* GeneralModules::init(QSettings& settings)
 
     settings.beginGroup(QStringLiteral("General"));
     settings.beginGroup(QStringLiteral("Modules"));
-    res->list_plugins->addItems(settings.value(QStringLiteral("plugins_dir"), QStringList()).toStringList());
-    res->list_python->addItems(settings.value(QStringLiteral("python_dir"), QStringList()).toStringList());
+    res->list_plugins->addItems(settings.value(QStringLiteral("plugins_dir")).toStringList());
+    res->list_python->addItems(settings.value(QStringLiteral("python_dir")).toStringList());
     settings.endGroup();
     settings.endGroup();
 

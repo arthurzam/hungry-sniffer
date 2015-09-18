@@ -176,7 +176,7 @@ QVariant InterfaceModel::headerData(int section, Qt::Orientation orientation, in
 
 Qt::ItemFlags InterfaceModel::flags(const QModelIndex& index) const
 {
-    if(index.column() == 0 )
+    if(index.column() == 0)
         return Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
     return QAbstractTableModel::flags(index);
 }

@@ -23,9 +23,8 @@
 #ifdef PYTHON_CMD
 
 #include "sniff_window.h"
-#include "ui_sniff_window.h"
-#include "widgets/history_line_edit.h"
 
+#include <QLineEdit>
 #include <QPlainTextEdit>
 
 void SniffWindow::addPyCommand(const char* command)
