@@ -155,12 +155,9 @@ class SniffWindow : public QMainWindow
     signals:
         void sig_appendToCmd(QString str);
         void sig_clearCmd();
-    private:
-        void addPyCommand(const char* pyCommand);
-        bool checkPyCommand(const char* pyCommand);
 
     private:
-        std::string pyCommand;
+        QString pyCommand;
         struct {
             int_fast16_t bracketsC; // '(' ')'
             int_fast16_t bracketsS; // '[' ']'

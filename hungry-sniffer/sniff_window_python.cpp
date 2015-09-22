@@ -27,38 +27,26 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 
-void SniffWindow::addPyCommand(const char* command)
+void SniffWindow::tb_command_returnPressed()
 {
-    QString output;
-    if(this->pyCommand.length() == 0)
-        output.append("&gt;&gt;&gt; ");
-    else
-        output.append(".  .  . ");
-    output.append("<font color=\"green\">");
-    output.append(QString(command).replace("<", "&lt;").replace(">", "&gt;"));
-    output.append("</font><br />");
+    QString commandQ = tb_command->text();
+
     lb_cmd->moveCursor(QTextCursor::End);
-    lb_cmd->textCursor().insertHtml(output);
+    lb_cmd->textCursor().insertHtml(QStringLiteral("%1 <font color=\"green\">%2</font><br />")
+                                    .arg(pyCommand.length() == 0 ? "&gt;&gt;&gt;" : ".  .  .")
+                                    .arg(commandQ.replace("<", "&lt;").replace(">", "&gt;")));
     lb_cmd->moveCursor(QTextCursor::End);
     tb_command->clear();
 
-    if(command[0] == '\0' && !this->py_checkCommand.block)
+    if(commandQ.isEmpty() && !this->py_checkCommand.block)
         return;
 
-    this->pyCommand.push_back('\n');
-    this->pyCommand.append(command);
+    pyCommand.push_back(QChar('\n'));
+    pyCommand.append(commandQ);
 
-    if(this->checkPyCommand(command))
-    {
-        emit python_thread.sendCommand(QString::fromStdString(this->pyCommand));
+    // start check if command needs continuation or is finished
+    const char* command = commandQ.toLatin1().constData();
 
-        this->py_checkCommand.reset();
-        this->pyCommand.clear();
-    }
-}
-
-bool SniffWindow::checkPyCommand(const char* command)
-{
     bool lineDelimeter = true;
     bool posibleBlock = !py_checkCommand.block;
     bool isFinished = true;
@@ -116,12 +104,13 @@ bool SniffWindow::checkPyCommand(const char* command)
     isFinished &= (py_checkCommand.bracketsC >= 0) & (py_checkCommand.bracketsS >= 0) & (py_checkCommand.bracketsM >= 0);
     isFinished &= !(py_checkCommand.block & (*command != '\0'));
 
-    return isFinished;
-}
+    if(isFinished)
+    {
+        emit python_thread.sendCommand(pyCommand);
 
-void SniffWindow::tb_command_returnPressed()
-{
-    this->addPyCommand(tb_command->text().toUtf8().constData());
+        this->py_checkCommand.reset();
+        this->pyCommand.clear();
+    }
 }
 
 #endif

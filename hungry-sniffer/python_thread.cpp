@@ -32,7 +32,6 @@
 
 #include "sniff_window.h"
 #include "ui_sniff_window.h"
-#include "widgets/history_line_edit.h"
 #include "EthernetPacket.h"
 #include "preferences.h"
 
@@ -133,7 +132,6 @@ namespace hs {
 #else
                 PyObject* res = PyUnicode_FromFormat("%U\n%U\n", self->name, self->info);
 #endif
-
                 PyObject* key, *value;
                 Py_ssize_t pos = 0;
                 while (PyDict_Next(self->headers, &pos, &key, &value))
@@ -174,7 +172,7 @@ namespace hs {
                 "", sizeof(layer_obj), 0,
                 (destructor)layer_dealloc,
                 0, 0, 0, 0, (reprfunc)layer_repr, 0, 0, &layer_map, 0, 0, (reprfunc)layer_str, 0, 0, 0,
-                Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, /*methods*/0,
+                Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, 0,
                 layer_members, 0, 0, 0, 0, 0, 0, 0, 0, 0
             };
 
@@ -204,7 +202,7 @@ namespace hs {
         {
 #if PY_MAJOR_VERSION < 3
             PyObject* res = PyString_FromFormat("[%d - %s - [", self->num, (self->isShown ? "True" : "False"));
-            Py_ssize_t len = PyList_Size(self->layersArr);
+            Py_ssize_t len = PyList_GET_SIZE(self->layersArr);
             for(Py_ssize_t i = 0; i < len; i++)
             {
                 PyObject* lay = PyList_GET_ITEM(self->layersArr, i);
@@ -216,7 +214,7 @@ namespace hs {
             return res;
 #else
             PyObject* res = PyUnicode_FromFormat("[%d - %s - [", self->num, (self->isShown ? "True" : "False"));
-            Py_ssize_t len = PyList_Size(self->layersArr);
+            Py_ssize_t len = PyList_GET_SIZE(self->layersArr);
             for(Py_ssize_t i = 0; i < len; i++)
             {
                 PyObject* lay = PyList_GET_ITEM(self->layersArr, i);
@@ -233,7 +231,7 @@ namespace hs {
         {
 #if PY_MAJOR_VERSION < 3
             PyObject* res = PyString_FromFormat("#%d\n%s\n", self->num, (self->isShown ? "True" : "False"));
-            Py_ssize_t len = PyList_Size(self->layersArr);
+            Py_ssize_t len = PyList_GET_SIZE(self->layersArr);
             for(Py_ssize_t i = 0; i < len; i++)
             {
                 PyObject* lay = PyList_GET_ITEM(self->layersArr, i);
@@ -245,7 +243,7 @@ namespace hs {
             return res;
 #else
             PyObject* res = PyUnicode_FromFormat("#%d\n%s\n", self->num, (self->isShown ? "Shown" : "not Shown"));
-            Py_ssize_t len = PyList_Size(self->layersArr);
+            Py_ssize_t len = PyList_GET_SIZE(self->layersArr);
             for(Py_ssize_t i = 0; i < len; i++)
             {
                 PyObject* lay = PyList_GET_ITEM(self->layersArr, i);
@@ -323,7 +321,7 @@ namespace hs {
 
         static Py_ssize_t packet_len(packet_obj* self)
         {
-            return PyList_Size(self->layersArr);
+            return PyList_GET_SIZE(self->layersArr);
         }
 
         static PyObject* packet_itemAt(packet_obj* self, PyObject* key)
@@ -331,15 +329,15 @@ namespace hs {
             PyObject* res = NULL;
 #if PY_MAJOR_VERSION < 3
             if(PyInt_CheckExact(key))
-                res = PyList_GetItem(self->layersArr, PyInt_AsSsize_t(key));
+                res = PyList_GET_ITEM(self->layersArr, PyInt_AsSsize_t(key));
             else if(PyString_CheckExact(key))
 #else
             if(PyLong_CheckExact(key))
-                res = PyList_GetItem(self->layersArr, PyLong_AsSsize_t(key));
+                res = PyList_GET_ITEM(self->layersArr, PyLong_AsSsize_t(key));
             else if(PyUnicode_CheckExact(key))
 #endif
             {
-                Py_ssize_t len = PyList_Size(self->layersArr);
+                Py_ssize_t len = PyList_GET_SIZE(self->layersArr);
                 for(Py_ssize_t i = 0; i < len; i++)
                 {
                     PyObject* lay = PyList_GET_ITEM(self->layersArr, i);
@@ -665,8 +663,8 @@ namespace hs {
 
         static PyObject* filter_set(PyObject*, PyObject* args)
         {
-            char* str = NULL;
-            if (!PyArg_ParseTuple(args, "z", &str))
+            const char* str = "";
+            if (!PyArg_ParseTuple(args, "|z", &str))
             {
                 return NULL;
             }
@@ -716,7 +714,7 @@ namespace ui {
 
     PyObject* open(PyObject*, PyObject* args)
     {
-        char* str = NULL;
+        const char* str;
         if (!PyArg_ParseTuple(args, "s", &str))
         {
             return NULL;
@@ -764,7 +762,7 @@ namespace catchOutErr {
 
     static PyObject* CatchOutErr_write(catch_obj* self, PyObject* args)
     {
-        char* str = NULL;
+        const char* str;
         if (!PyArg_ParseTuple(args, "s", &str))
         {
             return NULL;
