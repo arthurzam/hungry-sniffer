@@ -48,6 +48,7 @@ namespace hungry_sniffer {
 
             static bool filter_dstMac(const Packet* packet, const std::vector<std::string>* res);
             static bool filter_srcMac(const Packet* packet, const std::vector<std::string>* res);
+            static bool filter_follow(const Packet* packet, const std::vector<std::string>* res);
     };
 
 }

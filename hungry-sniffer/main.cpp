@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
     Protocol base(init<EthernetPacket>, "Ethernet", Protocol::getFlags(true, true));
     base.addFilter("^dst *== *([^ ]+)$", EthernetPacket::filter_dstMac);
     base.addFilter("^src *== *([^ ]+)$", EthernetPacket::filter_srcMac);
+    base.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", EthernetPacket::filter_follow);
     HungrySniffer_Core core(base);
     HungrySniffer_Core::core = &core;
 

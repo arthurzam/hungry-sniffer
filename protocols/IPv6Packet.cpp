@@ -52,7 +52,7 @@ IPv6Packet::IPv6Packet(const void* data, size_t len, const Protocol* protocol,
 std::string IPv6Packet::getConversationFilterText() const
 {
     char res[256];
-    snprintf(res, sizeof(res), "IPv6.follow==%s,%s", this->source.c_str(), this->destination.c_str());
+    snprintf(res, sizeof(res), "IPv6.follow==%s,%s", _realSource.c_str(), _realDestination.c_str());
     return std::string(res);
 }
 

@@ -51,6 +51,9 @@ EthernetPacket::EthernetPacket(const void* data, size_t len,
     this->_realSource = ether_ntoa((ether_addr*) this->value->ether_shost);
     this->_realDestination = ether_ntoa((ether_addr*) this->value->ether_dhost);
 
+    this->headers.push_back({"Source MAC", "", 6, 6});
+    this->headers.push_back({"Destination MAC", "", 0, 6});
+    this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value->ether_type)), 12, 2});
     this->updateNameAssociation();
 
     this->setNext(ntohs(this->value->ether_type), (const char*) data + sizeof(*value), len - sizeof(*value));
@@ -58,11 +61,9 @@ EthernetPacket::EthernetPacket(const void* data, size_t len,
 
 std::string EthernetPacket::getConversationFilterText() const
 {
-    std::string res("Ethernet.src==");
-    res.append(this->_realSource);
-    res.append(" & Ethernet.dst==");
-    res.append(this->_realDestination);
-    return res;
+    char res[64];
+    snprintf(res, sizeof(res), "Ethernet.follow==%s,%s", _realSource.c_str(), _realDestination.c_str());
+    return std::string(res);
 }
 
 void EthernetPacket::updateNameAssociation()
@@ -70,20 +71,25 @@ void EthernetPacket::updateNameAssociation()
     this->source = this->protocol->getNameAssociated(this->_realSource);
     this->destination = this->protocol->getNameAssociated(this->_realDestination);
 
-    this->headers.clear();
-    this->headers.push_back({"Source MAC", this->source, 6, 6});
-    this->headers.push_back({"Destination MAC", this->destination, 0, 6});
-    this->headers.push_back({"Next Protocol (Number)", std::to_string(ntohs(this->value->ether_type)), 12, 2});
+    this->headers[0].value = this->source;
+    this->headers[1].value = this->destination;
 }
 
 bool EthernetPacket::filter_dstMac(const Packet* packet, const std::vector<std::string>* res)
 {
-    const EthernetPacket* eth = static_cast<const EthernetPacket*>(packet);
-    return res->at(1) == eth->_realDestination || res->at(1) == eth->destination;
+    return res->at(1) == packet->realDestination() || res->at(1) == packet->localDestination();
 }
 
 bool EthernetPacket::filter_srcMac(const Packet* packet, const std::vector<string>* res)
 {
-    const EthernetPacket* eth = static_cast<const EthernetPacket*>(packet);
-    return res->at(1) == eth->_realSource || res->at(1) == eth->source;
+    return res->at(1) == packet->realSource() || res->at(1) == packet->localSource();
+}
+
+bool EthernetPacket::filter_follow(const Packet* packet, const std::vector<std::string>* res)
+{
+    if(res->at(1) == packet->realSource() || res->at(1) == packet->localSource())
+        return res->at(2) == packet->realDestination() || res->at(2) == packet->localDestination();
+    if(res->at(1) == packet->realDestination() || res->at(1) == packet->localDestination())
+        return res->at(2) == packet->realSource() || res->at(2) == packet->localSource();
+    return false;
 }
