@@ -13,6 +13,7 @@ unix: LIBS += -lpcap -ldl
 *-g++* {
     QMAKE_CXXFLAGS_RELEASE += -flto -fno-rtti
     QMAKE_LFLAGS_RELEASE += -s -flto -fno-rtti
+    CONFIG(release): DEFINES += NDEBUG
 }
 
 win32-g++ {
@@ -27,9 +28,7 @@ win32-g++ {
 
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
-CONFIG(test) {
-    DEFINES += PLUGINS_DIR=\\\"$$OUT_PWD/../plugins\\\"
-}
+CONFIG(test): DEFINES += PLUGINS_DIR=\\\"$$OUT_PWD/../plugins\\\"
 
 SOURCES += main.cpp\
     devicechoose.cpp \

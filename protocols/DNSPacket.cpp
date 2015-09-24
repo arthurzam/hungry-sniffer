@@ -77,7 +77,7 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
                 name.push_back('.');
                 data += len;
             }
-        }while(len != 0);
+        } while(len != 0);
         q.subHeaders.push_back({"Name", std::move(name), q.pos, (long)name.length() + 1});
 
         uint16_t temp;
@@ -106,8 +106,14 @@ DNSPacket::DNSPacket(const void* _data, size_t len, const Protocol* protocol,
 
     for(int i = 0; i < answersCount; ++i)
     {
+        long pos = (long)(data - (const char*)_data);
+        if(pos + sizeof(answer_t) > len)
+        {
+            this->isGood = false;
+            return;
+        }
         header_t q("Answer " + std::to_string(i + 1));
-        q.pos = (long)(data - (const char*)_data);
+        q.pos = pos;
         q.len = sizeof(answer_t);
 
         answer = (const answer_t*)data;

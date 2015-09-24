@@ -90,7 +90,7 @@ namespace hungry_sniffer {
      *
      * This class holds the initialize function to create Packet object and also associated data
      */
-    class Protocol {
+    class Protocol final {
         private:
             struct option {
                 std::string name;
@@ -152,7 +152,7 @@ namespace hungry_sniffer {
 
             EXPORT Protocol(Protocol&& other);
 
-            virtual ~Protocol()
+            ~Protocol()
             {
             }
 

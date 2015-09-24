@@ -42,8 +42,16 @@
 
 #if PY_MAJOR_VERSION < 3
     #define GetPyString PyString_FromString
+
+    #define GetPyBuffer_SizeString PyString_FromStringAndSize
+    #define GetPyBuffer_getSize PyString_GET_SIZE
+    #define GetPyBuffer_getData PyString_AS_STRING
 #else
     #define GetPyString PyUnicode_FromString
+
+    #define GetPyBuffer_SizeString PyByteArray_FromStringAndSize
+    #define GetPyBuffer_getSize PyByteArray_GET_SIZE
+    #define GetPyBuffer_getData PyByteArray_AS_STRING
 #endif
 
 #ifdef Q_OS_WIN
@@ -103,7 +111,7 @@ namespace hs {
             static void layer_dealloc(layer_obj* self)
             {
                 Py_DECREF(self->name);
-                Py_DECREF(self->info);
+                Py_XDECREF(self->info);
                 Py_DECREF(self->headers);
                 Py_TYPE(self)->tp_free((PyObject*)self);
             }
@@ -118,6 +126,11 @@ namespace hs {
 
             static PyObject* layer_repr(layer_obj* self)
             {
+                if(self->info == NULL)
+                {
+                    Py_INCREF(self->name);
+                    return self->name;
+                }
 #if PY_MAJOR_VERSION < 3
                 return PyString_FromFormat("[%s - %s]", PyString_AS_STRING(self->name), PyString_AS_STRING(self->info));
 #else
@@ -128,9 +141,9 @@ namespace hs {
             static PyObject* layer_str(layer_obj* self)
             {
 #if PY_MAJOR_VERSION < 3
-                PyObject* res = PyString_FromFormat("%s\n%s\n", PyString_AS_STRING(self->name), PyString_AS_STRING(self->info));
+                PyObject* res = PyString_FromFormat("%s\n%s\n", PyString_AS_STRING(self->name), self->info ? PyString_AS_STRING(self->info) : "");
 #else
-                PyObject* res = PyUnicode_FromFormat("%U\n%U\n", self->name, self->info);
+                PyObject* res = PyUnicode_FromFormat("%U\n%V\n", self->name, self->info, "");
 #endif
                 PyObject* key, *value;
                 Py_ssize_t pos = 0;
@@ -169,9 +182,8 @@ namespace hs {
             static PyTypeObject type =
             {
                 PyVarObject_HEAD_INIT(NULL, 0)
-                "", sizeof(layer_obj), 0,
-                (destructor)layer_dealloc,
-                0, 0, 0, 0, (reprfunc)layer_repr, 0, 0, &layer_map, 0, 0, (reprfunc)layer_str, 0, 0, 0,
+                "", sizeof(layer_obj), 0, (destructor)layer_dealloc, 0, 0, 0, 0,
+                (reprfunc)layer_repr, 0, 0, &layer_map, 0, 0, (reprfunc)layer_str, 0, 0, 0,
                 Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, 0,
                 layer_members, 0, 0, 0, 0, 0, 0, 0, 0, 0
             };
@@ -184,9 +196,10 @@ namespace hs {
         struct packet_obj
         {
             PyObject_HEAD
-            int num;
+            unsigned num;
             bool isShown;
             float time;
+            unsigned len;
             PyObject* data;
             PyObject* layersArr;
         };
@@ -258,12 +271,57 @@ namespace hs {
 
         static PyMemberDef packet_members[] =
         {
-            {(char*)"num", T_INT, offsetof(packet_obj, num), READONLY, NULL},
+            {(char*)"num", T_UINT, offsetof(packet_obj, num), READONLY, NULL},
             {(char*)"isShown", T_BOOL, offsetof(packet_obj, isShown), READONLY, NULL},
             {(char*)"time", T_FLOAT, offsetof(packet_obj, time), READONLY, NULL},
-            {(char*)"data", T_OBJECT, offsetof(packet_obj, data), 0, NULL},
+            {(char*)"len", T_UINT, offsetof(packet_obj, len), READONLY, NULL},
             {(char*)"layersArr", T_OBJECT, offsetof(packet_obj, layersArr), READONLY, NULL},
             {NULL, 0, 0, 0, NULL}
+        };
+
+        static PyObject* packet_getData(packet_obj* self, void*)
+        {
+            if(self->data == NULL)
+            {
+                const DataStructure::localPacket& pack = SniffWindow::window->model.local[self->num];
+                self->data = GetPyBuffer_SizeString((const char*)pack.rawPacket.data, pack.rawPacket.len);
+            }
+            Py_INCREF(self->data);
+            return self->data;
+        }
+
+        static int packet_setData(packet_obj* self, PyObject* value, void*)
+        {
+            if (value == NULL)
+            {
+                PyErr_SetString(PyExc_TypeError, "Cannot delete the last attribute");
+                return -1;
+            }
+
+#if PY_MAJOR_VERSION < 3
+            if (!PyString_Check(value))
+            {
+                PyErr_SetString(PyExc_TypeError, "The last attribute value must be a string");
+                return -1;
+            }
+#else
+            if (!PyByteArray_Check(value))
+            {
+                PyErr_SetString(PyExc_TypeError, "The last attribute value must be a bytearray");
+                return -1;
+            }
+#endif
+
+            Py_XDECREF(self->data);
+            Py_INCREF(value);
+            self->data = value;
+            self->len = GetPyBuffer_getSize(self->data);
+            return 0;
+        }
+
+        static PyGetSetDef packet_getset[] = {
+            {(char*)"data", (getter)packet_getData, (setter)packet_setData, NULL, NULL},
+            {NULL, NULL, NULL, NULL, NULL}
         };
 
         static PyObject* packet_remove(packet_obj* self)
@@ -273,33 +331,14 @@ namespace hs {
             Py_RETURN_NONE;
         }
 
-        static PyObject* packet_save(packet_obj* self, PyObject* args)
+        static PyObject* packet_save(packet_obj* self)
         {
+            if(self->data == NULL)
+                Py_RETURN_NONE;
             Py_ssize_t size = 0;
             char* b = NULL;
-            PyObject* data = self->data;
-#if PY_MAJOR_VERSION < 3
-            if (!PyArg_ParseTuple(args, "|O", &data))
-            {
-                return NULL;
-            }
-            PyString_AsStringAndSize(data, &b, &size);
-#else
-            if (!PyArg_ParseTuple(args, "|Y", &data))
-            {
-                return NULL;
-            }
-
-            size = PyByteArray_Size(data);
-            b = PyByteArray_AsString(data);
-#endif
-            if(data != self->data)
-            {
-                Py_INCREF(data);
-                Py_XDECREF(self->data);
-                self->data = data;
-            }
-
+            size = GetPyBuffer_getSize(self->data);
+            b = GetPyBuffer_getData(self->data);
             struct DataStructure::localPacket& pack = SniffWindow::window->model.local[self->num];
             DataStructure::RawPacketData& raw = pack.rawPacket;
             free(raw.data);
@@ -377,8 +416,8 @@ namespace hs {
             PyVarObject_HEAD_INIT(NULL, 0)
             "", sizeof(packet_obj), 0, (destructor)packet_dealloc, 0, 0, 0,
             0, (reprfunc)packet_repr, 0, 0, &packet_map, 0, 0, (reprfunc)packet_str, 0, 0, 0,
-            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, packet_methods,
-            packet_members, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0,
+            packet_methods, packet_members, packet_getset
         };
 
 #ifdef Q_CC_GNU
@@ -387,9 +426,8 @@ namespace hs {
         static void init()
         {
             PyType_Ready(&layer::type);
-            Py_INCREF(&layer::type);
-
             PyType_Ready(&type);
+            Py_INCREF(&layer::type);
             Py_INCREF(&type);
         }
 
@@ -401,12 +439,7 @@ namespace hs {
             obj->num = row;
             obj->isShown = pack.isShown;
             obj->time = pack.rawPacket.time.tv_sec + (float)pack.rawPacket.time.tv_usec * 0.000001;
-
-#if PY_MAJOR_VERSION < 3
-            obj->data = PyString_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len);
-#else
-            obj->data = PyByteArray_FromStringAndSize((const char*)pack.rawPacket.data, pack.rawPacket.len);
-#endif
+            obj->data = NULL;
 
             obj->layersArr = PyList_New(0);
             int i = 0;
@@ -417,7 +450,11 @@ namespace hs {
                     return NULL;
 
                 layer_obj->name = GetPyString(layer->getProtocol()->getName().c_str());
-                layer_obj->info = GetPyString(layer->getInfo().c_str());
+                const std::string& info = layer->getInfo();
+                if(info.length())
+                    layer_obj->info = GetPyString(info.c_str());
+                else
+                    layer_obj->info = NULL;
 
                 layer_obj->headers = PyDict_New();
                 for(auto& i : layer->getHeaders())
@@ -463,10 +500,8 @@ namespace hs {
         static PyTypeObject iter_type =
         {
             PyVarObject_HEAD_INIT(NULL, 0)
-            "", sizeof(iter_obj), 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)all_iter_iter, (getiterfunc)all_iter_iternext, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            "", sizeof(iter_obj), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)all_iter_iter, (getiterfunc)all_iter_iternext,
         };
 #ifdef Q_CC_GNU
     #pragma GCC diagnostic pop
@@ -514,11 +549,9 @@ namespace hs {
         static PyTypeObject all_type =
         {
             PyVarObject_HEAD_INIT(NULL, 0)
-            "", sizeof(all_obj), 0,
-            0,
-            0, 0, 0, 0, 0, 0, &seq_methods, 0, 0, 0, 0, 0, 0, 0,
-            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)all_iter, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            "", sizeof(all_obj), 0, 0, 0, 0, 0, 0, 0, 0,
+            &seq_methods, 0, 0, 0, 0, 0, 0, 0, Py_TPFLAGS_DEFAULT,
+            NULL, 0, 0, 0, 0, (getiterfunc)all_iter
         };
 #ifdef Q_CC_GNU
     #pragma GCC diagnostic pop
@@ -568,10 +601,8 @@ namespace hs {
         static PyTypeObject iter_type =
         {
             PyVarObject_HEAD_INIT(NULL, 0)
-            "", sizeof(iter_obj), 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)shown_iter_iter, (getiterfunc)shown_iter_iternext, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            "", sizeof(iter_obj), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)shown_iter_iter, (getiterfunc)shown_iter_iternext
         };
 #ifdef Q_CC_GNU
     #pragma GCC diagnostic pop
@@ -622,11 +653,8 @@ namespace hs {
         static PyTypeObject shown_type =
         {
             PyVarObject_HEAD_INIT(NULL, 0)
-            "", sizeof(shown_obj), 0,
-            0,
-            0, 0, 0, 0, 0, 0, &seq_methods, 0, 0, 0, 0, 0, 0, 0,
-            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)shown_iter, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            "", sizeof(shown_obj), 0, 0, 0, 0, 0, 0, 0, 0, &seq_methods, 0, 0, 0, 0,
+            0, 0, 0, Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, (getiterfunc)shown_iter
         };
 #ifdef Q_CC_GNU
     #pragma GCC diagnostic pop
@@ -688,10 +716,8 @@ namespace hs {
         static PyTypeObject type =
         {
             PyVarObject_HEAD_INIT(NULL, 0)
-            "", sizeof(filter_obj), 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, hs_filter_methods,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            "", sizeof(filter_obj), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, hs_filter_methods
         };
 #ifdef Q_CC_GNU
     #pragma GCC diagnostic pop
@@ -784,10 +810,8 @@ namespace catchOutErr {
     static PyTypeObject type =
     {
         PyVarObject_HEAD_INIT(NULL, 0)
-        "", sizeof(catch_obj), 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, CatchOutErr_methods,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        "", sizeof(catch_obj), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, Py_TPFLAGS_DEFAULT, NULL, 0, 0, 0, 0, 0, 0, CatchOutErr_methods
     };
 #ifdef Q_CC_GNU
     #pragma GCC diagnostic pop

@@ -49,7 +49,7 @@ namespace std {
 /*! \endcond docNever */
 
 namespace hungry_sniffer {
-    class TransportLayerConnections
+    class TransportLayerConnections final
     {
         protected:
             std::unordered_map<Packet*, Packet*> conns;
