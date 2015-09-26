@@ -41,10 +41,10 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
     int number = this->shownPerRow[index.row()];
     mutex_shownPerRow.unlock();
 
-    const hungry_sniffer::Packet* decodedPacket = this->local[number].decodedPacket;
-    if(!decodedPacket)
+    const DataStructure::localPacket& pack = this->local[number];
+    if(!pack.decodedPacket)
         QThread::msleep(50);
-    decodedPacket = this->local[number].decodedPacket;
+    const hungry_sniffer::Packet* decodedPacket = pack.decodedPacket;
 
     switch(role)
     {
@@ -55,11 +55,11 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
                 case 0:
                     return QVariant(number);
                 case 1:
-                    return QString::number(diffTimeval(this->local[number].rawPacket.time, this->local[0].rawPacket.time), 'f', 6);
+                    return QString::number(diffTimeval(pack.rawPacket.time, this->local[0].rawPacket.time), 'f', 6);
                 case 2:
                     return QString::fromStdString(decodedPacket->getName());
                 case 3:
-                    return QVariant(this->local[number].rawPacket.len);
+                    return QVariant(pack.rawPacket.len);
                 case 4:
                     return QString::fromStdString(decodedPacket->getSource());
                 case 5:
@@ -71,14 +71,12 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
         case Qt::ItemDataRole::BackgroundRole:
             if(this->showColors)
             {
-                if(!decodedPacket->isGoodPacket())
-                {
-                    return QBrush(Qt::yellow);
-                }
                 unsigned r = 0, b = 0, g = 0;
-                for(const hungry_sniffer::Packet* pack = decodedPacket; pack; pack = pack->getNext())
+                for(const hungry_sniffer::Packet* p = decodedPacket; p; p = p->getNext())
                 {
-                    uint32_t color = pack->getColor();
+                    if(!p->isLocalGood())
+                        return QBrush(Qt::yellow);
+                    uint32_t color = p->getColor();
                     unsigned a = (color >> 24);
                     if(a != 0) // not fully transperent
                     {

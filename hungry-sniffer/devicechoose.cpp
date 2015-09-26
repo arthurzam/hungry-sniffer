@@ -70,8 +70,7 @@ DeviceChoose::DeviceChoose(QWidget* parent) :
     hbox_num->addWidget(tb_number);
     vbox->addLayout(hbox_num);
 
-    QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
-    buttonBox->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel | QDialogButtonBox::Ok, this);
     QPushButton* btRefresh = new QPushButton(QStringLiteral("&Refresh"), buttonBox);
     connect(btRefresh, SIGNAL(clicked()), tableView, SLOT(refresh()));
     buttonBox->addButton(btRefresh, QDialogButtonBox::ActionRole);

@@ -38,13 +38,8 @@ GeneralUI::GeneralUI() :
 {
     QVBoxLayout* vbox = new QVBoxLayout(this);
 
-    cb_splitter_sizes = new QCheckBox(this);
-    cb_splitter_sizes->setText(QStringLiteral("Remember Splitter Sizes"));
-    vbox->addWidget(cb_splitter_sizes);
-
-    cb_colored = new QCheckBox(this);
-    cb_colored->setText(QStringLiteral("Enable Colored Packets"));
-    vbox->addWidget(cb_colored);
+    vbox->addWidget(cb_splitter_sizes = new QCheckBox(QStringLiteral("Remember Splitter Sizes"), this));
+    vbox->addWidget(cb_colored = new QCheckBox(QStringLiteral("Enable Colored Packets"), this));
 
     QHBoxLayout* layout_open = new QHBoxLayout();
     layout_open->addWidget(tb_default_dir = new QLineEdit(this));
@@ -66,14 +61,14 @@ void GeneralUI::save(QSettings& settings)
 {
     settings.beginGroup(QStringLiteral("General"));
     settings.beginGroup(("UI"));
-    SniffWindow::window->model.showColors = cb_colored->isChecked();
-    settings.setValue(QStringLiteral("colored_packets"), cb_colored->isChecked());
+    bool colored_packets = SniffWindow::window->model.showColors = cb_colored->isChecked();
+    settings.setValue(QStringLiteral("colored_packets"), colored_packets);
     settings.setValue(QStringLiteral("splitter_sizes"), cb_splitter_sizes->isChecked());
-    SniffWindow::window->default_open_location = tb_default_dir->text();
-    settings.setValue(QStringLiteral("default_dir"), tb_default_dir->text());
-    SniffWindow::window->max_recent_files = tb_recents_num->value();
+    QString& default_dir = SniffWindow::window->default_open_location = tb_default_dir->text();
+    settings.setValue(QStringLiteral("default_dir"), default_dir);
+    int max_recent_files = SniffWindow::window->max_recent_files = tb_recents_num->value();
     SniffWindow::window->updateRecentsMenu();
-    settings.setValue(QStringLiteral("max_recent_files"), tb_recents_num->value());
+    settings.setValue(QStringLiteral("max_recent_files"), max_recent_files);
     settings.endGroup();
     settings.endGroup();
 }

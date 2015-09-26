@@ -36,15 +36,13 @@ QString getDir()
 GeneralModules::GeneralModules()
 {
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
-    QGroupBox* panel_plugins = new QGroupBox(this);
-    panel_plugins->setTitle(QStringLiteral("Plugins"));
+    QGroupBox* panel_plugins = new QGroupBox(QStringLiteral("Plugins"), this);
     QVBoxLayout* plugins = new QVBoxLayout(panel_plugins);
     this->list_plugins = new StringListSelector(&getDir, this);
     plugins->addWidget(this->list_plugins);
     verticalLayout->addWidget(panel_plugins);
 
-    QGroupBox* panel_python = new QGroupBox(this);
-    panel_python->setTitle(QStringLiteral("Python Modules"));
+    QGroupBox* panel_python = new QGroupBox(QStringLiteral("Python Modules"), this);
     QVBoxLayout* python = new QVBoxLayout(panel_python);
     this->list_python = new StringListSelector(&getDir, this);
     python->addWidget(this->list_python);

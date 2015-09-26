@@ -73,8 +73,7 @@ Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
     this->resize(800, 600);
     this->setWindowTitle(QStringLiteral("Preferences"));
     QVBoxLayout* verticalLayout_2 = new QVBoxLayout(this);
-    splitter = new QSplitter(this);
-    splitter->setOrientation(Qt::Horizontal);
+    splitter = new QSplitter(Qt::Horizontal, this);
 
     QWidget* verticalLayoutWidget = new QWidget(splitter);
     QVBoxLayout* verticalLayout = new QVBoxLayout(verticalLayoutWidget);
@@ -90,9 +89,7 @@ Preferences::Preferences(QWidget* parent, const Preference* show_pref) :
     splitter->addWidget(stackedWidget);
     verticalLayout_2->addWidget(splitter);
 
-    QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
-    buttonBox->setOrientation(Qt::Horizontal);
-    buttonBox->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok | QDialogButtonBox::RestoreDefaults);
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel | QDialogButtonBox::Ok | QDialogButtonBox::RestoreDefaults, this);
     connect(buttonBox->button(QDialogButtonBox::RestoreDefaults), SIGNAL(clicked()), this, SLOT(reset_to_defaults()));
     verticalLayout_2->addWidget(buttonBox);
 

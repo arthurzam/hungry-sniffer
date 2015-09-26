@@ -152,7 +152,7 @@ namespace hungry_sniffer {
 
             EXPORT Protocol(Protocol&& other);
 
-            ~Protocol()
+            virtual ~Protocol()
             {
             }
 

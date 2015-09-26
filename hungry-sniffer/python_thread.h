@@ -35,7 +35,6 @@ class PythonThread : public QThread
     signals:
         void sendCommand(QString command);
 
-    public slots:
     private slots:
         void runCommand(QString command);
         void stopPython();

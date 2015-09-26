@@ -30,8 +30,7 @@ OptionsDisabler::OptionsDisabler(QWidget *parent) :
     QDialog(parent)
 {
     QVBoxLayout* verticalLayout = new QVBoxLayout(this);
-    grid = new QGridLayout();
-    verticalLayout->addLayout(grid);
+    verticalLayout->addLayout(grid = new QGridLayout());
 
     this->setWindowTitle(QStringLiteral("Options Disabler"));
     this->setFixedSize(0, 0);

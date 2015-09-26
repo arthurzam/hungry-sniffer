@@ -112,6 +112,9 @@ SniffWindow::SniffWindow(QWidget* parent) :
     this->py_checkCommand.reset();
     connect(this, SIGNAL(sig_appendToCmd(QString)), this, SLOT(lb_cmd_appendString(QString)));
     connect(this, SIGNAL(sig_clearCmd()), this, SLOT(lb_cmd_clear()));
+#ifndef QT_NO_DEBUG
+    python_thread.setObjectName(QStringLiteral("Python Interpreter"));
+#endif
     python_thread.start();
 #else
     ui->action_Python->setVisible(false);
