@@ -159,9 +159,9 @@ class SniffWindow : public QMainWindow
     private:
         QString pyCommand;
         struct {
-            int_fast16_t bracketsC; // '(' ')'
-            int_fast16_t bracketsS; // '[' ']'
-            int_fast16_t bracketsM; // '{' '}'
+            int_fast8_t bracketsC; // '(' ')'
+            int_fast8_t bracketsS; // '[' ']'
+            int_fast8_t bracketsM; // '{' '}'
 
             bool block = false;     // :
 

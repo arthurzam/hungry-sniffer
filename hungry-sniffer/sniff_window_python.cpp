@@ -30,19 +30,10 @@
 void SniffWindow::tb_command_returnPressed()
 {
     QString commandQ = tb_command->text();
-
-    lb_cmd->moveCursor(QTextCursor::End);
-    lb_cmd->textCursor().insertHtml(QStringLiteral("%1 <font color=\"green\">%2</font><br />")
-                                    .arg(pyCommand.length() == 0 ? "&gt;&gt;&gt;" : ".  .  .")
-                                    .arg(commandQ.replace("<", "&lt;").replace(">", "&gt;")));
-    lb_cmd->moveCursor(QTextCursor::End);
-    tb_command->clear();
-
     if(commandQ.isEmpty() && !this->py_checkCommand.block)
         return;
-
-    pyCommand.push_back(QChar('\n'));
-    pyCommand.append(commandQ);
+    const char* interpreter_prefix = (pyCommand.length() == 0 ? "&gt;&gt;&gt;" : ".  .  .");
+    tb_command->clear();
 
     // start check if command needs continuation or is finished
     const char* command = commandQ.toLatin1().constData();
@@ -65,24 +56,12 @@ void SniffWindow::tb_command_returnPressed()
             posibleBlock = false;
         switch (*c)
         {
-            case ')':
-                py_checkCommand.bracketsC++;
-                break;
-            case '(':
-                py_checkCommand.bracketsC--;
-                break;
-            case ']':
-                py_checkCommand.bracketsS++;
-                break;
-            case '[':
-                py_checkCommand.bracketsS--;
-                break;
-            case '}':
-                py_checkCommand.bracketsM++;
-                break;
-            case '{':
-                py_checkCommand.bracketsM--;
-                break;
+            case ')': py_checkCommand.bracketsC++; break;
+            case '(': py_checkCommand.bracketsC--; break;
+            case ']': py_checkCommand.bracketsS++; break;
+            case '[': py_checkCommand.bracketsS--; break;
+            case '}': py_checkCommand.bracketsM++; break;
+            case '{': py_checkCommand.bracketsM--; break;
             case '\"':
                 for (c -= 1; c >= command; --c)
                     if (c[0] == '\"' && c[-1] != '\\')
@@ -93,16 +72,15 @@ void SniffWindow::tb_command_returnPressed()
                     if (c[0] == '\'' && c[-1] != '\\')
                         break;
                 break;
-            case '\\':
-                isFinished &= !lineDelimeter;
-                break;
-            case ':':
-                py_checkCommand.block |= posibleBlock;
-                break;
+            case '\\': isFinished &= !lineDelimeter; break;
+            case ':': py_checkCommand.block |= posibleBlock; break;
         }
     }
-    isFinished &= (py_checkCommand.bracketsC >= 0) & (py_checkCommand.bracketsS >= 0) & (py_checkCommand.bracketsM >= 0);
+    isFinished &= (py_checkCommand.bracketsC == 0) & (py_checkCommand.bracketsS == 0) & (py_checkCommand.bracketsM == 0);
     isFinished &= !(py_checkCommand.block & (*command != '\0'));
+
+    pyCommand.push_back(QChar('\n'));
+    pyCommand.append(commandQ);
 
     if(isFinished)
     {
@@ -111,6 +89,12 @@ void SniffWindow::tb_command_returnPressed()
         this->py_checkCommand.reset();
         this->pyCommand.clear();
     }
+
+    lb_cmd->moveCursor(QTextCursor::End);
+    lb_cmd->textCursor().insertHtml(QStringLiteral("%1 <font color=\"green\">%2</font><br />")
+                                    .arg(interpreter_prefix)
+                                    .arg(commandQ.replace("<", "&lt;").replace(">", "&gt;")));
+    lb_cmd->moveCursor(QTextCursor::End);
 }
 
 #endif

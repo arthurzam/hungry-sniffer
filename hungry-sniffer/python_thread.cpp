@@ -434,6 +434,8 @@ namespace hs {
         static PyObject* buildPacket(int row)
         {
             packet_obj* obj = PyObject_New(packet_obj, &type);
+            if(obj == NULL)
+                return PyErr_NoMemory();
 
             const DataStructure::localPacket& pack = SniffWindow::window->model.local[row];
             obj->num = row;
@@ -447,18 +449,30 @@ namespace hs {
             {
                 layer::layer_obj* layer_obj = PyObject_New(layer::layer_obj, &layer::type);
                 if(layer_obj == NULL)
-                    return NULL;
+                    return PyErr_NoMemory();
 
                 layer_obj->name = layer->getProtocol()->getName().c_str();
                 const std::string& info = layer->getInfo();
                 if(info.length())
-                    layer_obj->info = GetPyString(info.c_str());
+                {
+                    if((layer_obj->info = GetPyString(info.c_str())) == NULL)
+                        return PyErr_NoMemory();
+                }
                 else
                     layer_obj->info = NULL;
 
-                layer_obj->headers = PyDict_New();
+                if((layer_obj->headers = PyDict_New()) == NULL)
+                    return PyErr_NoMemory();
                 for(auto& i : layer->getHeaders())
-                    PyDict_SetItem(layer_obj->headers, GetPyString(i.key.c_str()), GetPyString(i.value.c_str()));
+                {
+                    PyObject* key = GetPyString(i.key.c_str());
+                    if(key == NULL)
+                        return PyErr_NoMemory();
+                    PyObject* value = GetPyString(i.key.c_str());
+                    if(value == NULL)
+                        return PyErr_NoMemory();
+                    PyDict_SetItem(layer_obj->headers, key, value);
+                }
 
                 PyList_Append(obj->layersArr, (PyObject*)layer_obj);
                 Py_DECREF(layer_obj);
