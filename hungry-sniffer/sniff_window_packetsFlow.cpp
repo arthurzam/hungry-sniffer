@@ -70,20 +70,28 @@ void SniffWindow::runOfflineFile(const std::string &filename)
 
 void SniffWindow::managePacketsList()
 {
+    static constexpr unsigned UPDATE_TEXT_EVERY = 0x40;
     RawPacketData packet;
+    unsigned processed = 0;
     while(this->isNotExiting)
     {
-        if(this->toAdd.timeout_move_pop(packet, 4000))
+        if(this->toAdd.timeout_move_pop(packet, 3000))
         {
             localPacket p(std::move(packet));
             FilterTree* filter = this->filterTree;
             p.isShown = !filter || filter->get(p.decodedPacket);
             this->model.append(std::move(p));
-            ui->statusBar->updateText();
+            static_assert(((UPDATE_TEXT_EVERY - 1) & UPDATE_TEXT_EVERY) == 0, "UPDATE_TEXT_EVERY should be a power of 2");
+            if(((++processed) & (UPDATE_TEXT_EVERY - 1)) == (UPDATE_TEXT_EVERY - 1))
+                ui->statusBar->updateText();
         }
-        else if(this->toNotStop & this->threads.empty())
+        else
         {
-            QThread::msleep(1500);
+            if(processed != 0)
+                ui->statusBar->updateText();
+            processed = 0;
+            if(this->toNotStop & this->threads.empty())
+                QThread::msleep(1500);
         }
     }
 }
