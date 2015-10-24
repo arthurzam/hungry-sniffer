@@ -18,6 +18,7 @@ and converting to readable strings.
 */
 class XByteArray
 {
+        friend class QHexEditPrivate;
     public:
         explicit XByteArray();
 

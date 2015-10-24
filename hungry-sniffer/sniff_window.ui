@@ -89,16 +89,7 @@
        </column>
       </widget>
       <widget class="QHexEdit" name="hexEdit">
-       <property name="font">
-        <font>
-         <family>Sans</family>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
        <property name="toolTip">
-        <string>Hex View of Packet</string>
-       </property>
-       <property name="whatsThis">
         <string>Hex View of Packet</string>
        </property>
        <property name="readOnly" stdset="0">

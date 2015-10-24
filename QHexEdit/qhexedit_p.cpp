@@ -21,11 +21,11 @@ QHexEditPrivate::QHexEditPrivate(QScrollArea* parent) : QWidget(parent),
     _undoStack = new QUndoStack(this);
 
     _scrollArea = parent;
-    _xData.setAddressWidth(4);
-    _xData.setAddressOffset(0);
+    _xData._addressNumbers = 4;
+    _xData._addressOffset = 0;
 
-    QWidget::setFont(QFont("Courier", 10));
     setFocusPolicy(Qt::StrongFocus);
+    adjust();
 
     connect(this, SIGNAL(dataChanged()), this, SLOT(adjust())); //adjust scrollbar when inserting data
     connect(&_cursorTimer, SIGNAL(timeout()), this, SLOT(updateCursor()));
@@ -847,18 +847,12 @@ void QHexEditPrivate::adjust()
     _charHeight = fontMetrics().height();
 
     _xPosAdr = 0;
-    if (_addressArea)
-        _xPosHex = _xData.realAddressNumbers() * _charWidth + GAP_ADR_HEX;
-    else
-        _xPosHex = 0;
+    _xPosHex = (_addressArea ? _xData.realAddressNumbers() * _charWidth + GAP_ADR_HEX : 0);
     _xPosAscii = _xPosHex + HEXCHARS_IN_LINE * _charWidth + GAP_HEX_ASCII;
 
     // tell QAbstractScollbar, how big we are
-    setMinimumHeight(((_xData.size() / 16 + 1) * _charHeight) + 5);
-    if(_asciiArea)
-        setMinimumWidth(_xPosAscii + (BYTES_PER_LINE * _charWidth));
-    else
-        setMinimumWidth(_xPosHex + HEXCHARS_IN_LINE * _charWidth);
+    int minw = (_asciiArea ? (_xPosAscii + (BYTES_PER_LINE * _charWidth)) : (_xPosHex + HEXCHARS_IN_LINE * _charWidth));
+    setMinimumSize(minw, ((_xData.size() / 16 + 1) * _charHeight) + 5);
 
     update();
 }
