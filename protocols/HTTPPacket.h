@@ -29,10 +29,21 @@ using namespace hungry_sniffer;
 
 class HTTPPacket : public PacketTextHeaders {
     private:
-        bool isRequest;
+        enum FLAGS {
+            FLAGS_REQUEST = 0x1,
+            FLAGS_DATA_START = 0x2,
+            FLAGS_DATA_END = 0x4
+        };
+
+        HTTPPacket* prevData;
+        HTTPPacket* nextData;
+        uint8_t flags;
+
+        bool parseContinuesData(headers_t& headers, const std::vector<char>& data);
     public:
         HTTPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev);
         ~HTTPPacket() {}
+        virtual const headers_t& getHeaders() const;
 };
 
 #endif /* HTTPPACKET_H_ */

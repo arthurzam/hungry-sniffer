@@ -34,6 +34,7 @@
 #include "PacketJson.h"
 #endif
 #include "HTTPPacket.h"
+#include <hs_transport_layer_packet.h>
 
 Protocol dataProtocol(init<PacketText>, "Data");
 
@@ -90,6 +91,7 @@ EXPORT_FUNCTION void add()
     tcp.addFilter("^dst *== *([^ ]+)$", filter_dst);
     tcp.addFilter("^src *== *([^ ]+)$", filter_src);
     tcp.addFilter("^follow *== *([^ ]+) *, *([^ ]+)$", filter_follow);
+    tcp.connections = new TransportLayerConnections();
 
     tcp.addProtocol(80, init<HTTPPacket>, "HTTP");
     tcp.addProtocol(443, init<PacketEmpty>, "HTTPS");

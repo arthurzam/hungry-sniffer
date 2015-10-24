@@ -610,7 +610,7 @@ namespace hungry_sniffer {
                 return this->destination;
             }
 
-            const headers_t& getHeaders() const
+            virtual const headers_t& getHeaders() const
             {
                 return this->headers;
             }

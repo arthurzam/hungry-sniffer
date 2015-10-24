@@ -21,6 +21,7 @@
 */
 
 #include "HTTPPacket.h"
+#include <hs_transport_layer_packet.h>
 
 extern Protocol dataProtocol;
 
@@ -39,10 +40,48 @@ static bool cmpEncoding(const HTTPPacket::headers_t::value_type& i)
     return i.key == "Content-Encoding";
 }
 
-HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
-    : PacketTextHeaders(data, len, protocol, prev),
-      isRequest(prev->realDestination() == "80")
+bool HTTPPacket::parseContinuesData(Packet::headers_t& headers, const std::vector<char>& data)
 {
+    /* TODO: parse this data as a whole info
+     * return true if is a whole request
+     * In case of a part of packet when not full (missing parts), set the color as apropriate [like grey]
+     *  and add a header 'Not full'. Maybe add the known headers.
+     */
+}
+
+HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, const Packet* prev)
+    : PacketTextHeaders(data, len, protocol, prev)
+{
+    if(prev->realDestination() == "80")
+        this->flags |= FLAGS_REQUEST;
+
+#define isRequest (this->flags & FLAGS_REQUEST)
+    TransportLayerConnections* con = this->prev->getProtocol()->connections;
+    prevData = nullptr;
+    if(con)
+    {
+        Packet* p = con->getConnectionLast(const_cast<Packet*>(prev));
+        if(p)
+        {
+            prevData = (HTTPPacket*)(p->getNext());
+            prevData->nextData = this;
+            for(const HTTPPacket* tempP = prevData; tempP; tempP = tempP->prevData)
+                if((tempP->flags & FLAGS_REQUEST) == isRequest)
+                {
+                    if((tempP->flags & FLAGS_DATA_END))
+                        this->flags |= FLAGS_DATA_START;
+                    break;
+                }
+        }
+        else
+        {
+            flags |= FLAGS_DATA_START;
+        }
+        con->addToConns(const_cast<Packet*>(prev));
+    }
+    nextData = nullptr;
+
+
     static CONSTEXPR int MAX_FIELD_LEN = 256;
     // parse first line
 
@@ -84,6 +123,9 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
     // parse headers block
     static const char blockDivide[] = "\r\n\r\n";
     auto startOfData = std::search(start, end, blockDivide, blockDivide + 4);
+    if(startOfData == end && !isRequest)
+        return;
+    this->flags |= FLAGS_DATA_END;
     this->extractTextHeaders(start, startOfData, (int)(start - this->data.begin()));
 
     startOfData += 4;
@@ -106,4 +148,15 @@ HTTPPacket::HTTPPacket(const void* data, size_t len, const Protocol* protocol, c
             this->next->updateNameAssociation();
         }
     }
+#undef isRequest
+}
+
+const Packet::headers_t& HTTPPacket::getHeaders() const
+{
+    uint8_t searchFlag = FLAGS_DATA_START | (this->flags & FLAGS_REQUEST);
+    const HTTPPacket* p;
+    for(p = this; p->prevData; p = p->prevData)
+        if((p->flags & searchFlag) == searchFlag)
+            return p->headers;
+    return p->headers;
 }
