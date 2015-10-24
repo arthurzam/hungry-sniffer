@@ -68,32 +68,13 @@ void SniffWindow::runOfflineFile(const std::string &filename)
     this->threads.push_back(new std::thread(&SniffWindow::runOfflineOpen_p, this, filename));
 }
 
-void SniffWindow::managePacketsList()
+void SniffWindow::addPacket(DataStructure::RawPacketData* raw)
 {
-    static constexpr unsigned UPDATE_TEXT_EVERY = 0x40;
-    RawPacketData packet;
-    unsigned processed = 0;
-    while(this->isNotExiting)
-    {
-        if(this->toAdd.timeout_move_pop(packet, 3000))
-        {
-            localPacket p(std::move(packet));
-            FilterTree* filter = this->filterTree;
-            p.isShown = !filter || filter->get(p.decodedPacket);
-            this->model.append(std::move(p));
-            static_assert(((UPDATE_TEXT_EVERY - 1) & UPDATE_TEXT_EVERY) == 0, "UPDATE_TEXT_EVERY should be a power of 2");
-            if(((++processed) & (UPDATE_TEXT_EVERY - 1)) == (UPDATE_TEXT_EVERY - 1))
-                ui->statusBar->updateText();
-        }
-        else
-        {
-            if(processed != 0)
-                ui->statusBar->updateText();
-            processed = 0;
-            if(this->toNotStop & this->threads.empty())
-                QThread::msleep(1500);
-        }
-    }
+    localPacket p(std::move(*raw));
+    FilterTree* filter = this->filterTree;
+    p.isShown = !filter || filter->get(p.decodedPacket);
+    this->model.append(std::move(p));
+    delete raw;
 }
 
 void SniffWindow::runLivePcap_p(pcap* pd, int maxNumber)
@@ -114,7 +95,7 @@ void SniffWindow::runLivePcap_p(pcap* pd, int maxNumber)
             break;
         raw.setData(data, header->len);
         raw.time = header->ts;
-        this->toAdd.push(std::move(raw));
+        emit SniffWindow::window->pushPacket(new RawPacketData(std::move(raw)));
         i++;
         if(i == maxNumber)
             break;

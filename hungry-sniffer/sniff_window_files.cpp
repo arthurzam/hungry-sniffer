@@ -322,7 +322,7 @@ namespace HspcapFile {
                             }
                             if(packetsCount > 0)
                             {
-                                SniffWindow::window->toAdd.push(std::move(raw));
+                                emit SniffWindow::window->pushPacket(new RawPacketData(std::move(raw)));
                                 packetsCount--;
                             }
                             break;
@@ -392,7 +392,7 @@ void SniffWindow::runOfflineOpen_p(const std::string& filename)
             if((start.tv_sec | start.tv_usec) == 0)
                 start = raw.time;
             raw.time = calcDiffTimeval(raw.time, start, base);
-            this->toAdd.push(std::move(raw));
+            emit this->pushPacket(new RawPacketData(std::move(raw)));
         }
     }
     else if(ends_with(filename, ".hspcap"))

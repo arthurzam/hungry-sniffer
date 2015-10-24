@@ -31,14 +31,20 @@ class StatusBar : public QStatusBar
 {
     public:
         explicit StatusBar(QWidget *parent = 0);
+        ~StatusBar();
 
         void updateText(int selectedRow = -1);
         void setLiveSniffing(bool state);
+    protected:
+        void timerEvent(QTimerEvent *);
 
     private:
+        int timerId;
         QLabel lb_info;
         QLabel lb_liveSniffing;
         int selectedRow = 0;
+        unsigned last_all = -1;
+        unsigned last_displayed = -1;
 
         QPixmap capture_off, capture_on;
 };

@@ -41,16 +41,24 @@ StatusBar::StatusBar(QWidget* parent) :
     layout->addWidget(&lb_info);
     this->addWidget(widget, 1);
 
-    updateText();
+    timerId = startTimer(1000);
+}
+
+StatusBar::~StatusBar()
+{
+    killTimer(timerId);
 }
 
 void StatusBar::updateText(int selectedRow)
 {
     if(selectedRow != -1)
         this->selectedRow = selectedRow;
-    auto all = SniffWindow::window->model.local.size();
-    auto displayed = SniffWindow::window->model.shownPerRow.size();
-    this->lb_info.setText(QStringLiteral("Packets:%1 * Displayed:%2 * Selected:%3").arg(all).arg(displayed).arg(this->selectedRow));
+    unsigned all = SniffWindow::window->model.local.size();
+    unsigned displayed = SniffWindow::window->model.shownPerRow.size();
+    if(last_all != all || last_displayed != displayed || selectedRow != -1)
+        this->lb_info.setText(QStringLiteral("Packets:%1 * Displayed:%2 * Selected:%3").arg(all).arg(displayed).arg(selectedRow));
+    last_all = all;
+    last_displayed = displayed;
 }
 
 void StatusBar::setLiveSniffing(bool state)
@@ -59,5 +67,10 @@ void StatusBar::setLiveSniffing(bool state)
 #ifndef QT_NO_TOOLTIP
     lb_liveSniffing.setToolTip(state ? QStringLiteral("Live Capturing") : QStringLiteral("Not Capturing"));
 #endif
+}
+
+void StatusBar::timerEvent(QTimerEvent*)
+{
+    updateText();
 }
 

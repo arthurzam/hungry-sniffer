@@ -63,12 +63,12 @@ SniffWindow::SniffWindow(QWidget* parent) :
     statsTable(new PacketStats(this)),
     toNotStop(true),
     isNotExiting(true),
-    manageThread(&SniffWindow::managePacketsList, this),
     filterTree(nullptr)
 {
     SniffWindow::window = this;
     ui->setupUi(this);
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    connect(this, SIGNAL(pushPacket(DataStructure::RawPacketData*)), this, SLOT(addPacket(DataStructure::RawPacketData*)));
     ui->table_packets->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->table_packets->horizontalHeader()->setStretchLastSection(true);
     ui->table_packets->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -172,13 +172,12 @@ SniffWindow::SniffWindow(QWidget* parent) :
 
 SniffWindow::~SniffWindow()
 {
-    this->isNotExiting = false;
-    delete this->statsTable;
 #ifdef PYTHON_CMD
     python_thread.quit();
 #endif
+    this->isNotExiting = false;
+    delete this->statsTable;
     this->on_actionStop_triggered();
-    this->manageThread.join();
     delete &*this->filterTree;
     delete ui;
 }

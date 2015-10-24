@@ -35,11 +35,9 @@ inline double diffTimeval(const struct timeval& curr, const struct timeval& base
 
 QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
 {
-    mutex_shownPerRow.lock();
     if(index.row() >= (int)shownPerRow.size())
         return QVariant();
     int number = this->shownPerRow[index.row()];
-    mutex_shownPerRow.unlock();
 
     const DataStructure::localPacket& pack = this->local[number];
     if(!pack.decodedPacket)
@@ -112,11 +110,9 @@ void PacketsTableModel::append(DataStructure::localPacket&& obj)
     this->local.push_back(std::move(obj));
     if(this->local.back().isShown)
     {
-        mutex_shownPerRow.lock();
         int row = (int)this->shownPerRow.size();
         beginInsertRows(QModelIndex(), row, row);
         this->shownPerRow.push_back((int)this->local.size() - 1);
-        mutex_shownPerRow.unlock();
         endInsertRows();
     }
 }
@@ -125,12 +121,10 @@ void PacketsTableModel::remove(int row)
 {
     if(row >= (int)shownPerRow.size()) return;
     beginRemoveRows(QModelIndex(), row, row);
-    mutex_shownPerRow.lock();
     int loc = shownPerRow[row];
     local.erase(local.begin() + loc);
     for(auto iter = shownPerRow.erase(shownPerRow.begin() + row); iter != shownPerRow.end(); ++iter)
         (*iter)--;
-    mutex_shownPerRow.unlock();
     endRemoveRows();
     emit dataChanged(index(row, 0), index((int)shownPerRow.size() - 1, 0));
 }
@@ -138,9 +132,7 @@ void PacketsTableModel::remove(int row)
 void PacketsTableModel::removeAll()
 {
     beginResetModel();
-    mutex_shownPerRow.lock();
     this->shownPerRow.clear();
-    mutex_shownPerRow.unlock();
     this->local.clear();
     endResetModel();
 }
@@ -148,19 +140,16 @@ void PacketsTableModel::removeAll()
 void PacketsTableModel::removeShown()
 {
     beginResetModel();
-    mutex_shownPerRow.lock();
     int count = 0;
     for(const int& row : shownPerRow)
         local.erase(local.begin() + row - (count++));
     this->shownPerRow.clear();
-    mutex_shownPerRow.unlock();
     endResetModel();
 }
 
 void PacketsTableModel::rerunFilter(const FilterTree* filter)
 {
     beginResetModel();
-    mutex_shownPerRow.lock();
     this->shownPerRow.clear();
     int i = 0;
     for(auto& p : this->local)
@@ -171,7 +160,6 @@ void PacketsTableModel::rerunFilter(const FilterTree* filter)
         }
         ++i;
     }
-    mutex_shownPerRow.unlock();
     endResetModel();
 }
 
@@ -186,7 +174,6 @@ void PacketsTableModel::reloadText(const hungry_sniffer::Protocol* protocol)
 
     long startChangeRow = -1;
 
-    mutex_shownPerRow.lock();
     long shown = shownPerRow[0];
     for(auto& pack : this->local)
     {
@@ -215,5 +202,4 @@ void PacketsTableModel::reloadText(const hungry_sniffer::Protocol* protocol)
         emit dataChanged(index(startChangeRow, 0), index(j, COLUMNS_COUNT - 1));
         startChangeRow = -1;
     }
-    mutex_shownPerRow.unlock();
 }

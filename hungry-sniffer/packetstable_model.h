@@ -25,7 +25,6 @@
 
 #include <QAbstractTableModel>
 #include <vector>
-#include <mutex>
 
 #ifdef Q_CC_MSVC
     #include <Winsock2.h>
@@ -80,7 +79,6 @@ class PacketsTableModel : public QAbstractTableModel
     public:
         std::vector<DataStructure::localPacket> local;
         std::vector<int> shownPerRow;
-        mutable std::mutex mutex_shownPerRow;
         bool showColors = true;
 
         static Q_CONSTEXPR unsigned COLUMNS_COUNT = 7;

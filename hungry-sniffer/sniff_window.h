@@ -97,6 +97,11 @@ class SniffWindow : public QMainWindow
         void open_preference_window();
         void open_url();
 
+        void addPacket(DataStructure::RawPacketData* raw);
+
+    signals:
+        // gets a pointer to a object on the heap created with new!
+        void pushPacket(DataStructure::RawPacketData* raw);
     protected:
         void dragEnterEvent(QDragEnterEvent* event);
         void dropEvent(QDropEvent* event);
@@ -109,13 +114,11 @@ class SniffWindow : public QMainWindow
         PacketStats* statsTable;
 
         DataStructure::localPacket* selected = nullptr;
-        ThreadSafeQueue<DataStructure::RawPacketData> toAdd;
     private:
 
         std::vector<std::thread*> threads;
         bool toNotStop;
         bool isNotExiting;
-        std::thread manageThread;
 
         std::atomic<FilterTree*> filterTree;
 
@@ -130,7 +133,6 @@ class SniffWindow : public QMainWindow
     private:
         void runLivePcap_p(struct pcap* pd, int maxNumber);
         void runOfflineOpen_p(const std::string& filename);
-        void managePacketsList();
 
     public:
         void setCurrentPacket(const DataStructure::localPacket& pack);

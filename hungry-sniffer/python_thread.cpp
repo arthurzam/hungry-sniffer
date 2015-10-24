@@ -77,7 +77,7 @@ namespace hs {
         DataStructure::RawPacketData raw;
         gettimeofday(&raw.time, nullptr);
         raw.setData(b, size);
-        SniffWindow::window->toAdd.push(raw);
+        emit SniffWindow::window->pushPacket(new DataStructure::RawPacketData(std::move(raw)));
         Py_RETURN_NONE;
     }
 
