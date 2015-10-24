@@ -104,7 +104,6 @@ class SniffWindow : public QMainWindow
 
     public:
         Ui::SniffWindow *ui;
-        QSortFilterProxyModel* m_sortFilterProxy;
         PacketsTableModel model;
         PacketStats* statsTable;
 

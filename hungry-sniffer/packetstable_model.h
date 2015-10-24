@@ -77,6 +77,12 @@ namespace DataStructure {
 
 class PacketsTableModel : public QAbstractTableModel
 {
+    private:
+        std::map<QVariant, std::vector<int>> sortedShown;
+        int sortColumn = 0;
+        Qt::SortOrder sortOrder = Qt::AscendingOrder;
+
+        QVariant dataFromPack(const DataStructure::localPacket& packet, int col, int number) const;
     public:
         std::vector<DataStructure::localPacket> local;
         std::vector<int> shownPerRow;
@@ -99,6 +105,7 @@ class PacketsTableModel : public QAbstractTableModel
 
         QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
         QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+        void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
 
         void append(DataStructure::localPacket&& obj);
         void remove(int row);

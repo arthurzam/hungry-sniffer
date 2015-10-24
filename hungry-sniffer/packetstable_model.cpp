@@ -33,12 +33,73 @@ inline double diffTimeval(const struct timeval& curr, const struct timeval& base
     return ((curr.tv_sec - base.tv_sec) + (curr.tv_usec - base.tv_usec) * DIVIDE_MILI);
 }
 
+QVariant PacketsTableModel::dataFromPack(const DataStructure::localPacket& packet, int col, int number) const
+{
+    switch(col)
+    {
+        case 0:
+            return QVariant(number);
+        case 1:
+            return QString::number(diffTimeval(packet.rawPacket.time, this->local[0].rawPacket.time), 'f', 6);
+        case 2:
+            return QString::fromStdString(packet.decodedPacket->getName());
+        case 3:
+            return QVariant(packet.rawPacket.len);
+        case 4:
+            return QString::fromStdString(packet.decodedPacket->getSource());
+        case 5:
+            return QString::fromStdString(packet.decodedPacket->getDestination());
+        default:
+            return (packet.decodedPacket->isGoodPacket() ? QString::fromStdString(packet.decodedPacket->getInfo()) : QStringLiteral("Bad Packet"));
+    }
+}
+
 QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
 {
     mutex_shownPerRow.lock();
     if(index.row() >= (int)shownPerRow.size())
         return QVariant();
-    int number = this->shownPerRow[index.row()];
+    int number;
+
+
+    if(this->sortColumn == 0)
+    {
+        if(this->sortOrder == Qt::AscendingOrder)
+            number = this->shownPerRow[index.row()];
+        else
+            number = this->shownPerRow[shownPerRow.size() - index.row() - 1];
+    }
+    else
+    {
+        unsigned row = index.row();
+        if(this->sortOrder == Qt::AscendingOrder)
+        {
+            for(const auto& var : sortedShown)
+            {
+                if(var.second.size() <= row)
+                    row -= var.second.size();
+                else
+                {
+                    number = var.second[row];
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for(auto var = sortedShown.rbegin(); var != sortedShown.rend(); ++var)
+            {
+                const auto& vec = var->second;
+                if(vec.size() <= row)
+                    row -= vec.size();
+                else
+                {
+                    number = vec[vec.size() - row - 1];
+                    break;
+                }
+            }
+        }
+    }
     mutex_shownPerRow.unlock();
 
     const DataStructure::localPacket& pack = this->local[number];
@@ -50,24 +111,7 @@ QVariant PacketsTableModel::data(const QModelIndex &index, int role) const
     {
         case Qt::ItemDataRole::ToolTipRole:
         case Qt::ItemDataRole::DisplayRole:
-            switch(index.column())
-            {
-                case 0:
-                    return QVariant(number);
-                case 1:
-                    return QString::number(diffTimeval(pack.rawPacket.time, this->local[0].rawPacket.time), 'f', 6);
-                case 2:
-                    return QString::fromStdString(decodedPacket->getName());
-                case 3:
-                    return QVariant(pack.rawPacket.len);
-                case 4:
-                    return QString::fromStdString(decodedPacket->getSource());
-                case 5:
-                    return QString::fromStdString(decodedPacket->getDestination());
-                case 6:
-                    return (decodedPacket->isGoodPacket() ? QString::fromStdString(decodedPacket->getInfo()) : QStringLiteral("Bad Packet"));
-            }
-            break;
+            return dataFromPack(pack, index.column(), number);
         case Qt::ItemDataRole::BackgroundRole:
             if(this->showColors)
             {
@@ -107,6 +151,28 @@ QVariant PacketsTableModel::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
+void PacketsTableModel::sort(int column, Qt::SortOrder order)
+{
+    this->sortOrder = order;
+    beginResetModel();
+    if(this->sortColumn != column)
+    {
+        this->sortColumn = column;
+        mutex_shownPerRow.lock();
+        sortedShown.clear();
+        // when the column is the Num column, we dont need the sortedDataSet
+        if(column != 0)
+        {
+            for(int number : shownPerRow)
+            {
+                sortedShown[dataFromPack(local[number], column, number)].push_back(number);
+            }
+        }
+        mutex_shownPerRow.unlock();
+    }
+    endResetModel();
+}
+
 void PacketsTableModel::append(DataStructure::localPacket&& obj)
 {
     this->local.push_back(std::move(obj));
@@ -115,7 +181,9 @@ void PacketsTableModel::append(DataStructure::localPacket&& obj)
         mutex_shownPerRow.lock();
         int row = (int)this->shownPerRow.size();
         beginInsertRows(QModelIndex(), row, row);
-        this->shownPerRow.push_back((int)this->local.size() - 1);
+        int number = (int)this->local.size() - 1;
+        this->shownPerRow.push_back(number);
+        sortedShown[dataFromPack(local[number], this->sortColumn, number)].push_back(number);
         mutex_shownPerRow.unlock();
         endInsertRows();
     }
@@ -139,6 +207,7 @@ void PacketsTableModel::removeAll()
 {
     beginResetModel();
     mutex_shownPerRow.lock();
+    sortedShown.clear();
     this->shownPerRow.clear();
     mutex_shownPerRow.unlock();
     this->local.clear();
@@ -153,6 +222,7 @@ void PacketsTableModel::removeShown()
     for(const int& row : shownPerRow)
         local.erase(local.begin() + row - (count++));
     this->shownPerRow.clear();
+    sortedShown.clear();
     mutex_shownPerRow.unlock();
     endResetModel();
 }
@@ -161,13 +231,15 @@ void PacketsTableModel::rerunFilter(const FilterTree* filter)
 {
     beginResetModel();
     mutex_shownPerRow.lock();
-    this->shownPerRow.clear();
+    shownPerRow.clear();
+    sortedShown.clear();
     int i = 0;
     for(auto& p : this->local)
     {
         if((p.isShown = !(bool)filter || filter->get(p.decodedPacket)))
         {
             this->shownPerRow.push_back(i);
+            sortedShown[dataFromPack(local[i], this->sortColumn, i)].push_back(i);
         }
         ++i;
     }
@@ -177,6 +249,7 @@ void PacketsTableModel::rerunFilter(const FilterTree* filter)
 
 void PacketsTableModel::reloadText(const hungry_sniffer::Protocol* protocol)
 {
+    // TODO: work with the sort
     if(shownPerRow.size() == 0)
     {
         return;

@@ -73,9 +73,7 @@ SniffWindow::SniffWindow(QWidget* parent) :
     ui->table_packets->horizontalHeader()->setStretchLastSection(true);
     ui->table_packets->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
-    m_sortFilterProxy = new QSortFilterProxyModel(this);
-    m_sortFilterProxy->setSourceModel(&model);
-    ui->table_packets->setModel(m_sortFilterProxy);
+    ui->table_packets->setModel(&model);
 
     connect(ui->table_packets->selectionModel(), SIGNAL(currentRowChanged(QModelIndex, QModelIndex)),
             this, SLOT(model_currentRowChanged(QModelIndex, QModelIndex)));
@@ -403,7 +401,7 @@ void SniffWindow::on_table_packets_customContextMenuRequested(const QPoint& pos)
     auto listSelected = ui->table_packets->selectionModel()->selectedIndexes();
     if(listSelected.size() == 0)
         return;
-    QModelIndex item = m_sortFilterProxy->mapToSource(listSelected[0]);
+    QModelIndex item = listSelected[0];
     std::vector<QAction*> list;
     QMenu menu;
     int row = model.shownPerRow[item.row()];
@@ -664,8 +662,8 @@ void SniffWindow::on_splitter_splitterMoved(int, int)
 
 void SniffWindow::model_currentRowChanged(QModelIndex newSelection, QModelIndex oldSelection)
 {
-    int row = m_sortFilterProxy->mapToSource(newSelection).row();
-    if(row != m_sortFilterProxy->mapToSource(oldSelection).row())
+    int row = newSelection.row();
+    if(row != oldSelection.row())
     {
         int loc = model.shownPerRow[row];
         this->setCurrentPacket(this->model.local[loc]);
