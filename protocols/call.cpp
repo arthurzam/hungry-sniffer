@@ -31,7 +31,6 @@
 #include "DNSPacket.h"
 #include "VRRPPacket.h"
 #ifdef Q_OS_UNIX
-#include "PacketJson.h"
 #endif
 #include "HTTPPacket.h"
 
@@ -106,9 +105,6 @@ EXPORT_FUNCTION void add()
         udp.addProtocol(5353, dns, init<DNSPacket>, "MDNS");
     }
     udp.addProtocol(1900, init<HTTPPacket>, "SSDP");
-#ifdef Q_OS_UNIX
-    udp.addProtocol(17500, init<PacketJson>, "Dropbox LAN sync");
-#endif
 }
 
 EXPORT_COPYRIGHT("Arthur Zamarin")

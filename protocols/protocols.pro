@@ -1,8 +1,7 @@
 TEMPLATE = lib
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11 link_pkgconfig
-unix: PKGCONFIG += jsoncpp
+CONFIG += c++11
 
 TARGET = hungry-sniffer-protocols
 TEMPLATE = lib
@@ -54,10 +53,8 @@ HEADERS += \
     ICMPv6Packet.h
 
 unix {
-    SOURCES += iptc.cpp \
-      PacketJson.cpp
-    HEADERS += iptc.h \
-      PacketJson.h
+    SOURCES += iptc.cpp
+    HEADERS += iptc.h
 }
 
 win32 {
