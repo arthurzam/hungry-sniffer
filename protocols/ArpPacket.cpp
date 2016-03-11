@@ -97,15 +97,19 @@ ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, con
         memcpy(&this->data, (const char*)data + sizeof(*value), size);
         size += sizeof(*value);
 
+#ifdef INET6_ADDRSTRLEN
         char str[INET6_ADDRSTRLEN];
+#else
+        char str[46];
+#endif
         if(arp_protocol == 0x0800)
         {
             this->headers.push_back({"Sender MAC Address", ether_ntoa((ether_addr*) this->data.eth_ip.arp_sha), 8, 6});
             this->headers.push_back({"Target MAC Address", ether_ntoa((ether_addr*) this->data.eth_ip.arp_tha), 18, 6});
 
-            inet_ntop(AF_INET, &this->data.eth_ip.arp_sip, str, INET6_ADDRSTRLEN);
+            inet_ntop(AF_INET, &this->data.eth_ip.arp_sip, str, sizeof(str));
             this->headers.push_back({"Sender IP Address" , str, 14, 4});
-            inet_ntop(AF_INET, &this->data.eth_ip.arp_tip, str, INET6_ADDRSTRLEN);
+            inet_ntop(AF_INET, &this->data.eth_ip.arp_tip, str, sizeof(str));
             this->headers.push_back({"Target IP Address" , str, 24, 4});
         }
         else
@@ -113,9 +117,9 @@ ArpPacket::ArpPacket(const void* data, size_t len, const Protocol* protocol, con
             this->headers.push_back({"Sender MAC Address", ether_ntoa((ether_addr*) this->data.eth_ipv6.arp_sha), 8, 6});
             this->headers.push_back({"Target MAC Address", ether_ntoa((ether_addr*) this->data.eth_ipv6.arp_tha), 30, 6});
 
-            inet_ntop(AF_INET6, &this->data.eth_ipv6.arp_sip, str, INET6_ADDRSTRLEN);
+            inet_ntop(AF_INET6, &this->data.eth_ipv6.arp_sip, str, sizeof(str));
             this->headers.push_back({"Sender IPv6 Address" , str, 14, 16});
-            inet_ntop(AF_INET6, &this->data.eth_ipv6.arp_tip, str, INET6_ADDRSTRLEN);
+            inet_ntop(AF_INET6, &this->data.eth_ipv6.arp_tip, str, sizeof(str));
             this->headers.push_back({"Target IPv6 Address" , str, 36, 16});
         }
     }

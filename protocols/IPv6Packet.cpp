@@ -33,10 +33,14 @@ IPv6Packet::IPv6Packet(const void* data, size_t len, const Protocol* protocol,
         const Packet* prev) : PacketStructed(data, len, protocol, prev)
 {
     if(!value) return;
+#ifdef INET6_ADDRSTRLEN
     char str[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, (void*)&this->value->ip6_src, str, INET6_ADDRSTRLEN);
+#else
+    char str[46];
+#endif
+    inet_ntop(AF_INET6, (void*)&this->value->ip6_src, str, sizeof(str));
     this->_realSource = str;
-    inet_ntop(AF_INET6, (void*)&this->value->ip6_dst, str, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, (void*)&this->value->ip6_dst, str, sizeof(str));
     this->_realDestination = str;
 
     this->headers.push_back({"Source ipv6", "", 8, 16});
