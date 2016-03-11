@@ -35,6 +35,7 @@
 #include "EthernetPacket.h"
 #include "preferences.h"
 #include "sniff_window.h"
+#include "ids/idslist.h"
 
 #include <hs_plugin.h>
 
@@ -57,44 +58,51 @@ using namespace hungry_sniffer;
 
 inline void loadLibs(const QString& path)
 {
-    typedef void (*add_function_t)();
-    typedef uint32_t (*info_uint32_t)();
-
     QDir dir(path);
-    QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files);
-    allFiles.sort(Qt::CaseInsensitive);
+    QStringList allFiles = dir.entryList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::Name);
     for(const auto& iter : allFiles)
     {
         QLibrary lib(dir.absoluteFilePath(iter));
-        info_uint32_t info_version = (info_uint32_t)lib.resolve("PLUGIN_VERSION");
-        if(info_version && info_version() != API_VERSION)
-        {
+
+        try {
+            typedef uint32_t (*info_uint32_t)();
+            info_uint32_t info_version = (info_uint32_t)lib.resolve("PLUGIN_VERSION");
+            if(info_version && info_version() != API_VERSION)
+            {
 #ifndef QT_NO_DEBUG
-            qDebug("plugin %s version isn't matching", iter.toLatin1().constData());
-#endif
-            continue;
-        }
-        add_function_t add = (add_function_t)lib.resolve("add");
-        if(add)
-        {
-            try {
-                add();
-#ifndef QT_NO_DEBUG
-            } catch (const std::exception& e) {
-                qDebug("error with %s: %s", iter.toLatin1().constData(), e.what());
-                continue;
-#endif
-            } catch (...) {
-#ifndef QT_NO_DEBUG
-                qDebug("error with %s", iter.toLatin1().constData());
+                qDebug("plugin %s version isn't matching", iter.toLatin1().constData());
 #endif
                 continue;
             }
+
+            typedef void (*add_function_t)();
+            add_function_t add = (add_function_t)lib.resolve("add");
+            if(add)
+                add();
+
+#ifdef WITH_IDS
+            typedef void (*ids_add_function_t)(std::vector<hungry_sniffer::ids::Rule*>&);
+            ids_add_function_t ids_add = (ids_add_function_t)lib.resolve("ids_add");
+            if(ids_add)
+                ids_add(IDSlist::ids_list.list_rules);
+#endif
+
+            Preferences::reloadFunc_t reload = (Preferences::reloadFunc_t)lib.resolve("reload");
+            if(reload)
+                Preferences::reloadFunctions.push_back(reload);
+
+            AboutPlugins::window->addPlugin(lib);
+#ifndef QT_NO_DEBUG
+        } catch (const std::exception& e) {
+            qDebug("error with %s: %s", iter.toLatin1().constData(), e.what());
+            continue;
+#endif
+        } catch (...) {
+#ifndef QT_NO_DEBUG
+            qDebug("error with %s", iter.toLatin1().constData());
+#endif
+            continue;
         }
-        Preferences::reloadFunc_t reload = (Preferences::reloadFunc_t)lib.resolve("reload");
-        if(reload)
-            Preferences::reloadFunctions.push_back(reload);
-        AboutPlugins::window->addPlugin(lib);
     }
 }
 

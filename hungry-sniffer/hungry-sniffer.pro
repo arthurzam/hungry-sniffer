@@ -103,6 +103,7 @@ unix {
 
 include(prefs/prefs.pri)
 include(widgets/widgets.pri)
+include(ids/ids.pri)
 include(../QHexEdit/QHexEdit.pri)
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sdk/release/ -lhungry-sniffer-sdk

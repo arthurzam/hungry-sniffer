@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 
+OPTION(ENABLE_IDS "Enable the IDS" ON)
 OPTION(ENABLE_PYTHON "Enable Python interpreter with the UI" ON)
 OPTION(INSTALL_SDK_HEADERS "Install also the SDK headers - used for plugins development" ON)
 OPTION(SDK_DOCS "create the docs with doxygen and install them" OFF)
@@ -22,6 +23,10 @@ if(MINGW)
 endif()
 
 set(CMAKE_SKIP_RPATH TRUE)
+
+if(ENABLE_IDS)
+  add_definitions(-DWITH_IDS)
+endif(ENABLE_IDS)
 
 add_subdirectory(sdk)
 add_subdirectory(protocols)

@@ -28,6 +28,9 @@
 #include "ui_sniff_window.h"
 #include "filter_tree.h"
 #include "packetstable_model.h"
+#ifdef WITH_IDS
+    #include "ids/idslist.h"
+#endif
 
 #include <QMessageBox>
 #include <QThread>
@@ -80,7 +83,11 @@ void SniffWindow::managePacketsList()
             localPacket p(std::move(packet));
             FilterTree* filter = this->filterTree;
             p.isShown = !filter || filter->get(p.decodedPacket);
+#ifdef WITH_IDS
+            IDSlist::ids_list.checkPacket(p.decodedPacket);
+#endif
             this->model.append(std::move(p));
+
             static_assert(((UPDATE_TEXT_EVERY - 1) & UPDATE_TEXT_EVERY) == 0, "UPDATE_TEXT_EVERY should be a power of 2");
             if(((++processed) & (UPDATE_TEXT_EVERY - 1)) == (UPDATE_TEXT_EVERY - 1))
                 ui->statusBar->updateText();
@@ -88,8 +95,10 @@ void SniffWindow::managePacketsList()
         else
         {
             if(processed != 0)
+            {
                 ui->statusBar->updateText();
-            processed = 0;
+                processed = 0;
+            }
             if(this->toNotStop & this->threads.empty())
                 QThread::msleep(1500);
         }
@@ -115,8 +124,7 @@ void SniffWindow::runLivePcap_p(pcap* pd, int maxNumber)
         raw.setData(data, header->len);
         raw.time = header->ts;
         this->toAdd.push(std::move(raw));
-        i++;
-        if(i == maxNumber)
+        if((++i) == maxNumber)
             break;
     }
 

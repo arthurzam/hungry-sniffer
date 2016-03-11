@@ -36,7 +36,8 @@ HEADERS  += \
     hs_protocol.h \
     hs_plugin.h \
     hs_stats.h \
-    hs_transport_layer_packet.h
+    hs_transport_layer_packet.h \
+    hs_ids.h
 
 unix {
     OTHER_FILES += HungrySniffer.pc

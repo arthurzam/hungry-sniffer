@@ -16,6 +16,10 @@ set(SDK_HDR
     hs_transport_layer_packet.h
 )
 
+if(ENABLE_IDS)
+  list(APPEND SDK_HDR hs_ids.h)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX)
   add_compile_options(-fno-exceptions -fno-rtti)
   set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -fno-exceptions -fno-rtti")

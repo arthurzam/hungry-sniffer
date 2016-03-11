@@ -20,51 +20,48 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef HS_PREFS
-#define HS_PREFS
+#ifndef HS_IDS_H
+#define HS_IDS_H
 
-#include <list>
 #include <string>
 
-class QSettings;
-class QWidget;
-
 namespace hungry_sniffer {
-    namespace Preference {
-        class Panel
+    class Packet;
+
+    namespace ids {
+        class Problem;
+
+        class Rule
         {
             public:
-                virtual QWidget* get() = 0;
-                virtual void save(QSettings& settings) = 0;
+                std::string name;
+                std::string info;
 
-                virtual ~Panel() {}
+                virtual Problem* check(const Packet* packet) = 0;
+                virtual void reset() = 0;
+                virtual ~Rule() {}
         };
 
-        typedef Panel* (*preferencesFunction_t)(QSettings& settings);
-
-        struct Preference
+        class Problem
         {
-            std::string name;
-            preferencesFunction_t func;
-            std::list<Preference> subPreferences;
+            public:
+                int level;
+                std::string name;
+                const Rule* rule;
 
-            Preference(const std::string& name, preferencesFunction_t func) :
-                name(name), func(func) {}
+                Problem(int level, std::string name, const Rule* rule)
+                    : level(level), name(name), rule(rule) {}
 
-            Preference(const std::string& name) :
-                name(name), func(nullptr) {}
+                virtual ~Problem() {}
 
-            Preference(const char* name) :
-                name(name), func(nullptr) {}
+                virtual std::string getDescription() const = 0;
 
-            Preference& add(Preference&& pref)
-            {
-                subPreferences.push_back(std::move(pref));
-                return subPreferences.back();
-            }
+                virtual std::string getFilter() const
+                {
+                    return std::string();
+                }
         };
+
     }
 }
-
-#endif // HS_PREFS
-
+#endif // HS_IDS_H
