@@ -8,8 +8,8 @@ include(../common.pri)
 DEFINES += SDK_LIBRARY
 
 *-g++* {
-    QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
-    QMAKE_LFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+    QMAKE_CXXFLAGS_RELEASE += -flto -fno-exceptions -fno-rtti
+    QMAKE_LFLAGS_RELEASE += -flto -fno-exceptions -fno-rtti
 }
 
 win32-g++ {
@@ -52,3 +52,4 @@ unix {
     INSTALLS += headers pc target
 }
 
+OTHER_FILES += CMakeLists.txt

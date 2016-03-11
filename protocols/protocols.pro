@@ -9,8 +9,8 @@ TEMPLATE = lib
 include(../common.pri)
 
 *-g++* {
-    QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
-    QMAKE_LFLAGS_RELEASE += -s -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+    QMAKE_CXXFLAGS_RELEASE += -flto -fno-exceptions -fno-rtti
+    QMAKE_LFLAGS_RELEASE += -s -flto -fno-exceptions -fno-rtti
 }
 
 win32-g++ {
@@ -67,3 +67,5 @@ else:unix: LIBS += -L$$OUT_PWD/../sdk/ -lhungry-sniffer-sdk
 
 INCLUDEPATH += $$PWD/../sdk
 DEPENDPATH += $$PWD/../sdk
+
+OTHER_FILES += CMakeLists.txt

@@ -7,8 +7,8 @@ TEMPLATE = lib
 include(../common.pri)
 
 *-g++* {
-    QMAKE_CXXFLAGS_RELEASE += -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
-    QMAKE_LFLAGS_RELEASE += -s -flto -Bsymbolic-functions -fno-exceptions -fno-rtti
+    QMAKE_CXXFLAGS_RELEASE += -flto -fno-exceptions -fno-rtti
+    QMAKE_LFLAGS_RELEASE += -s -flto -fno-exceptions -fno-rtti
 }
 
 win32-g++ {
@@ -38,6 +38,7 @@ HEADERS +=\
 
 FORMS +=
 
+OTHER_FILES += CMakeLists.txt
 
 win32: LIBS += -lws2_32
 

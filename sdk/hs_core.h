@@ -23,9 +23,9 @@
 #ifndef CORE_H
 #define CORE_H
 
-#include <hs_protocol.h>
-#include <hs_prefs.h>
-#include <hs_stats.h>
+#include "hs_protocol.h"
+#include "hs_prefs.h"
+#include "hs_stats.h"
 
 struct HungrySniffer_Core {
     EXPORT static struct HungrySniffer_Core* core; /*!<Global pointer to the cross module singelton of HungrySniffer_Core*/

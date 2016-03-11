@@ -7,3 +7,4 @@ sdk/html/*
 sdk/latex/*
 __pycache__
 *.pyc
+build/*

@@ -6,3 +6,6 @@ protocols.depends = sdk
 hungry-sniffer.depends = sdk
 
 include(common.pri)
+
+OTHER_FILES += CMakeLists.txt \
+               VERSION

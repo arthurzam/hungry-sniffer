@@ -66,6 +66,7 @@ FORMS += sniff_window.ui
 RESOURCES += icons/icons.qrc
 
 unix: OTHER_FILES += hungry-sniffer.desktop
+OTHER_FILES += CMakeLists.txt
 
 !CONFIG(no-pycmd) {
     unix {

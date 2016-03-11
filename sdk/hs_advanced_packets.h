@@ -23,7 +23,7 @@
 #ifndef HS_ADVANCED_PACKETS
 #define HS_ADVANCED_PACKETS
 
-#include <hs_protocol.h>
+#include "hs_protocol.h"
 
 namespace hungry_sniffer {
     /**

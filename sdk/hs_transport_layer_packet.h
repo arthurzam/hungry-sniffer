@@ -23,7 +23,7 @@
 #ifndef TRANSPORTLAYERPACKET_H
 #define TRANSPORTLAYERPACKET_H
 
-#include <hs_protocol.h>
+#include "hs_protocol.h"
 #include <unordered_map>
 
 /*! \cond docNever */
