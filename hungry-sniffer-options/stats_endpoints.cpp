@@ -66,7 +66,7 @@ QVariant StatsEndpointsModel::data(const QModelIndex& index, int role) const
     if(role == Qt::ItemDataRole::DisplayRole)
     {
         auto iter = this->endpoints.cbegin();
-        for(uint_fast32_t i = index.row(); i != 0; i--) iter++;
+        for(uint_fast32_t i = index.row(); i != 0; --i) ++iter;
         switch(index.column())
         {
             case 0:

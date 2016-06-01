@@ -35,7 +35,7 @@ static pid_t runArpspoof(const char* ip1, const char* ip2)
         case 0:
             close(STDOUT_FILENO);
             close(STDERR_FILENO);
-            execlp("arpspoof", "arpspoof", "-t", ip1, ip2);
+            execlp("arpspoof", "arpspoof", "-t", ip1, ip2, NULL);
             return -1;
         default:
             return p;
@@ -45,7 +45,7 @@ static pid_t runArpspoof(const char* ip1, const char* ip2)
 extern "C" bool stop_arpspoof(const void* data)
 {
     const pid_t* newPids = static_cast<const pid_t*>(data);
-    bool res = !(kill(newPids[0], SIGINT) || kill(newPids[1], SIGINT));
+    bool res = !(kill(newPids[0], SIGINT) | kill(newPids[1], SIGINT));
     free(const_cast<void*>(data));
     return res;
 }
@@ -59,7 +59,10 @@ int start_arpspoof(const Packet* packet, Option::disabled_options_t& options)
         return 0;
     pids[1] = runArpspoof(packet->realDestination().c_str(), packet->realSource().c_str());
     if(pids[1] == -1)
+    {
+        kill(pids[0], SIGINT); // stop the first way arpspoof
         return 0;
+    }
     pid_t* newPids = (pid_t*)malloc(2 * sizeof(pid_t));
     newPids[0] = pids[0];
     newPids[1] = pids[1];
